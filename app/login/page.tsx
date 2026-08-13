@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -10,7 +9,6 @@ export default function LoginPage() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const router = useRouter();
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,25 +17,26 @@ export default function LoginPage() {
 
     try {
       if (isSignUp) {
-        // Registro de usuario nuevo
         const { error } = await supabase.auth.signUp({
           email,
           password,
         });
         if (error) throw error;
-        setMessage("¡Registro exitoso! Ya puedes iniciar sesión.");
-        setIsSignUp(false);
+        setMessage("¡Registro exitoso! Revisa tu correo para confirmar.");
       } else {
-        // Iniciar Sesión
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
+        
         if (error) throw error;
-        router.push("/");
+
+        // Ahora sí, recargamos hacia la ruta principal
+        window.location.href = "/";
       }
     } catch (error: any) {
-      setMessage(error.message || "Ocurrió un error.");
+      console.error(error);
+      setMessage(error.message || "Ocurrió un error al intentar ingresar");
     } finally {
       setLoading(false);
     }
@@ -51,9 +50,7 @@ export default function LoginPage() {
             {isSignUp ? "Crear Cuenta" : "Iniciar Sesión"}
           </h1>
           <p className="text-sm text-slate-400">
-            {isSignUp
-              ? "Regístrate para guardar tus cotizaciones"
-              : "Ingresa a tu cotizador SaaS"}
+            {isSignUp ? "Regístrate para guardar tus cotizaciones" : "Ingresa a tu cotizador SaaS"}
           </p>
         </div>
 
@@ -97,11 +94,7 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg transition shadow-lg disabled:opacity-50"
           >
-            {loading
-              ? "Cargando..."
-              : isSignUp
-              ? "Registrarme"
-              : "Entrar al Sistema"}
+            {loading ? "Cargando..." : (isSignUp ? "Registrarme" : "Entrar al Sistema")}
           </button>
         </form>
 
@@ -111,9 +104,7 @@ export default function LoginPage() {
             onClick={() => setIsSignUp(!isSignUp)}
             className="text-xs text-indigo-400 hover:underline"
           >
-            {isSignUp
-              ? "¿Ya tienes cuenta? Inicia sesión aquí"
-              : "¿No tienes cuenta? Regístrate gratis"}
+            {isSignUp ? "¿Ya tienes cuenta? Inicia sesión aquí" : "¿No tienes cuenta? Regístrate gratis"}
           </button>
         </div>
       </div>
