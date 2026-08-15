@@ -713,7 +713,7 @@ export default function Home() {
 
   const cityStateText = [companyCity, companyState].filter(Boolean).join(', ');
 
-  // ESTILO UNIFICADO Y PROFESIONAL PARA BOTONES
+  // ESTILO UNIFICADO Y PROFESIONAL
   const menuBtnClass = "w-full bg-slate-700 hover:bg-slate-600 text-white font-semibold px-4 py-3 rounded-xl text-sm transition-all duration-200 text-center shadow-md border border-slate-500/50 active:scale-[0.98]";
 
   return (
@@ -728,7 +728,7 @@ export default function Home() {
         }
       `}</style>
 
-      {/* BARRA SUPERIOR PARA MÓVILES (NO PRINT) */}
+      {/* BARRA SUPERIOR MÓVIL */}
       <div className="no-print md:hidden bg-slate-900 text-white px-4 py-3 flex justify-between items-center shadow-lg sticky top-0 z-40">
         <h1 className="font-bold text-base tracking-tight">{t.appTitle}</h1>
         <button 
@@ -740,7 +740,7 @@ export default function Home() {
         </button>
       </div>
 
-      {/* SIDEBAR / MENÚ IZQUIERDO (RESPONSIVO EN MÓVIL Y DESKTOP) */}
+      {/* MENÚ LATERAL */}
       <aside className={`no-print w-full md:w-64 bg-slate-900 text-slate-100 p-4 shrink-0 flex-col justify-between border-r border-slate-800 shadow-xl z-30 ${isMobileMenuOpen ? 'flex' : 'hidden md:flex'}`}>
         <div className="space-y-4">
           <div className="pb-3 border-b border-slate-800/80 hidden md:block">
@@ -828,7 +828,6 @@ export default function Home() {
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
               
-              {/* IDIOMA */}
               <div className="flex flex-col justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-200">
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{t.lblLang}</label>
                 <select 
@@ -841,7 +840,6 @@ export default function Home() {
                 </select>
               </div>
 
-              {/* IMPUESTOS */}
               <div className="flex flex-col justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-200">
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{t.lblTax}</label>
                 <div className="flex gap-1.5 items-center">
@@ -865,7 +863,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* EMITIR CON (EMPRESA) */}
               <div className="flex flex-col justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-200">
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{t.lblSelectCompany}</label>
                 <select 
@@ -886,7 +883,6 @@ export default function Home() {
                 </select>
               </div>
 
-              {/* CLIENTE FRECUENTE */}
               <div className="flex flex-col justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-200">
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{t.lblSelectClient}</label>
                 <select 
@@ -910,7 +906,6 @@ export default function Home() {
                 </select>
               </div>
 
-              {/* CUENTA BANCARIA */}
               <div className="flex flex-col justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-200">
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{t.lblSelectBank}</label>
                 <select 
@@ -928,7 +923,6 @@ export default function Home() {
 
             </div>
 
-            {/* CATÁLOGO RÁPIDO */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-slate-100">
               <div className="flex items-center gap-2 flex-1">
                 <span className="text-xs font-bold text-slate-500 shrink-0">{t.catalogLabel}</span>
@@ -954,7 +948,7 @@ export default function Home() {
                 </button>
                 <button 
                   onClick={addBlankItem} 
-                  className="flex-1 sm:flex-none bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold px-4 py-2 rounded-lg text-xs border border-indigo-200 transition text-center"
+                  className="flex-1 sm:flex-none bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-4 py-2 rounded-lg text-xs border border-slate-300 transition text-center"
                 >
                   {t.btnBlank}
                 </button>
@@ -964,7 +958,7 @@ export default function Home() {
           </div>
 
           {/* DOCUMENTO COTIZACIÓN */}
-          <div id="quote-document" className="quote-container relative bg-white p-5 md:p-12 rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+          <div id="quote-document" className="quote-container relative bg-white p-4 md:p-12 rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
             
             {logo && (
               <div className="hidden print:flex absolute inset-0 items-center justify-center pointer-events-none select-none z-0">
@@ -993,7 +987,6 @@ export default function Home() {
                     <input value={companyTagline} onChange={(e) => setCompanyTagline(e.target.value)} className="text-xs text-slate-500 w-full text-left md:text-right bg-transparent outline-none leading-none mb-1" />
                   )}
 
-                  {/* BLOQUE CON LÍNEAS INDIVIDUALES */}
                   <div className="text-xs text-slate-600 flex flex-col items-start md:items-end leading-tight space-y-0.5 w-full">
                     {companyTaxId && <p className="font-semibold text-slate-800">RFC: {companyTaxId}</p>}
                     {companyAddress && <p>{companyAddress}</p>}
@@ -1009,40 +1002,51 @@ export default function Home() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6 md:my-8 bg-slate-50 p-4 rounded-xl border border-slate-100 print:bg-transparent print:p-0 print:border-none">
                 <div>
                   <span className="text-xs font-bold text-slate-900 uppercase block mb-1">{t.quotedTo}</span>
-                  <input value={clientName} onChange={(e) => setClientName(e.target.value)} className="font-semibold text-slate-800 w-full bg-transparent outline-none" />
+                  <input value={clientName} onChange={(e) => setClientName(e.target.value)} className="font-semibold text-slate-800 w-full bg-transparent outline-none text-sm md:text-base" />
                 </div>
                 <div className="md:text-right space-y-1 text-xs text-slate-600">
                   <p><strong>{t.folio}</strong> <input value={folio} onChange={(e) => setFolio(e.target.value)} className="w-28 text-left md:text-right bg-transparent outline-none font-semibold text-slate-800" /></p>
                 </div>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse min-w-[500px]">
-                  <thead>
-                    <tr className="border-b-2 border-slate-200 text-xs font-bold text-slate-500 uppercase">
-                      <th className="py-3 px-2">{t.thConcept}</th>
-                      <th className="py-3 px-2 w-20 text-center">{t.thQty}</th>
-                      <th className="py-3 px-2 w-28 text-right">{t.thPrice}</th>
-                      <th className="py-3 px-2 w-28 text-right">{t.thAmount}</th>
-                      <th className="py-3 px-2 w-10 no-print"></th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-sm">
-                    {items.map((item, idx) => {
-                      const q = typeof item.qty === 'number' ? item.qty : parseFloat(item.qty) || 0;
-                      const p = typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0;
+              {/* VISTA DE TABLA / TARJETAS RESPONSIVAS PARA ÍTEMS DE LA COTIZACIÓN */}
+              <div className="mt-4">
+                {/* 1. ENCABEZADO DE TABLA (SOLO COMPUTADORA/TABLET) */}
+                <div className="hidden sm:grid grid-cols-12 border-b-2 border-slate-200 text-xs font-bold text-slate-500 uppercase pb-2">
+                  <div className="col-span-5 px-2">{t.thConcept}</div>
+                  <div className="col-span-2 text-center px-2">{t.thQty}</div>
+                  <div className="col-span-2 text-right px-2">{t.thPrice}</div>
+                  <div className="col-span-2 text-right px-2">{t.thAmount}</div>
+                  <div className="col-span-1 text-center no-print"></div>
+                </div>
 
-                      return (
-                        <tr key={idx} className="hover:bg-slate-50">
-                          <td className="py-3 px-2">
-                            <input 
-                              value={lang === 'es' ? item.description_es : item.description_en} 
-                              onChange={(e) => updateItem(idx, 'description', e.target.value)}
-                              placeholder="Escribe un concepto..."
-                              className="w-full bg-transparent outline-none"
-                            />
-                          </td>
-                          <td className="py-3 px-2 text-center">
+                {/* 2. LISTA DE ÍTEMS (TARJETAS EN MÓVIL, FILAS EN COMPUTADORA) */}
+                <div className="divide-y divide-slate-100 sm:divide-y-0 space-y-3 sm:space-y-0">
+                  {items.map((item, idx) => {
+                    const q = typeof item.qty === 'number' ? item.qty : parseFloat(item.qty) || 0;
+                    const p = typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0;
+
+                    return (
+                      <div 
+                        key={idx} 
+                        className="bg-slate-50 sm:bg-transparent p-3 sm:p-0 rounded-xl sm:rounded-none border sm:border-none border-slate-200 grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-0 items-center hover:bg-slate-50/80 transition"
+                      >
+                        {/* CONCEPTO */}
+                        <div className="sm:col-span-5 sm:px-2 py-1">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thConcept}</label>
+                          <input 
+                            value={lang === 'es' ? item.description_es : item.description_en} 
+                            onChange={(e) => updateItem(idx, 'description', e.target.value)}
+                            placeholder="Escribe un concepto..."
+                            className="w-full bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 text-sm font-medium outline-none focus:border-indigo-500"
+                          />
+                        </div>
+
+                        {/* CANTIDAD, PRECIO E IMPORTE EN MÓVIL (GRID DE 3 COLUMNAS) */}
+                        <div className="grid grid-cols-3 sm:contents gap-2 mt-1 sm:mt-0">
+                          {/* CANTIDAD */}
+                          <div className="sm:col-span-2 sm:px-2 sm:text-center">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thQty}</label>
                             <input 
                               type="number" 
                               value={item.qty} 
@@ -1051,10 +1055,13 @@ export default function Home() {
                                 if (item.qty === '') updateItem(idx, 'qty', 0);
                               }}
                               onChange={(e) => updateItem(idx, 'qty', e.target.value)} 
-                              className="w-16 text-center bg-transparent outline-none focus:bg-indigo-50/50 rounded" 
+                              className="w-full sm:w-16 text-center bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 text-sm font-semibold outline-none focus:bg-indigo-50/50" 
                             />
-                          </td>
-                          <td className="py-3 px-2 text-right">
+                          </div>
+
+                          {/* PRECIO UNITARIO */}
+                          <div className="sm:col-span-2 sm:px-2 sm:text-right">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thPrice}</label>
                             <input 
                               type="number" 
                               value={item.price} 
@@ -1063,21 +1070,31 @@ export default function Home() {
                                 if (item.price === '') updateItem(idx, 'price', 0);
                               }}
                               onChange={(e) => updateItem(idx, 'price', e.target.value)} 
-                              className="w-24 text-right bg-transparent outline-none font-medium focus:bg-indigo-50/50 rounded" 
+                              className="w-full sm:w-24 text-right bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 text-sm font-semibold outline-none focus:bg-indigo-50/50" 
                               placeholder="0.00" 
                             />
-                          </td>
-                          <td className="py-3 px-2 text-right font-medium text-slate-700">
-                            ${(q * p).toFixed(2)}
-                          </td>
-                          <td className="py-3 px-2 text-center no-print">
-                            <button onClick={() => removeItem(idx)} className="text-rose-400 hover:text-rose-600 font-bold">✕</button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                          </div>
+
+                          {/* IMPORTE */}
+                          <div className="sm:col-span-2 sm:px-2 text-right">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thAmount}</label>
+                            <span className="text-sm font-bold text-slate-800 block pt-1.5 sm:pt-0">
+                              ${(q * p).toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* BOTÓN ELIMINAR */}
+                        <div className="sm:col-span-1 sm:px-2 text-right sm:text-center mt-2 sm:mt-0 no-print border-t sm:border-none pt-2 sm:pt-0 border-slate-200 flex justify-between sm:block items-center">
+                          <span className="text-xs text-slate-400 font-medium sm:hidden">Acción:</span>
+                          <button onClick={() => removeItem(idx)} className="text-rose-500 hover:text-rose-700 font-bold text-sm bg-rose-50 sm:bg-transparent px-2 py-1 sm:p-0 rounded">
+                            Eliminar ✕
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="flex justify-end mt-8 border-t border-slate-200 pt-6">
@@ -1148,13 +1165,13 @@ export default function Home() {
               <button onClick={() => setIsBanksModalOpen(false)} className="text-slate-400 font-bold text-xl">✕</button>
             </div>
 
-            <div className="bg-cyan-50 p-3 rounded-xl border border-cyan-200 space-y-2 text-xs">
+            <div className="bg-slate-100 p-3 rounded-xl border border-slate-300 space-y-2 text-xs">
               <div className="flex justify-between items-center">
-                <span className="font-bold text-cyan-900 block">
+                <span className="font-bold text-slate-900 block">
                   {editingBankIndex !== null ? "Editar Cuenta Bancaria:" : "Registrar Nueva Cuenta Bancaria:"}
                 </span>
                 {editingBankIndex !== null && (
-                  <button onClick={resetBankForm} className="text-xs text-cyan-700 hover:underline font-semibold">
+                  <button onClick={resetBankForm} className="text-xs text-slate-600 hover:underline font-semibold">
                     Cancelar edición
                   </button>
                 )}
@@ -1169,7 +1186,7 @@ export default function Home() {
               </div>
               <button 
                 onClick={handleSaveBankAccount} 
-                className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 rounded text-xs transition"
+                className="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded text-xs transition"
               >
                 {editingBankIndex !== null ? "Guardar Cambios" : "Guardar Cuenta Bancaria"}
               </button>
@@ -1192,7 +1209,7 @@ export default function Home() {
                     </button>
                     <button 
                       onClick={() => { setBankData(acc); setIsBanksModalOpen(false); }} 
-                      className="bg-cyan-600 hover:bg-cyan-700 text-white font-semibold px-2.5 py-1 rounded text-xs"
+                      className="bg-slate-700 hover:bg-slate-800 text-white font-semibold px-2.5 py-1 rounded text-xs"
                     >
                       Usar
                     </button>
@@ -1220,15 +1237,15 @@ export default function Home() {
             <div className="flex justify-between items-center border-b pb-3">
               <div>
                 <h3 className="font-bold text-slate-800 text-lg">{t.modalTitle}</h3>
-                <p className="text-xs text-teal-700 font-semibold">
+                <p className="text-xs text-slate-600 font-semibold">
                   Personalizados: {customCatalog.length} / 10
                 </p>
               </div>
               <button onClick={() => setIsConceptsModalOpen(false)} className="text-slate-400 font-bold text-xl">✕</button>
             </div>
 
-            <div className="bg-teal-50 p-3 rounded-xl border border-teal-200 space-y-2 text-xs">
-              <span className="font-bold text-teal-900 block">{t.modalAddNew}</span>
+            <div className="bg-slate-100 p-3 rounded-xl border border-slate-300 space-y-2 text-xs">
+              <span className="font-bold text-slate-900 block">{t.modalAddNew}</span>
               <input 
                 placeholder="Descripción en Español *" 
                 value={newCustomConcept.es} 
@@ -1243,7 +1260,7 @@ export default function Home() {
               />
               <button 
                 onClick={handleAddCustomConcept} 
-                className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 rounded text-xs transition"
+                className="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded text-xs transition"
               >
                 {t.btnSaveCatItem}
               </button>
@@ -1286,12 +1303,12 @@ export default function Home() {
               <button onClick={() => setIsClientsOpen(false)} className="text-slate-400 font-bold text-xl">✕</button>
             </div>
 
-            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+            <div className="bg-slate-100 p-3 rounded-xl border border-slate-300 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
               <input placeholder="Nombre / Razón Social *" value={newClient.name} onChange={(e) => setNewClient({ ...newClient, name: e.target.value })} className="border p-2 rounded bg-white" />
               <input placeholder="RFC / Tax ID" value={newClient.tax_id} onChange={(e) => setNewClient({ ...newClient, tax_id: e.target.value })} className="border p-2 rounded bg-white" />
               <input placeholder="Correo Electrónico" value={newClient.email} onChange={(e) => setNewClient({ ...newClient, email: e.target.value })} className="border p-2 rounded bg-white" />
               <input placeholder="Teléfono WhatsApp (ej: 521662...)" value={newClient.phone} onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })} className="border p-2 rounded bg-white" />
-              <button onClick={handleSaveClient} className="col-span-1 sm:col-span-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded text-xs transition">
+              <button onClick={handleSaveClient} className="col-span-1 sm:col-span-2 bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2 rounded text-xs transition">
                 + Guardar Cliente
               </button>
             </div>
@@ -1310,7 +1327,7 @@ export default function Home() {
                       <button onClick={() => handleViewClientHistory(cli)} className="bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1 rounded text-xs font-semibold">
                         {t.btnClientHistory}
                       </button>
-                      <button onClick={() => handleSelectClient(cli)} className="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded text-xs font-semibold">
+                      <button onClick={() => handleSelectClient(cli)} className="bg-slate-700 hover:bg-slate-800 text-white px-2.5 py-1 rounded text-xs font-semibold">
                         {t.btnSelectClient}
                       </button>
                       <button onClick={() => handleDeleteClient(cli.id)} className="bg-rose-100 hover:bg-rose-200 text-rose-700 px-2 py-1 rounded">
@@ -1338,12 +1355,12 @@ export default function Home() {
             <div className="flex justify-between items-center border-b pb-3">
               <div>
                 <h3 className="font-bold text-slate-800 text-lg">{t.clientHistoryTitle}</h3>
-                <p className="text-xs text-indigo-600 font-semibold">{selectedClientForHistory.name} {selectedClientForHistory.tax_id ? `(${selectedClientForHistory.tax_id})` : ''}</p>
+                <p className="text-xs text-slate-600 font-semibold">{selectedClientForHistory.name} {selectedClientForHistory.tax_id ? `(${selectedClientForHistory.tax_id})` : ''}</p>
               </div>
               <button onClick={() => setIsClientHistoryOpen(false)} className="text-slate-400 font-bold text-xl">✕</button>
             </div>
 
-            <div className="bg-amber-50 p-3 rounded-xl border border-amber-200 flex justify-between items-center text-xs text-amber-900">
+            <div className="bg-slate-100 p-3 rounded-xl border border-slate-300 flex justify-between items-center text-xs text-slate-800">
               <span><strong>Cotizaciones Registradas:</strong> {clientQuotesList.length}</span>
               <span><strong>Monto Total Cotizado:</strong> ${clientQuotesList.reduce((acc, q) => acc + (q.total_amount || 0), 0).toFixed(2)} {currency}</span>
             </div>
@@ -1359,7 +1376,7 @@ export default function Home() {
                       <span className="text-slate-500">Monto: ${q.total_amount ? q.total_amount.toFixed(2) : '0.00'} • Fecha: {new Date(q.created_at).toLocaleDateString()}</span>
                     </div>
                     <div className="flex gap-1">
-                      <button onClick={() => loadQuoteFromHistory(q)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded text-xs font-semibold">
+                      <button onClick={() => loadQuoteFromHistory(q)} className="bg-slate-800 hover:bg-slate-900 text-white px-2.5 py-1 rounded text-xs font-semibold">
                         {t.btnLoadQuote}
                       </button>
                       <button onClick={() => deleteQuoteFromHistory(q.id)} className="bg-rose-100 hover:bg-rose-200 text-rose-700 px-2 py-1 rounded">
@@ -1385,7 +1402,6 @@ export default function Home() {
         <div className="no-print fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-6 space-y-4 max-h-[90vh] flex flex-col">
             
-            {/* ENCABEZADO */}
             <div className="flex justify-between items-center border-b pb-3 shrink-0">
               <div>
                 <h3 className="font-bold text-slate-800 text-lg">{t.companyModalTitle}</h3>
@@ -1394,31 +1410,29 @@ export default function Home() {
               <button onClick={() => { setIsCompaniesOpen(false); resetCompanyForm(); }} className="text-slate-400 hover:text-slate-600 font-bold text-xl">✕</button>
             </div>
 
-            {/* FORMULARIO */}
-            <div className="bg-purple-50 p-4 rounded-xl border border-purple-200 text-xs shrink-0 space-y-3">
+            <div className="bg-slate-100 p-4 rounded-xl border border-slate-300 text-xs shrink-0 space-y-3">
               <div className="flex justify-between items-center">
-                <span className="font-bold text-purple-900 block text-xs uppercase tracking-wide">
+                <span className="font-bold text-slate-900 block text-xs uppercase tracking-wide">
                   {editingCompanyId ? "✏️ Editar Datos de Empresa:" : "➕ Registrar Nueva Empresa:"}
                 </span>
                 {editingCompanyId && (
-                  <button onClick={resetCompanyForm} className="text-purple-700 hover:underline font-semibold text-xs">
+                  <button onClick={resetCompanyForm} className="text-slate-600 hover:underline font-semibold text-xs">
                     Cancelar edición
                   </button>
                 )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
-                <input placeholder="Nombre de la Empresa *" value={newCompany.company_name} onChange={(e) => setNewCompany({ ...newCompany, company_name: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-purple-500" />
-                <input placeholder="Slogan / Giro" value={newCompany.tagline} onChange={(e) => setNewCompany({ ...newCompany, tagline: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-purple-500" />
-                <input placeholder="RFC / Tax ID" value={newCompany.tax_id} onChange={(e) => setNewCompany({ ...newCompany, tax_id: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-purple-500" />
-                <input placeholder="Teléfono" value={newCompany.phone} onChange={(e) => setNewCompany({ ...newCompany, phone: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-purple-500" />
-                <input placeholder="Correo Electrónico" value={newCompany.email} onChange={(e) => setNewCompany({ ...newCompany, email: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-purple-500" />
-                <input placeholder="Código Postal (C.P.)" value={newCompany.postal_code} onChange={(e) => setNewCompany({ ...newCompany, postal_code: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-purple-500" />
-                <input placeholder="Ciudad" value={newCompany.city} onChange={(e) => setNewCompany({ ...newCompany, city: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-purple-500" />
-                <input placeholder="Estado / Provincia" value={newCompany.state} onChange={(e) => setNewCompany({ ...newCompany, state: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-purple-500" />
+                <input placeholder="Nombre de la Empresa *" value={newCompany.company_name} onChange={(e) => setNewCompany({ ...newCompany, company_name: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-slate-500" />
+                <input placeholder="Slogan / Giro" value={newCompany.tagline} onChange={(e) => setNewCompany({ ...newCompany, tagline: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-slate-500" />
+                <input placeholder="RFC / Tax ID" value={newCompany.tax_id} onChange={(e) => setNewCompany({ ...newCompany, tax_id: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-slate-500" />
+                <input placeholder="Teléfono" value={newCompany.phone} onChange={(e) => setNewCompany({ ...newCompany, phone: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-slate-500" />
+                <input placeholder="Correo Electrónico" value={newCompany.email} onChange={(e) => setNewCompany({ ...newCompany, email: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-slate-500" />
+                <input placeholder="Código Postal (C.P.)" value={newCompany.postal_code} onChange={(e) => setNewCompany({ ...newCompany, postal_code: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-slate-500" />
+                <input placeholder="Ciudad" value={newCompany.city} onChange={(e) => setNewCompany({ ...newCompany, city: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-slate-500" />
+                <input placeholder="Estado / Provincia" value={newCompany.state} onChange={(e) => setNewCompany({ ...newCompany, state: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-slate-500" />
                 
-                {/* SELECTOR DE LOGO */}
-                <div className="border-2 border-dashed border-purple-300 bg-white px-2 py-1.5 rounded text-center cursor-pointer relative hover:bg-purple-100/50 transition flex items-center justify-center">
+                <div className="border-2 border-dashed border-slate-300 bg-white px-2 py-1.5 rounded text-center cursor-pointer relative hover:bg-slate-50 transition flex items-center justify-center">
                   {newCompany.logo_url ? (
                     <div className="flex items-center gap-2">
                       <img src={newCompany.logo_url} alt="Preview Logo" className="h-6 object-contain" />
@@ -1430,15 +1444,14 @@ export default function Home() {
                   <input type="file" accept="image/*" onChange={handleCompanyLogoUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
                 </div>
 
-                <input placeholder="Dirección Fiscal / Calle y Número" value={newCompany.address} onChange={(e) => setNewCompany({ ...newCompany, address: e.target.value })} className="col-span-1 sm:col-span-2 md:col-span-3 border p-2 rounded bg-white outline-none focus:border-purple-500" />
+                <input placeholder="Dirección Fiscal / Calle y Número" value={newCompany.address} onChange={(e) => setNewCompany({ ...newCompany, address: e.target.value })} className="col-span-1 sm:col-span-2 md:col-span-3 border p-2 rounded bg-white outline-none focus:border-slate-500" />
               </div>
 
-              <button onClick={handleSaveCompany} className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 rounded text-xs transition shadow-sm">
+              <button onClick={handleSaveCompany} className="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded text-xs transition shadow-sm">
                 {editingCompanyId ? "Guardar Cambios" : "+ Guardar Mi Empresa"}
               </button>
             </div>
 
-            {/* LISTA COMPACTA DE EMPRESAS */}
             <div className="overflow-y-auto flex-1 space-y-2 pr-1 max-h-[320px]">
               <h4 className="text-xs font-bold text-slate-500 uppercase border-b pb-1">Empresas Registradas ({companiesList.length}):</h4>
               {companiesList.length === 0 ? (
@@ -1447,7 +1460,7 @@ export default function Home() {
                 companiesList.map((comp) => {
                   const compLoc = [comp.city, comp.state].filter(Boolean).join(', ');
                   return (
-                    <div key={comp.id} className="flex justify-between items-center bg-slate-50 p-2.5 rounded-lg border border-slate-200 hover:border-purple-300 transition text-xs">
+                    <div key={comp.id} className="flex justify-between items-center bg-slate-50 p-2.5 rounded-lg border border-slate-200 hover:border-slate-400 transition text-xs">
                       <div className="flex items-center gap-3">
                         {comp.logo_url ? (
                           <img src={comp.logo_url} alt="Logo" className="w-10 h-10 object-contain bg-white rounded border p-1 shrink-0" />
@@ -1459,7 +1472,7 @@ export default function Home() {
                         <div className="space-y-0.5">
                           <div className="flex items-center gap-2">
                             <strong className="text-slate-800 text-sm">{comp.company_name}</strong>
-                            {comp.tagline && <span className="text-[11px] text-purple-700 font-medium bg-purple-100 px-1.5 py-0.5 rounded">{comp.tagline}</span>}
+                            {comp.tagline && <span className="text-[11px] text-slate-700 font-medium bg-slate-200 px-1.5 py-0.5 rounded">{comp.tagline}</span>}
                           </div>
                           <span className="text-slate-500 block text-[11px]">
                             {comp.tax_id ? `RFC: ${comp.tax_id} • ` : ''}
@@ -1478,7 +1491,7 @@ export default function Home() {
                         <button onClick={() => handleEditCompanyClick(comp)} className="bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1.5 rounded text-xs font-semibold shadow-sm transition">
                           Editar
                         </button>
-                        <button onClick={() => { applyCompany(comp); setIsCompaniesOpen(false); resetCompanyForm(); }} className="bg-purple-600 hover:bg-purple-700 text-white px-2.5 py-1.5 rounded text-xs font-semibold shadow-sm transition">
+                        <button onClick={() => { applyCompany(comp); setIsCompaniesOpen(false); resetCompanyForm(); }} className="bg-slate-700 hover:bg-slate-800 text-white px-2.5 py-1.5 rounded text-xs font-semibold shadow-sm transition">
                           {t.btnSelectCompany}
                         </button>
                         <button onClick={() => handleDeleteCompany(comp.id)} className="bg-rose-100 hover:bg-rose-200 text-rose-700 px-2 py-1.5 rounded font-bold transition">
@@ -1514,7 +1527,7 @@ export default function Home() {
                 <p className="text-center text-slate-500 py-8 text-sm">{t.noHistory}</p>
               ) : (
                 savedQuotes.map((q) => (
-                  <div key={q.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-50 p-4 rounded-xl border border-slate-200 hover:border-indigo-200 transition gap-3">
+                  <div key={q.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-50 p-4 rounded-xl border border-slate-200 hover:border-slate-400 transition gap-3">
                     <div>
                       <h4 className="font-bold text-slate-800 text-sm">{q.client_name || "Cliente sin nombre"}</h4>
                       <div className="flex gap-4 text-xs text-slate-500 mt-1">
@@ -1525,7 +1538,7 @@ export default function Home() {
                     </div>
 
                     <div className="flex gap-2 w-full sm:w-auto justify-end">
-                      <button onClick={() => loadQuoteFromHistory(q)} className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow transition">
+                      <button onClick={() => loadQuoteFromHistory(q)} className="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow transition">
                         {t.btnLoadQuote}
                       </button>
                       <button onClick={() => deleteQuoteFromHistory(q.id)} className="bg-rose-100 hover:bg-rose-200 text-rose-700 text-xs font-semibold px-3 py-1.5 rounded-lg transition">
