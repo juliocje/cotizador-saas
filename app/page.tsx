@@ -17,6 +17,8 @@ const translations: Record<string, any> = {
     btnHistory: "Mis Cotizaciones",
     btnManageClients: "Clientes",
     btnManageCompanies: "Mis Empresas",
+    btnSubscribePro: "⭐ Plan Pro ($199/mes)",
+    planProActive: "✅ Plan Pro Activo",
     lblSelectBank: "Cuenta Bancaria",
     lblSelectClient: "Cliente Frecuente",
     lblSelectCompany: "Emitir con",
@@ -76,6 +78,8 @@ const translations: Record<string, any> = {
     btnHistory: "Saved Quotes",
     btnManageClients: "Clients",
     btnManageCompanies: "My Companies",
+    btnSubscribePro: "⭐ Pro Plan ($199/mo)",
+    planProActive: "✅ Pro Plan Active",
     lblSelectBank: "Bank Account",
     lblSelectClient: "Saved Client",
     lblSelectCompany: "Issue As",
@@ -174,6 +178,9 @@ export default function Home() {
   const [discount, setDiscount] = useState<number>(0);
   const [currency] = useState<string>('MXN');
 
+  // PLAN DE SUSCRIPCIÓN DEL USUARIO ('free' | 'active')
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string>('free');
+
   // CONTROL DE MENÚ MÓVIL
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
@@ -223,6 +230,7 @@ export default function Home() {
 
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState<boolean>(false);
 
   const [savedQuotes, setSavedQuotes] = useState<any[]>([]);
   const [clientsList, setClientsList] = useState<any[]>([]);
@@ -255,9 +263,57 @@ export default function Home() {
   const t = translations[lang];
 
   useEffect(() => {
+    fetchUserProfile();
     fetchClients();
     fetchCompanies();
   }, []);
+
+  // OBTENER PLAN DEL USUARIO DESDE SUPABASE
+  const fetchUserProfile = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('subscription_status')
+        .eq('id', user.id)
+        .single();
+
+      if (!error && data) {
+        setSubscriptionStatus(data.subscription_status || 'free');
+      }
+    } catch (err) {
+      console.error("Error al obtener perfil del usuario:", err);
+    }
+  };
+
+  // VERIFICACIÓN DEL LÍMITE DE USO PARA USUARIOS GRATUITOS
+  const checkFreePlanUsageLimit = async (): Promise<boolean> => {
+    if (subscriptionStatus === 'active') return true;
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        alert("Debes iniciar sesión para realizar esta acción.");
+        return false;
+      }
+
+      const { count, error } = await supabase
+        .from('quotes')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      if (!error && count !== null && count >= 3) {
+        alert("⚠️ Has alcanzado el límite de 3 cotizaciones/PDFs del Plan Gratuito.\n\nSuscríbete al Plan Pro para generar e imprimir cotizaciones ilimitadas.");
+        return false;
+      }
+    } catch (err) {
+      console.error("Error al verificar límite de uso:", err);
+    }
+
+    return true;
+  };
 
   const handleLogout = async () => {
     try {
@@ -265,6 +321,46 @@ export default function Home() {
       router.push('/');
     } catch (err: any) {
       alert("Error al cerrar sesión: " + err.message);
+    }
+  };
+
+  // IMPRIMIR / DESCARGAR PDF CON CONTROL DE LÍMITE
+  const handlePrintPdf = async () => {
+    const canProceed = await checkFreePlanUsageLimit();
+    if (!canProceed) return;
+
+    window.print();
+  };
+
+  // REDIRECCIÓN A MERCADO PAGO PARA SUSCRIPCIÓN/PAGO
+  const handleCheckoutPro = async () => {
+    setIsProcessingPayment(true);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: 'Suscripción Plan Pro - Cotizador Express Pro',
+          price: 199,
+          quantity: 1,
+          userEmail: user?.email || 'cliente@cotizador.com'
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.init_point) {
+        window.location.href = data.init_point;
+      } else {
+        alert("Error al iniciar el pago: " + (data.error || "Intenta más tarde"));
+      }
+    } catch (err: any) {
+      alert("Error de conexión con la pasarela de pagos: " + err.message);
+    } finally {
+      setIsProcessingPayment(false);
     }
   };
 
@@ -338,9 +434,18 @@ export default function Home() {
     setCustomCatalog(customCatalog.filter((_, i) => i !== index));
   };
 
+  // OBTENER CLIENTES FILTRADOS POR EL USUARIO ACTUAL
   const fetchClients = async () => {
     try {
-      const { data, error } = await supabase.from('clients').select('*').order('name', { ascending: true });
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('clients')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('name', { ascending: true });
+
       if (error) throw error;
       setClientsList(data || []);
     } catch (err: any) {
@@ -352,7 +457,9 @@ export default function Home() {
     if (!newClient.name) return alert("Escribe al menos el nombre del cliente.");
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      const { error } = await supabase.from('clients').insert([{ ...newClient, user_id: user?.id }]);
+      if (!user) return alert("Debes iniciar sesión para guardar clientes.");
+
+      const { error } = await supabase.from('clients').insert([{ ...newClient, user_id: user.id }]);
       if (error) throw error;
       
       alert("Cliente guardado con éxito.");
@@ -380,14 +487,19 @@ export default function Home() {
     }
   };
 
+  // HISTORIAL DE COTIZACIONES DE UN CLIENTE FILTRADO POR USUARIO
   const handleViewClientHistory = async (client: any) => {
     setSelectedClientForHistory(client);
     setIsLoading(true);
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return alert("Debes iniciar sesión para consultar el historial.");
+
       const { data, error } = await supabase
         .from('quotes')
         .select('*')
+        .eq('user_id', user.id)
         .ilike('client_name', `%${client.name}%`)
         .order('created_at', { ascending: false });
 
@@ -402,9 +514,18 @@ export default function Home() {
     }
   };
 
+  // OBTENER EMPRESAS FILTRADAS POR EL USUARIO ACTUAL
   const fetchCompanies = async () => {
     try {
-      const { data, error } = await supabase.from('companies').select('*').order('created_at', { ascending: true });
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('companies')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true });
+
       if (error) throw error;
       setCompaniesList(data || []);
 
@@ -439,11 +560,11 @@ export default function Home() {
     }
   };
 
-  // REGISTRAR / EDITAR EMPRESA EN SUPABASE
   const handleSaveCompany = async () => {
     if (!newCompany.company_name) return alert("Escribe el nombre de tu empresa.");
     try {
       const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return alert("Debes iniciar sesión para registrar una empresa.");
 
       const payload: any = {
         company_name: newCompany.company_name,
@@ -462,12 +583,13 @@ export default function Home() {
         const { error } = await supabase
           .from('companies')
           .update(payload)
-          .eq('id', editingCompanyId);
+          .eq('id', editingCompanyId)
+          .eq('user_id', user.id);
 
         if (error) throw error;
         alert("Empresa actualizada con éxito.");
       } else {
-        const { error } = await supabase.from('companies').insert([{ ...payload, user_id: user?.id }]);
+        const { error } = await supabase.from('companies').insert([{ ...payload, user_id: user.id }]);
         if (error) throw error;
         alert("Empresa registrada con éxito.");
       }
@@ -559,8 +681,11 @@ export default function Home() {
   const taxAmount = subtotalWithDiscount * (taxRate / 100);
   const total = subtotalWithDiscount + taxAmount;
 
-  // GENERAR Y ENVIAR POR WHATSAPP
+  // GENERAR Y ENVIAR POR WHATSAPP (CON CONTROL DE LÍMITE)
   const sendPdfWhatsApp = async () => {
+    const canProceed = await checkFreePlanUsageLimit();
+    if (!canProceed) return;
+
     setIsGeneratingPdf(true);
 
     try {
@@ -641,14 +766,19 @@ export default function Home() {
     }
   };
 
+  // GUARDAR EN LA NUBE (CON CONTROL DE LÍMITE DE PLAN GRATUITO)
   const saveQuoteToCloud = async () => {
+    const canProceed = await checkFreePlanUsageLimit();
+    if (!canProceed) return;
+
     setIsSaving(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return alert("Debes iniciar sesión para guardar cotizaciones.");
 
       const { error } = await supabase.from('quotes').insert([
         {
-          user_id: user?.id,
+          user_id: user.id,
           client_name: clientName,
           total_amount: total,
           items: items,
@@ -667,10 +797,19 @@ export default function Home() {
     }
   };
 
+  // OBTENER HISTORIAL GENERAL FILTRADO ÚNICAMENTE PARA EL USUARIO ACTIVO
   const fetchQuotesHistory = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.from('quotes').select('*').order('created_at', { ascending: false });
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return alert("Debes iniciar sesión para consultar el historial.");
+
+      const { data, error } = await supabase
+        .from('quotes')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
       if (error) throw error;
 
       setSavedQuotes(data || []);
@@ -713,7 +852,7 @@ export default function Home() {
 
   const cityStateText = [companyCity, companyState].filter(Boolean).join(', ');
 
-  // ESTILO UNIFICADO Y PROFESIONAL
+  // ESTILO UNIFICADO Y PROFESIONAL DE BOTONES
   const menuBtnClass = "w-full bg-slate-700 hover:bg-slate-600 text-white font-semibold px-4 py-3 rounded-xl text-sm transition-all duration-200 text-center shadow-md border border-slate-500/50 active:scale-[0.98]";
 
   return (
@@ -746,6 +885,21 @@ export default function Home() {
           <div className="pb-3 border-b border-slate-800/80 hidden md:block">
             <h1 className="text-xl font-bold text-white text-center tracking-tight">{t.appTitle}</h1>
           </div>
+
+          {/* BOTÓN O BADGE DEL PLAN DE SUSCRIPCIÓN */}
+          {subscriptionStatus === 'active' ? (
+            <div className="w-full bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 font-bold px-4 py-3 rounded-xl text-sm text-center shadow-md">
+              {t.planProActive}
+            </div>
+          ) : (
+            <button 
+              onClick={handleCheckoutPro} 
+              disabled={isProcessingPayment} 
+              className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-900 font-extrabold px-4 py-3 rounded-xl text-sm transition-all duration-200 text-center shadow-lg border border-amber-300 active:scale-[0.98] animate-pulse"
+            >
+              {isProcessingPayment ? "Conectando..." : t.btnSubscribePro}
+            </button>
+          )}
 
           <nav className="flex flex-col gap-2.5">
             <button 
@@ -785,7 +939,7 @@ export default function Home() {
             </button>
 
             <button 
-              onClick={() => { setIsMobileMenuOpen(false); window.print(); }} 
+              onClick={() => { setIsMobileMenuOpen(false); handlePrintPdf(); }} 
               className={menuBtnClass}
             >
               {t.btnPrint}
@@ -1011,7 +1165,6 @@ export default function Home() {
 
               {/* VISTA DE TABLA / TARJETAS RESPONSIVAS PARA ÍTEMS DE LA COTIZACIÓN */}
               <div className="mt-4">
-                {/* 1. ENCABEZADO DE TABLA (SOLO COMPUTADORA/TABLET) */}
                 <div className="hidden sm:grid grid-cols-12 border-b-2 border-slate-200 text-xs font-bold text-slate-500 uppercase pb-2">
                   <div className="col-span-5 px-2">{t.thConcept}</div>
                   <div className="col-span-2 text-center px-2">{t.thQty}</div>
@@ -1020,7 +1173,6 @@ export default function Home() {
                   <div className="col-span-1 text-center no-print"></div>
                 </div>
 
-                {/* 2. LISTA DE ÍTEMS (TARJETAS EN MÓVIL, FILAS EN COMPUTADORA) */}
                 <div className="divide-y divide-slate-100 sm:divide-y-0 space-y-3 sm:space-y-0">
                   {items.map((item, idx) => {
                     const q = typeof item.qty === 'number' ? item.qty : parseFloat(item.qty) || 0;
@@ -1031,7 +1183,6 @@ export default function Home() {
                         key={idx} 
                         className="bg-slate-50 sm:bg-transparent p-3 sm:p-0 rounded-xl sm:rounded-none border sm:border-none border-slate-200 grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-0 items-center hover:bg-slate-50/80 transition"
                       >
-                        {/* CONCEPTO */}
                         <div className="sm:col-span-5 sm:px-2 py-1">
                           <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thConcept}</label>
                           <input 
@@ -1042,9 +1193,7 @@ export default function Home() {
                           />
                         </div>
 
-                        {/* CANTIDAD, PRECIO E IMPORTE EN MÓVIL (GRID DE 3 COLUMNAS) */}
                         <div className="grid grid-cols-3 sm:contents gap-2 mt-1 sm:mt-0">
-                          {/* CANTIDAD */}
                           <div className="sm:col-span-2 sm:px-2 sm:text-center">
                             <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thQty}</label>
                             <input 
@@ -1059,7 +1208,6 @@ export default function Home() {
                             />
                           </div>
 
-                          {/* PRECIO UNITARIO */}
                           <div className="sm:col-span-2 sm:px-2 sm:text-right">
                             <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thPrice}</label>
                             <input 
@@ -1075,7 +1223,6 @@ export default function Home() {
                             />
                           </div>
 
-                          {/* IMPORTE */}
                           <div className="sm:col-span-2 sm:px-2 text-right">
                             <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thAmount}</label>
                             <span className="text-sm font-bold text-slate-800 block pt-1.5 sm:pt-0">
@@ -1084,7 +1231,6 @@ export default function Home() {
                           </div>
                         </div>
 
-                        {/* BOTÓN ELIMINAR */}
                         <div className="sm:col-span-1 sm:px-2 text-right sm:text-center mt-2 sm:mt-0 no-print border-t sm:border-none pt-2 sm:pt-0 border-slate-200 flex justify-between sm:block items-center">
                           <span className="text-xs text-slate-400 font-medium sm:hidden">Acción:</span>
                           <button onClick={() => removeItem(idx)} className="text-rose-500 hover:text-rose-700 font-bold text-sm bg-rose-50 sm:bg-transparent px-2 py-1 sm:p-0 rounded">
