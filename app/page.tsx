@@ -24,6 +24,7 @@ const translations: Record<string, any> = {
     btnBlank: "➕ Blanco",
     btnPrint: "📄 Guardar / PDF",
     btnSaveCloud: "☁️ Guardar en Nube",
+    btnWhatsApp: "📲 Enviar PDF por WhatsApp",
     btnLogout: "🚪 Cerrar Sesión",
     logoPrompt: "Haz clic para subir tu Logo o cárgalo desde 'Mis Empresas'",
     quotedTo: "Cotizado Para:",
@@ -53,15 +54,18 @@ const translations: Record<string, any> = {
     btnCloseModal: "Cerrar",
     generatedAt: "Fecha y hora de emisión:",
     bankModalTitle: "🏦 Administrar Cuentas Bancarias",
-    historyModalTitle: "📜 Historial de Cotizaciones Guardadas",
+    historyModalTitle: "📜 Historial General de Cotizaciones Guardadas",
+    clientHistoryTitle: "📋 Historial de Cotizaciones del Cliente",
     clientModalTitle: "👥 Directorio de Clientes Frecuentes",
     companyModalTitle: "🏢 Administrar Mis Empresas",
     noHistory: "Aún no tienes cotizaciones guardadas en la nube.",
+    noClientHistory: "Este cliente aún no tiene cotizaciones guardadas.",
     noClients: "No tienes clientes frecuentes registrados.",
     noCompanies: "No tienes empresas registradas.",
     btnLoadQuote: "📥 Cargar",
     btnDeleteQuote: "🗑️ Eliminar",
     btnSelectClient: "⚡ Usar Cliente",
+    btnClientHistory: "📋 Historial",
     btnSelectCompany: "⚡ Cargar Empresa"
   },
   en: {
@@ -82,6 +86,7 @@ const translations: Record<string, any> = {
     btnBlank: "➕ Blank Item",
     btnPrint: "📄 Save / PDF",
     btnSaveCloud: "☁️ Save to Cloud",
+    btnWhatsApp: "📲 Send PDF via WhatsApp",
     btnLogout: "🚪 Log Out",
     logoPrompt: "Click to upload Logo or load it from 'My Companies'",
     quotedTo: "Quoted To:",
@@ -112,14 +117,17 @@ const translations: Record<string, any> = {
     generatedAt: "Date and time of issue:",
     bankModalTitle: "🏦 Manage Bank Accounts",
     historyModalTitle: "📜 Saved Quotes History",
+    clientHistoryTitle: "📋 Client's Quote History",
     clientModalTitle: "👥 Frequent Clients Directory",
     companyModalTitle: "🏢 Manage My Companies",
     noHistory: "You don't have any saved quotes in the cloud yet.",
+    noClientHistory: "No quotes found for this client.",
     noClients: "No saved clients found.",
     noCompanies: "No companies registered.",
     btnLoadQuote: "📥 Load",
     btnDeleteQuote: "🗑️ Delete",
     btnSelectClient: "⚡ Use Client",
+    btnClientHistory: "📋 History",
     btnSelectCompany: "⚡ Load Company"
   }
 };
@@ -169,6 +177,7 @@ export default function Home() {
 
   // DATOS CLIENTE
   const [clientName, setClientName] = useState<string>("Cliente: Juan Pérez / Empresa ABC");
+  const [clientPhone, setClientPhone] = useState<string>("");
   const [folio, setFolio] = useState<string>("#COT-2026-001");
 
   // CATÁLOGOS Y MODALES
@@ -178,7 +187,13 @@ export default function Home() {
   const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
   const [isClientsOpen, setIsClientsOpen] = useState<boolean>(false);
   const [isCompaniesOpen, setIsCompaniesOpen] = useState<boolean>(false);
+  const [isClientHistoryOpen, setIsClientHistoryOpen] = useState<boolean>(false);
+  
+  const [selectedClientForHistory, setSelectedClientForHistory] = useState<any>(null);
+  const [clientQuotesList, setClientQuotesList] = useState<any[]>([]);
+
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
 
   // HISTORIAL, CLIENTES Y EMPRESAS
   const [savedQuotes, setSavedQuotes] = useState<any[]>([]);
@@ -189,7 +204,7 @@ export default function Home() {
   // FORMULARIO NUEVO CLIENTE
   const [newClient, setNewClient] = useState({ name: '', email: '', phone: '', tax_id: '', address: '' });
 
-  // FORMULARIO NUEVA EMPRESA (CON LOGO)
+  // FORMULARIO NUEVA EMPRESA
   const [newCompany, setNewCompany] = useState({ company_name: '', tagline: '', email: '', phone: '', address: '', logo_url: '' });
 
   // BANCOS
@@ -215,7 +230,6 @@ export default function Home() {
     }
   };
 
-  // CLIENTES DE SUPABASE
   const fetchClients = async () => {
     try {
       const { data, error } = await supabase.from('clients').select('*').order('name', { ascending: true });
@@ -243,6 +257,7 @@ export default function Home() {
 
   const handleSelectClient = (client: any) => {
     setClientName(`Cliente: ${client.name} ${client.tax_id ? `(${client.tax_id})` : ''}`);
+    if (client.phone) setClientPhone(client.phone);
     setIsClientsOpen(false);
   };
 
@@ -257,7 +272,29 @@ export default function Home() {
     }
   };
 
-  // EMPRESAS DE SUPABASE
+  // VER HISTORIAL DE UN CLIENTE ESPECÍFICO
+  const handleViewClientHistory = async (client: any) => {
+    setSelectedClientForHistory(client);
+    setIsLoading(true);
+
+    try {
+      const { data, error } = await supabase
+        .from('quotes')
+        .select('*')
+        .ilike('client_name', `%${client.name}%`)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setClientQuotesList(data || []);
+      setIsClientHistoryOpen(true);
+    } catch (err: any) {
+      alert("Error al cargar historial del cliente: " + err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const fetchCompanies = async () => {
     try {
       const { data, error } = await supabase.from('companies').select('*').order('created_at', { ascending: true });
@@ -331,8 +368,7 @@ export default function Home() {
   };
 
   const addBlankItem = () => {
-    const defaultDesc = lang === 'es' ? "Nuevo concepto / servicio" : "New item / service";
-    setItems([...items, { description_es: defaultDesc, description_en: defaultDesc, qty: 1, price: 0.00 }]);
+    setItems([...items, { description_es: "", description_en: "", qty: 1, price: 0.00 }]);
   };
 
   const updateItem = (index: number, field: string, value: any) => {
@@ -340,8 +376,8 @@ export default function Home() {
     if (field === 'qty') newItems[index].qty = parseFloat(value) || 0;
     else if (field === 'price') newItems[index].price = parseFloat(value) || 0;
     else {
-      if (lang === 'es') newItems[index].description_es = value;
-      else newItems[index].description_en = value;
+      newItems[index].description_es = value;
+      newItems[index].description_en = value;
     }
     setItems(newItems);
   };
@@ -357,7 +393,88 @@ export default function Home() {
   const taxAmount = subtotalWithDiscount * (taxRate / 100);
   const total = subtotalWithDiscount + taxAmount;
 
-  // GUARDAR EN LA NUBE
+  // GENERAR Y ENVIAR POR WHATSAPP
+  const sendPdfWhatsApp = async () => {
+    setIsGeneratingPdf(true);
+
+    try {
+      const element = document.getElementById('quote-document');
+      if (!element) return alert("Error al ubicar el documento.");
+
+      const { default: jsPDF } = await import('jspdf');
+      const { default: html2canvas } = await import('html2canvas-pro');
+
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.98);
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'in',
+        format: 'letter'
+      });
+
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+
+      const pdfBlob = pdf.output('blob');
+      const fileName = `cotizacion_${Date.now()}_${folio.replace(/#/g, '')}.pdf`;
+
+      let pdfUrl = "";
+
+      try {
+        const { error } = await supabase.storage
+          .from('quotations')
+          .upload(fileName, pdfBlob, {
+            contentType: 'application/pdf',
+            upsert: true
+          });
+
+        if (!error) {
+          const { data: publicUrlData } = supabase.storage
+            .from('quotations')
+            .getPublicUrl(fileName);
+          pdfUrl = publicUrlData.publicUrl;
+        }
+      } catch (storageErr) {
+        console.warn("Error en Storage, continuando...", storageErr);
+      }
+
+      const cleanPhone = clientPhone.replace(/\D/g, '');
+      let text = `📄 *COTIZACIÓN DE SERVICIOS*\n`;
+      text += `🏢 *${companyName}*\n`;
+      text += `👤 *${clientName}*\n`;
+      text += `📌 *Folio:* ${folio}\n`;
+      text += `💰 *Total Neto:* *$${total.toFixed(2)} ${currency}*\n\n`;
+      
+      if (pdfUrl) {
+        text += `📥 *Puedes descargar/ver el PDF completo aquí:*\n${pdfUrl}\n\n`;
+      } else {
+        text += `📎 *Cotización adjunta.*\n\n`;
+      }
+      
+      text += `¡Quedamos a tus órdenes! 🙌`;
+
+      const encodedText = encodeURIComponent(text);
+      const waUrl = cleanPhone 
+        ? `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodedText}`
+        : `https://api.whatsapp.com/send?text=${encodedText}`;
+
+      window.open(waUrl, '_blank');
+    } catch (err: any) {
+      alert("⚠️ Error al generar/enviar PDF: " + err.message);
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
   const saveQuoteToCloud = async () => {
     setIsSaving(true);
     try {
@@ -384,7 +501,6 @@ export default function Home() {
     }
   };
 
-  // HISTORIAL
   const fetchQuotesHistory = async () => {
     setIsLoading(true);
     try {
@@ -408,6 +524,8 @@ export default function Home() {
     if (quote.folio) setFolio(quote.folio);
 
     setIsHistoryOpen(false);
+    setIsClientHistoryOpen(false);
+    setIsClientsOpen(false);
     alert(`📥 Cotización "${quote.client_name}" cargada.`);
   };
 
@@ -417,6 +535,7 @@ export default function Home() {
       const { error } = await supabase.from('quotes').delete().eq('id', id);
       if (error) throw error;
       setSavedQuotes(savedQuotes.filter(q => q.id !== id));
+      setClientQuotesList(clientQuotesList.filter(q => q.id !== id));
     } catch (err: any) {
       alert("Error al eliminar: " + err.message);
     }
@@ -496,6 +615,10 @@ export default function Home() {
                 {isSaving ? "Guardando..." : t.btnSaveCloud}
               </button>
 
+              <button onClick={sendPdfWhatsApp} disabled={isGeneratingPdf} className="bg-green-600 hover:bg-green-700 text-white font-semibold px-3 py-2 rounded-lg text-xs shadow transition flex items-center gap-1">
+                {isGeneratingPdf ? "Generando PDF..." : t.btnWhatsApp}
+              </button>
+
               <button onClick={() => window.print()} className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-3 py-2 rounded-lg text-xs shadow transition">
                 {t.btnPrint}
               </button>
@@ -506,7 +629,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* DESPLEGABLES DE SELECCIÓN RÁPIDA */}
           <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-slate-100">
             {companiesList.length > 0 && (
               <div className="flex items-center gap-1.5 bg-purple-50 p-1.5 rounded-lg border border-purple-200">
@@ -564,7 +686,7 @@ export default function Home() {
         </div>
 
         {/* DOCUMENTO COTIZACIÓN */}
-        <div className="quote-container relative bg-white p-8 md:p-12 rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+        <div id="quote-document" className="quote-container relative bg-white p-8 md:p-12 rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
           
           {logo && (
             <div className="hidden print:flex absolute inset-0 items-center justify-center pointer-events-none select-none z-0">
@@ -592,7 +714,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8 bg-slate-50/80 p-4 rounded-xl border border-slate-100 print:bg-transparent print:p-0 print:border-none">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8 bg-slate-50 p-4 rounded-xl border border-slate-100 print:bg-transparent print:p-0 print:border-none">
               <div>
                 <span className="text-xs font-bold text-indigo-600 uppercase block mb-1">{t.quotedTo}</span>
                 <input value={clientName} onChange={(e) => setClientName(e.target.value)} className="font-semibold text-slate-800 w-full bg-transparent outline-none" />
@@ -616,11 +738,12 @@ export default function Home() {
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-sm">
                   {items.map((item, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50/50">
+                    <tr key={idx} className="hover:bg-slate-50">
                       <td className="py-3 px-2">
                         <input 
-                          value={lang === 'es' ? (item.description_es || item.description_en) : (item.description_en || item.description_es)} 
+                          value={lang === 'es' ? item.description_es : item.description_en} 
                           onChange={(e) => updateItem(idx, 'description', e.target.value)}
+                          placeholder="Escribe un concepto..."
                           className="w-full bg-transparent outline-none"
                         />
                       </td>
@@ -665,7 +788,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="mt-8 bg-slate-50/80 p-5 rounded-xl border border-slate-200 text-xs space-y-3 print:bg-transparent print:border-slate-300">
+            <div className="mt-8 bg-slate-50 p-5 rounded-xl border border-slate-200 text-xs space-y-3 print:bg-transparent print:border-slate-300">
               <p className="font-bold text-slate-800 text-sm">{t.bankHeader}</p>
               <div className="flex flex-col space-y-2 text-slate-700 max-w-md">
                 <div className="grid grid-cols-[140px_1fr] items-center">
@@ -699,7 +822,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* MODAL 1: CLIENTES FRECUENTES */}
+      {/* MODAL DIRECTORIO DE CLIENTES */}
       {isClientsOpen && (
         <div className="no-print fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 space-y-4 max-h-[85vh] flex flex-col">
@@ -712,7 +835,7 @@ export default function Home() {
               <input placeholder="Nombre / Razón Social *" value={newClient.name} onChange={(e) => setNewClient({ ...newClient, name: e.target.value })} className="border p-2 rounded bg-white" />
               <input placeholder="RFC / Tax ID" value={newClient.tax_id} onChange={(e) => setNewClient({ ...newClient, tax_id: e.target.value })} className="border p-2 rounded bg-white" />
               <input placeholder="Correo Electrónico" value={newClient.email} onChange={(e) => setNewClient({ ...newClient, email: e.target.value })} className="border p-2 rounded bg-white" />
-              <input placeholder="Teléfono" value={newClient.phone} onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })} className="border p-2 rounded bg-white" />
+              <input placeholder="Teléfono WhatsApp (ej: 521662...)" value={newClient.phone} onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })} className="border p-2 rounded bg-white" />
               <button onClick={handleSaveClient} className="col-span-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded text-xs transition">
                 + Guardar Cliente
               </button>
@@ -726,9 +849,12 @@ export default function Home() {
                   <div key={cli.id} className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border text-xs">
                     <div>
                       <strong className="text-slate-800 text-sm block">{cli.name}</strong>
-                      <span className="text-slate-500">{cli.tax_id} {cli.email ? `• ${cli.email}` : ''}</span>
+                      <span className="text-slate-500">{cli.tax_id} {cli.phone ? `• Tel: ${cli.phone}` : ''}</span>
                     </div>
                     <div className="flex gap-1">
+                      <button onClick={() => handleViewClientHistory(cli)} className="bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1 rounded text-xs font-semibold">
+                        {t.btnClientHistory}
+                      </button>
                       <button onClick={() => handleSelectClient(cli)} className="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded text-xs font-semibold">
                         {t.btnSelectClient}
                       </button>
@@ -750,7 +876,57 @@ export default function Home() {
         </div>
       )}
 
-      {/* MODAL 2: MIS EMPRESAS EMISORAS (CON CARGA DE LOGOTIPO) */}
+      {/* MODAL HISTORIAL DE UN CLIENTE ESPECÍFICO */}
+      {isClientHistoryOpen && selectedClientForHistory && (
+        <div className="no-print fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 space-y-4 max-h-[85vh] flex flex-col">
+            <div className="flex justify-between items-center border-b pb-3">
+              <div>
+                <h3 className="font-bold text-slate-800 text-lg">{t.clientHistoryTitle}</h3>
+                <p className="text-xs text-indigo-600 font-semibold">{selectedClientForHistory.name} {selectedClientForHistory.tax_id ? `(${selectedClientForHistory.tax_id})` : ''}</p>
+              </div>
+              <button onClick={() => setIsClientHistoryOpen(false)} className="text-slate-400 font-bold text-xl">✕</button>
+            </div>
+
+            {/* ESTADÍSTICAS DEL CLIENTE */}
+            <div className="bg-amber-50 p-3 rounded-xl border border-amber-200 flex justify-between items-center text-xs text-amber-900">
+              <span><strong>Cotizaciones Registradas:</strong> {clientQuotesList.length}</span>
+              <span><strong>Monto Total Cotizado:</strong> ${clientQuotesList.reduce((acc, q) => acc + (q.total_amount || 0), 0).toFixed(2)} {currency}</span>
+            </div>
+
+            <div className="overflow-y-auto flex-1 space-y-2 pr-1">
+              {clientQuotesList.length === 0 ? (
+                <p className="text-center text-slate-500 py-8 text-xs">{t.noClientHistory}</p>
+              ) : (
+                clientQuotesList.map((q) => (
+                  <div key={q.id} className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border text-xs">
+                    <div>
+                      <strong className="text-slate-800 text-sm block">Folio: {q.folio || "S/F"}</strong>
+                      <span className="text-slate-500">Monto: ${q.total_amount ? q.total_amount.toFixed(2) : '0.00'} • Fecha: {new Date(q.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex gap-1">
+                      <button onClick={() => loadQuoteFromHistory(q)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded text-xs font-semibold">
+                        {t.btnLoadQuote}
+                      </button>
+                      <button onClick={() => deleteQuoteFromHistory(q.id)} className="bg-rose-100 hover:bg-rose-200 text-rose-700 px-2 py-1 rounded">
+                        🗑️
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="flex justify-end border-t pt-3">
+              <button onClick={() => setIsClientHistoryOpen(false)} className="bg-slate-200 text-slate-700 font-semibold text-xs px-4 py-2 rounded-lg">
+                {t.btnCloseModal}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL EMPRESAS */}
       {isCompaniesOpen && (
         <div className="no-print fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 space-y-4 max-h-[85vh] flex flex-col">
@@ -765,7 +941,6 @@ export default function Home() {
               <input placeholder="Correo de Empresa" value={newCompany.email} onChange={(e) => setNewCompany({ ...newCompany, email: e.target.value })} className="border p-2 rounded bg-white" />
               <input placeholder="Teléfono" value={newCompany.phone} onChange={(e) => setNewCompany({ ...newCompany, phone: e.target.value })} className="border p-2 rounded bg-white" />
 
-              {/* CARGA DE LOGO DE EMPRESA */}
               <div className="col-span-2 border-2 border-dashed border-purple-300 bg-white p-3 rounded-lg text-center cursor-pointer relative hover:bg-purple-50 transition">
                 {newCompany.logo_url ? (
                   <div className="flex items-center justify-center gap-2">
@@ -820,7 +995,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* MODAL 3: HISTORIAL COTIZACIONES */}
+      {/* MODAL HISTORIAL GENERAL DE COTIZACIONES */}
       {isHistoryOpen && (
         <div className="no-print fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full p-6 space-y-4 max-h-[85vh] flex flex-col">
