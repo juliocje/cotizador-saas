@@ -27,7 +27,6 @@ const translations: Record<string, any> = {
     btnLogout: "Cerrar Sesión",
     logoPrompt: "Haz clic para subir tu Logo o cárgalo desde 'Mis Empresas'",
     quotedTo: "Cotizado Para:",
-    details: "Detalles Comerciales:",
     folio: "Folio:",
     date: "Fecha:",
     validity: "Vigencia:",
@@ -87,7 +86,6 @@ const translations: Record<string, any> = {
     btnLogout: "Log Out",
     logoPrompt: "Click to upload Logo or load it from 'My Companies'",
     quotedTo: "Quoted To:",
-    details: "Commercial Details:",
     folio: "Quote #:",
     date: "Date:",
     validity: "Validity:",
@@ -176,10 +174,16 @@ export default function Home() {
   const [discount, setDiscount] = useState<number>(0);
   const [currency] = useState<string>('MXN');
 
-  // DATOS MI EMPRESA
+  // DATOS MI EMPRESA SELECCIONADA EN COTIZACIÓN
   const [companyName, setCompanyName] = useState<string>("Mi Empresa S.A. de C.V.");
   const [companyTagline, setCompanyTagline] = useState<string>("Servicios Profesionales");
   const [companyEmail, setCompanyEmail] = useState<string>("contacto@miempresa.com");
+  const [companyTaxId, setCompanyTaxId] = useState<string>("");
+  const [companyPhone, setCompanyPhone] = useState<string>("");
+  const [companyAddress, setCompanyAddress] = useState<string>("");
+  const [companyPostalCode, setCompanyPostalCode] = useState<string>("");
+  const [companyCity, setCompanyCity] = useState<string>("");
+  const [companyState, setCompanyState] = useState<string>("");
   const [logo, setLogo] = useState<string | null>(null);
 
   // DATOS CLIENTE
@@ -200,7 +204,6 @@ export default function Home() {
   const [bankData, setBankData] = useState(initialBankAccounts[0]);
   const [isBanksModalOpen, setIsBanksModalOpen] = useState<boolean>(false);
   
-  // Estado para la cuenta bancaria en edición/creación
   const [editingBankIndex, setEditingBankIndex] = useState<number | null>(null);
   const [bankForm, setBankForm] = useState({
     alias: '', nombre: '', banco: '', cuenta: '', clabe: '', rfc: ''
@@ -226,8 +229,20 @@ export default function Home() {
   // FORMULARIO NUEVO CLIENTE
   const [newClient, setNewClient] = useState({ name: '', email: '', phone: '', tax_id: '', address: '' });
 
-  // FORMULARIO NUEVA EMPRESA
-  const [newCompany, setNewCompany] = useState({ company_name: '', tagline: '', email: '', phone: '', address: '', logo_url: '' });
+  // FORMULARIO Y EDICIÓN DE EMPRESAS
+  const [editingCompanyId, setEditingCompanyId] = useState<string | null>(null);
+  const [newCompany, setNewCompany] = useState({ 
+    company_name: '', 
+    tagline: '', 
+    email: '', 
+    phone: '', 
+    tax_id: '', 
+    address: '', 
+    postal_code: '',
+    city: '',
+    state: '',
+    logo_url: '' 
+  });
 
   // ÍTEMS
   const [items, setItems] = useState<Array<{ description_es: string; description_en: string; qty: number | string; price: number | string }>>([
@@ -390,7 +405,7 @@ export default function Home() {
       if (error) throw error;
       setCompaniesList(data || []);
 
-      if (data && data.length > 0) {
+      if (data && data.length > 0 && !editingCompanyId) {
         applyCompany(data[0]);
       }
     } catch (err: any) {
@@ -402,6 +417,12 @@ export default function Home() {
     setCompanyName(company.company_name);
     setCompanyTagline(company.tagline || '');
     setCompanyEmail(company.email || '');
+    setCompanyTaxId(company.tax_id || '');
+    setCompanyPhone(company.phone || '');
+    setCompanyAddress(company.address || '');
+    setCompanyPostalCode(company.postal_code || '');
+    setCompanyCity(company.city || '');
+    setCompanyState(company.state || '');
     if (company.logo_url) {
       setLogo(company.logo_url);
     }
@@ -415,19 +436,65 @@ export default function Home() {
     }
   };
 
+  // REGISTRAR / EDITAR EMPRESA EN SUPABASE
   const handleSaveCompany = async () => {
     if (!newCompany.company_name) return alert("Escribe el nombre de tu empresa.");
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      const { error } = await supabase.from('companies').insert([{ ...newCompany, user_id: user?.id }]);
-      if (error) throw error;
 
-      alert("Empresa registrada con éxito.");
-      setNewCompany({ company_name: '', tagline: '', email: '', phone: '', address: '', logo_url: '' });
+      const payload: any = {
+        company_name: newCompany.company_name,
+        tagline: newCompany.tagline,
+        email: newCompany.email,
+        phone: newCompany.phone,
+        tax_id: newCompany.tax_id,
+        address: newCompany.address,
+        postal_code: newCompany.postal_code,
+        city: newCompany.city,
+        state: newCompany.state,
+        logo_url: newCompany.logo_url
+      };
+
+      if (editingCompanyId) {
+        const { error } = await supabase
+          .from('companies')
+          .update(payload)
+          .eq('id', editingCompanyId);
+
+        if (error) throw error;
+        alert("Empresa actualizada con éxito.");
+      } else {
+        const { error } = await supabase.from('companies').insert([{ ...payload, user_id: user?.id }]);
+        if (error) throw error;
+        alert("Empresa registrada con éxito.");
+      }
+
+      resetCompanyForm();
       fetchCompanies();
     } catch (err: any) {
       alert("Error al guardar empresa: " + err.message);
     }
+  };
+
+  const handleEditCompanyClick = (company: any) => {
+    setEditingCompanyId(company.id);
+    setNewCompany({
+      company_name: company.company_name || '',
+      tagline: company.tagline || '',
+      email: company.email || '',
+      phone: company.phone || '',
+      tax_id: company.tax_id || '',
+      address: company.address || '',
+      postal_code: company.postal_code || '',
+      city: company.city || '',
+      state: company.state || '',
+      logo_url: company.logo_url || ''
+    });
+  };
+
+  const resetCompanyForm = () => {
+    setEditingCompanyId(null);
+    setNewCompany({ company_name: '', tagline: '', email: '', phone: '', tax_id: '', address: '', postal_code: '', city: '', state: '', logo_url: '' });
   };
 
   const handleDeleteCompany = async (id: string) => {
@@ -435,6 +502,7 @@ export default function Home() {
     try {
       const { error } = await supabase.from('companies').delete().eq('id', id);
       if (error) throw error;
+      if (editingCompanyId === id) resetCompanyForm();
       fetchCompanies();
     } catch (err: any) {
       alert("Error al eliminar empresa: " + err.message);
@@ -640,6 +708,8 @@ export default function Home() {
     dateStyle: 'medium', timeStyle: 'short'
   });
 
+  const cityStateText = [companyCity, companyState].filter(Boolean).join(', ');
+
   return (
     <div className="bg-slate-100 min-h-screen font-sans text-slate-800 print:bg-white print:p-0 flex flex-col md:flex-row">
       
@@ -735,7 +805,7 @@ export default function Home() {
       <main className="flex-1 p-4 md:p-8 overflow-x-hidden">
         <div className="max-w-5xl mx-auto print:max-w-none print:w-full space-y-6">
           
-          {/* BARRA SUPERIOR DE SELECTORES COMPLETAMENTE SIMÉTRICA */}
+          {/* BARRA SUPERIOR DE SELECTORES */}
           <div className="no-print bg-white p-5 rounded-xl shadow-md border border-slate-200 space-y-4">
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
@@ -840,7 +910,7 @@ export default function Home() {
 
             </div>
 
-            {/* CATÁLOGO RÁPIDO Y BOTONES CENTRADOS */}
+            {/* CATÁLOGO RÁPIDO */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-slate-100">
               <div className="flex items-center gap-2 flex-1">
                 <span className="text-xs font-bold text-slate-500 shrink-0">{t.catalogLabel}</span>
@@ -885,7 +955,8 @@ export default function Home() {
             )}
 
             <div className="relative z-10">
-              <div className="flex flex-col md:flex-row justify-between items-start border-b border-slate-200 pb-8 gap-6">
+              {/* ENCABEZADO Y DATOS DE LA EMPRESA (CADA DATO EN SU RENGLÓN Y SÚPER UNIDOS) */}
+              <div className="flex flex-col md:flex-row justify-between items-start border-b border-slate-200 pb-5 gap-6">
                 <div className="w-full md:w-1/2">
                   <div className="relative border-2 border-dashed border-slate-300 bg-slate-50 rounded-lg h-24 w-52 flex items-center justify-center cursor-pointer overflow-hidden print:border-none print:bg-transparent">
                     {logo ? (
@@ -897,20 +968,32 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="w-full md:w-1/2 text-left md:text-right space-y-1">
-                  <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="font-bold text-xl text-slate-900 w-full text-left md:text-right bg-transparent outline-none" />
-                  <input value={companyTagline} onChange={(e) => setCompanyTagline(e.target.value)} className="text-xs text-slate-500 w-full text-left md:text-right bg-transparent outline-none" />
-                  <input value={companyEmail} onChange={(e) => setCompanyEmail(e.target.value)} className="text-xs text-slate-500 w-full text-left md:text-right bg-transparent outline-none" />
+                <div className="w-full md:w-1/2 text-left md:text-right flex flex-col items-start md:items-end space-y-0.5">
+                  <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="font-extrabold text-2xl text-slate-900 w-full text-left md:text-right bg-transparent outline-none leading-none tracking-tight mb-0.5" />
+                  
+                  {companyTagline && (
+                    <input value={companyTagline} onChange={(e) => setCompanyTagline(e.target.value)} className="text-xs text-slate-500 w-full text-left md:text-right bg-transparent outline-none leading-none mb-1" />
+                  )}
+
+                  {/* BLOQUE CON LÍNEAS INDIVIDUALES Y CERO ESPACIO INNECESARIO */}
+                  <div className="text-xs text-slate-600 flex flex-col items-start md:items-end leading-tight space-y-0.5 w-full">
+                    {companyTaxId && <p className="font-semibold text-slate-800">RFC: {companyTaxId}</p>}
+                    {companyAddress && <p>{companyAddress}</p>}
+                    {cityStateText && <p>{cityStateText}</p>}
+                    {companyPostalCode && <p>C.P. {companyPostalCode}</p>}
+                    {companyPhone && <p><strong>Tel:</strong> {companyPhone}</p>}
+                    <input value={companyEmail} onChange={(e) => setCompanyEmail(e.target.value)} className="text-xs text-slate-500 w-full text-left md:text-right bg-transparent outline-none leading-tight" />
+                  </div>
                 </div>
               </div>
 
+              {/* SECCIÓN CLIENTE Y FOLIO */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8 bg-slate-50 p-4 rounded-xl border border-slate-100 print:bg-transparent print:p-0 print:border-none">
                 <div>
-                  <span className="text-xs font-bold text-indigo-600 uppercase block mb-1">{t.quotedTo}</span>
+                  <span className="text-xs font-bold text-slate-900 uppercase block mb-1">{t.quotedTo}</span>
                   <input value={clientName} onChange={(e) => setClientName(e.target.value)} className="font-semibold text-slate-800 w-full bg-transparent outline-none" />
                 </div>
                 <div className="md:text-right space-y-1 text-xs text-slate-600">
-                  <span className="text-xs font-bold text-indigo-600 uppercase block mb-1">{t.details}</span>
                   <p><strong>{t.folio}</strong> <input value={folio} onChange={(e) => setFolio(e.target.value)} className="w-28 text-right bg-transparent outline-none font-semibold text-slate-800" /></p>
                 </div>
               </div>
@@ -1279,68 +1362,119 @@ export default function Home() {
         </div>
       )}
 
-      {/* MODAL EMPRESAS */}
+      {/* MODAL MIS EMPRESAS */}
       {isCompaniesOpen && (
         <div className="no-print fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 space-y-4 max-h-[85vh] flex flex-col">
-            <div className="flex justify-between items-center border-b pb-3">
-              <h3 className="font-bold text-slate-800 text-lg">{t.companyModalTitle}</h3>
-              <button onClick={() => setIsCompaniesOpen(false)} className="text-slate-400 font-bold text-xl">✕</button>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-6 space-y-4 max-h-[90vh] flex flex-col">
+            
+            {/* ENCABEZADO */}
+            <div className="flex justify-between items-center border-b pb-3 shrink-0">
+              <div>
+                <h3 className="font-bold text-slate-800 text-lg">{t.companyModalTitle}</h3>
+                <p className="text-xs text-slate-500">Administra tus marcas, datos fiscales y logotipos</p>
+              </div>
+              <button onClick={() => { setIsCompaniesOpen(false); resetCompanyForm(); }} className="text-slate-400 hover:text-slate-600 font-bold text-xl">✕</button>
             </div>
 
-            <div className="bg-purple-50 p-4 rounded-xl border border-purple-200 grid grid-cols-2 gap-3 text-xs">
-              <input placeholder="Nombre de la Empresa *" value={newCompany.company_name} onChange={(e) => setNewCompany({ ...newCompany, company_name: e.target.value })} className="border p-2 rounded bg-white" />
-              <input placeholder="Slogan / Giro" value={newCompany.tagline} onChange={(e) => setNewCompany({ ...newCompany, tagline: e.target.value })} className="border p-2 rounded bg-white" />
-              <input placeholder="Correo de Empresa" value={newCompany.email} onChange={(e) => setNewCompany({ ...newCompany, email: e.target.value })} className="border p-2 rounded bg-white" />
-              <input placeholder="Teléfono" value={newCompany.phone} onChange={(e) => setNewCompany({ ...newCompany, phone: e.target.value })} className="border p-2 rounded bg-white" />
-
-              <div className="col-span-2 border-2 border-dashed border-purple-300 bg-white p-3 rounded-lg text-center cursor-pointer relative hover:bg-purple-50 transition">
-                {newCompany.logo_url ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <img src={newCompany.logo_url} alt="Preview Logo" className="h-10 object-contain" />
-                    <span className="text-emerald-600 font-bold text-xs">Logotipo listo</span>
-                  </div>
-                ) : (
-                  <span className="text-slate-500 font-medium">Haz clic para seleccionar el Logotipo de esta empresa</span>
+            {/* FORMULARIO */}
+            <div className="bg-purple-50 p-4 rounded-xl border border-purple-200 text-xs shrink-0 space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-purple-900 block text-xs uppercase tracking-wide">
+                  {editingCompanyId ? "✏️ Editar Datos de Empresa:" : "➕ Registrar Nueva Empresa:"}
+                </span>
+                {editingCompanyId && (
+                  <button onClick={resetCompanyForm} className="text-purple-700 hover:underline font-semibold text-xs">
+                    Cancelar edición
+                  </button>
                 )}
-                <input type="file" accept="image/*" onChange={handleCompanyLogoUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
               </div>
 
-              <button onClick={handleSaveCompany} className="col-span-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 rounded text-xs transition">
-                + Guardar Mi Empresa
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+                <input placeholder="Nombre de la Empresa *" value={newCompany.company_name} onChange={(e) => setNewCompany({ ...newCompany, company_name: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-purple-500" />
+                <input placeholder="Slogan / Giro" value={newCompany.tagline} onChange={(e) => setNewCompany({ ...newCompany, tagline: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-purple-500" />
+                <input placeholder="RFC / Tax ID" value={newCompany.tax_id} onChange={(e) => setNewCompany({ ...newCompany, tax_id: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-purple-500" />
+                <input placeholder="Teléfono" value={newCompany.phone} onChange={(e) => setNewCompany({ ...newCompany, phone: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-purple-500" />
+                <input placeholder="Correo Electrónico" value={newCompany.email} onChange={(e) => setNewCompany({ ...newCompany, email: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-purple-500" />
+                <input placeholder="Código Postal (C.P.)" value={newCompany.postal_code} onChange={(e) => setNewCompany({ ...newCompany, postal_code: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-purple-500" />
+                <input placeholder="Ciudad" value={newCompany.city} onChange={(e) => setNewCompany({ ...newCompany, city: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-purple-500" />
+                <input placeholder="Estado / Provincia" value={newCompany.state} onChange={(e) => setNewCompany({ ...newCompany, state: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-purple-500" />
+                
+                {/* SELECTOR DE LOGO */}
+                <div className="border-2 border-dashed border-purple-300 bg-white px-2 py-1.5 rounded text-center cursor-pointer relative hover:bg-purple-100/50 transition flex items-center justify-center">
+                  {newCompany.logo_url ? (
+                    <div className="flex items-center gap-2">
+                      <img src={newCompany.logo_url} alt="Preview Logo" className="h-6 object-contain" />
+                      <span className="text-emerald-600 font-bold text-[11px]">Logo Listo</span>
+                    </div>
+                  ) : (
+                    <span className="text-slate-500 font-medium text-[11px]">📷 Subir Logo</span>
+                  )}
+                  <input type="file" accept="image/*" onChange={handleCompanyLogoUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
+                </div>
+
+                <input placeholder="Dirección Fiscal / Calle y Número" value={newCompany.address} onChange={(e) => setNewCompany({ ...newCompany, address: e.target.value })} className="md:col-span-3 border p-2 rounded bg-white outline-none focus:border-purple-500" />
+              </div>
+
+              <button onClick={handleSaveCompany} className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 rounded text-xs transition shadow-sm">
+                {editingCompanyId ? "Guardar Cambios" : "+ Guardar Mi Empresa"}
               </button>
             </div>
 
-            <div className="overflow-y-auto flex-1 space-y-2 pr-1">
+            {/* LISTA COMPACTA DE EMPRESAS */}
+            <div className="overflow-y-auto flex-1 space-y-2 pr-1 max-h-[320px]">
+              <h4 className="text-xs font-bold text-slate-500 uppercase border-b pb-1">Empresas Registradas ({companiesList.length}):</h4>
               {companiesList.length === 0 ? (
                 <p className="text-center text-slate-500 py-6 text-xs">{t.noCompanies}</p>
               ) : (
-                companiesList.map((comp) => (
-                  <div key={comp.id} className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border text-xs">
-                    <div className="flex items-center gap-3">
-                      {comp.logo_url && (
-                        <img src={comp.logo_url} alt="Logo" className="w-10 h-10 object-contain bg-white rounded border p-1" />
-                      )}
-                      <div>
-                        <strong className="text-slate-800 text-sm block">{comp.company_name}</strong>
-                        <span className="text-slate-500">{comp.tagline} {comp.email ? `• ${comp.email}` : ''}</span>
+                companiesList.map((comp) => {
+                  const compLoc = [comp.city, comp.state].filter(Boolean).join(', ');
+                  return (
+                    <div key={comp.id} className="flex justify-between items-center bg-slate-50 p-2.5 rounded-lg border border-slate-200 hover:border-purple-300 transition text-xs">
+                      <div className="flex items-center gap-3">
+                        {comp.logo_url ? (
+                          <img src={comp.logo_url} alt="Logo" className="w-10 h-10 object-contain bg-white rounded border p-1 shrink-0" />
+                        ) : (
+                          <div className="w-10 h-10 bg-slate-200 text-slate-400 font-bold flex items-center justify-center rounded text-xs shrink-0">
+                            LOG
+                          </div>
+                        )}
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-2">
+                            <strong className="text-slate-800 text-sm">{comp.company_name}</strong>
+                            {comp.tagline && <span className="text-[11px] text-purple-700 font-medium bg-purple-100 px-1.5 py-0.5 rounded">{comp.tagline}</span>}
+                          </div>
+                          <span className="text-slate-500 block text-[11px]">
+                            {comp.tax_id ? `RFC: ${comp.tax_id} • ` : ''}
+                            {comp.phone ? `Tel: ${comp.phone} • ` : ''}
+                            {comp.email || ''}
+                          </span>
+                          {(comp.address || compLoc || comp.postal_code) && (
+                            <span className="text-slate-400 text-[10px] block">
+                              📍 {[comp.address, compLoc, comp.postal_code ? `C.P. ${comp.postal_code}` : ''].filter(Boolean).join(', ')}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex gap-1.5 shrink-0">
+                        <button onClick={() => handleEditCompanyClick(comp)} className="bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1.5 rounded text-xs font-semibold shadow-sm transition">
+                          Editar
+                        </button>
+                        <button onClick={() => { applyCompany(comp); setIsCompaniesOpen(false); resetCompanyForm(); }} className="bg-purple-600 hover:bg-purple-700 text-white px-2.5 py-1.5 rounded text-xs font-semibold shadow-sm transition">
+                          {t.btnSelectCompany}
+                        </button>
+                        <button onClick={() => handleDeleteCompany(comp.id)} className="bg-rose-100 hover:bg-rose-200 text-rose-700 px-2 py-1.5 rounded font-bold transition">
+                          ✕
+                        </button>
                       </div>
                     </div>
-                    <div className="flex gap-1">
-                      <button onClick={() => { applyCompany(comp); setIsCompaniesOpen(false); }} className="bg-purple-600 hover:bg-purple-700 text-white px-2.5 py-1 rounded text-xs font-semibold">
-                        {t.btnSelectCompany}
-                      </button>
-                      <button onClick={() => handleDeleteCompany(comp.id)} className="bg-rose-100 hover:bg-rose-200 text-rose-700 px-2 py-1 rounded">
-                        ✕
-                      </button>
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
 
-            <div className="flex justify-end border-t pt-3">
-              <button onClick={() => setIsCompaniesOpen(false)} className="bg-slate-200 text-slate-700 font-semibold text-xs px-4 py-2 rounded-lg">
+            <div className="flex justify-end border-t pt-3 shrink-0">
+              <button onClick={() => { setIsCompaniesOpen(false); resetCompanyForm(); }} className="bg-slate-200 text-slate-700 font-semibold text-xs px-4 py-2 rounded-lg">
                 {t.btnCloseModal}
               </button>
             </div>
