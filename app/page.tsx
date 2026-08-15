@@ -13,7 +13,7 @@ const translations: Record<string, any> = {
     lblTax: "Impuesto:",
     catalogLabel: "📦 Catálogo Rápido:",
     btnCatalog: "⚡ Agregar",
-    btnManageCatalog: "⚙️ Catálogo",
+    btnManageCatalog: "⚙️ Conceptos",
     btnManageBanks: "🏦 Cuentas Bancarias",
     btnHistory: "📜 Mis Cotizaciones",
     btnManageClients: "👥 Clientes",
@@ -47,10 +47,9 @@ const translations: Record<string, any> = {
     discount: "Descuento (%):",
     taxLabel: "Impuesto:",
     total: "Total Neto:",
-    modalTitle: "⚙️ Administrar Conceptos / Catálogo",
-    modalAddNew: "➕ Agregar Nuevo Concepto:",
-    btnSaveCatItem: "+ Agregar al Catálogo (Máx. 15)",
-    btnAddToQuoteDirect: "⚡ Agregar Directo a Cotización",
+    modalTitle: "⚙️ Administrar Conceptos Frecuentes",
+    modalAddNew: "➕ Agregar Nuevo Concepto (Máx. 10 personalizados):",
+    btnSaveCatItem: "+ Guardar Concepto",
     btnCloseModal: "Cerrar",
     generatedAt: "Fecha y hora de emisión:",
     bankModalTitle: "🏦 Administrar Cuentas Bancarias",
@@ -75,7 +74,7 @@ const translations: Record<string, any> = {
     lblTax: "Tax Rate:",
     catalogLabel: "📦 Quick Catalog:",
     btnCatalog: "⚡ Add Item",
-    btnManageCatalog: "⚙️ Edit Catalog",
+    btnManageCatalog: "⚙️ Concepts",
     btnManageBanks: "🏦 Bank Accounts",
     btnHistory: "📜 Saved Quotes",
     btnManageClients: "👥 Clients",
@@ -109,10 +108,9 @@ const translations: Record<string, any> = {
     discount: "Discount (%):",
     taxLabel: "Tax Rate:",
     total: "Net Total:",
-    modalTitle: "⚙️ Manage Items / Catalog",
-    modalAddNew: "➕ Add New Concept:",
-    btnSaveCatItem: "+ Add to Catalog (Max 15)",
-    btnAddToQuoteDirect: "⚡ Add Directly to Quote",
+    modalTitle: "⚙️ Manage Frequent Concepts",
+    modalAddNew: "➕ Add New Concept (Max 10 custom):",
+    btnSaveCatItem: "+ Save Concept",
     btnCloseModal: "Close",
     generatedAt: "Date and time of issue:",
     bankModalTitle: "🏦 Manage Bank Accounts",
@@ -147,7 +145,18 @@ const initialCatalog = [
   { es: "Mano de obra y remodelación de espacio", en: "Labor and space remodeling" },
   { es: "Materiales y acabados especiales", en: "Special materials and finishes" },
   { es: "Diseño y planos arquitectónicos (M2)", en: "Architectural design and blueprints (SqFt)" },
-  { es: "Instalación eléctrica residencial/comercial", en: "Residential/Commercial electrical installation" }
+  { es: "Instalación eléctrica residencial/comercial", en: "Residential/Commercial electrical installation" },
+  { es: "Mantenimiento preventivo e inspección técnica", en: "Preventive maintenance and technical inspection" },
+  { es: "Servicios de pintura e impermeabilización", en: "Painting and waterproofing services" },
+  { es: "Consultoría e ingeniería de proyecto", en: "Consulting and project engineering" },
+  { es: "Supervisión y administración de obra", en: "Construction supervision and management" },
+  { es: "Instalación hidrosanitaria y plomería general", en: "Plumbing and hydrosanitary installation" },
+  { es: "Suministro e instalación de aire acondicionado", en: "HVAC / Air conditioning supply and installation" },
+  { es: "Fabricación e instalación de carpintería/aluminio", en: "Carpentry and aluminum fabrication/installation" },
+  { es: "Demolición y retiro de escombro", en: "Demolition and debris removal" },
+  { es: "Desarrollo de software y sistemas a medida", en: "Custom software and systems development" },
+  { es: "Servicios de diseño gráfico y branding", en: "Graphic design and branding services" },
+  { es: "Estrategia de marketing digital y publicidad", en: "Digital marketing and advertising strategy" }
 ];
 
 const initialBankAccounts = [
@@ -180,10 +189,23 @@ export default function Home() {
   const [clientPhone, setClientPhone] = useState<string>("");
   const [folio, setFolio] = useState<string>("#COT-2026-001");
 
-  // CATÁLOGOS Y MODALES
-  const [catalog] = useState(initialCatalog);
+  // CATÁLOGOS Y CONCEPTOS
+  const [customCatalog, setCustomCatalog] = useState<{ es: string, en: string }[]>([]);
+  const [newCustomConcept, setNewCustomConcept] = useState({ es: '', en: '' });
+  const [isConceptsModalOpen, setIsConceptsModalOpen] = useState<boolean>(false);
   const [selectedCatalogIdx, setSelectedCatalogIdx] = useState<number>(0);
-  
+
+  const fullCatalog = [...initialCatalog, ...customCatalog];
+
+  // BANCOS
+  const [bankAccountsList, setBankAccountsList] = useState(initialBankAccounts);
+  const [bankData, setBankData] = useState(initialBankAccounts[0]);
+  const [isBanksModalOpen, setIsBanksModalOpen] = useState<boolean>(false);
+  const [newBankAccount, setNewBankAccount] = useState({
+    alias: '', nombre: '', banco: '', cuenta: '', clabe: '', rfc: ''
+  });
+
+  // MODALES
   const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
   const [isClientsOpen, setIsClientsOpen] = useState<boolean>(false);
   const [isCompaniesOpen, setIsCompaniesOpen] = useState<boolean>(false);
@@ -195,7 +217,6 @@ export default function Home() {
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
 
-  // HISTORIAL, CLIENTES Y EMPRESAS
   const [savedQuotes, setSavedQuotes] = useState<any[]>([]);
   const [clientsList, setClientsList] = useState<any[]>([]);
   const [companiesList, setCompaniesList] = useState<any[]>([]);
@@ -207,10 +228,8 @@ export default function Home() {
   // FORMULARIO NUEVA EMPRESA
   const [newCompany, setNewCompany] = useState({ company_name: '', tagline: '', email: '', phone: '', address: '', logo_url: '' });
 
-  // BANCOS
-  const [bankData, setBankData] = useState(initialBankAccounts[0]);
-
-  const [items, setItems] = useState([
+  // ÍTEMS
+  const [items, setItems] = useState<Array<{ description_es: string; description_en: string; qty: number | string; price: number | string }>>([
     { description_es: initialCatalog[0].es, description_en: initialCatalog[0].en, qty: 1, price: 0.00 }
   ]);
 
@@ -228,6 +247,51 @@ export default function Home() {
     } catch (err: any) {
       alert("Error al cerrar sesión: " + err.message);
     }
+  };
+
+  // GESTIÓN DE CUENTAS BANCARIAS
+  const handleAddBankAccount = () => {
+    if (!newBankAccount.alias || !newBankAccount.banco || !newBankAccount.cuenta) {
+      return alert("Por favor completa al menos el Alias, Banco y Número de Cuenta.");
+    }
+    const updated = [...bankAccountsList, newBankAccount];
+    setBankAccountsList(updated);
+    setBankData(newBankAccount);
+    setNewBankAccount({ alias: '', nombre: '', banco: '', cuenta: '', clabe: '', rfc: '' });
+    alert("✅ Cuenta bancaria guardada y seleccionada.");
+  };
+
+  const handleRemoveBankAccount = (index: number) => {
+    if (bankAccountsList.length <= 1) {
+      return alert("Debes mantener al menos una cuenta bancaria.");
+    }
+    const updated = bankAccountsList.filter((_, i) => i !== index);
+    setBankAccountsList(updated);
+    setBankData(updated[0]);
+  };
+
+  // AGREGAR CONCEPTO PERSONALIZADO
+  const handleAddCustomConcept = () => {
+    if (!newCustomConcept.es.trim()) {
+      return alert("Escribe al menos el nombre del concepto en español.");
+    }
+
+    if (customCatalog.length >= 10) {
+      return alert("⚠️ Has alcanzado el límite máximo de 10 conceptos personalizados.");
+    }
+
+    const newItem = {
+      es: newCustomConcept.es.trim(),
+      en: newCustomConcept.en.trim() || newCustomConcept.es.trim()
+    };
+
+    setCustomCatalog([...customCatalog, newItem]);
+    setNewCustomConcept({ es: '', en: '' });
+    alert("✅ Concepto guardado e integrado a la lista rápida.");
+  };
+
+  const handleRemoveCustomConcept = (index: number) => {
+    setCustomCatalog(customCatalog.filter((_, i) => i !== index));
   };
 
   const fetchClients = async () => {
@@ -272,7 +336,6 @@ export default function Home() {
     }
   };
 
-  // VER HISTORIAL DE UN CLIENTE ESPECÍFICO
   const handleViewClientHistory = async (client: any) => {
     setSelectedClientForHistory(client);
     setIsLoading(true);
@@ -361,7 +424,7 @@ export default function Home() {
   };
 
   const addItemFromCatalog = () => {
-    const prod = catalog[selectedCatalogIdx];
+    const prod = fullCatalog[selectedCatalogIdx];
     if (prod) {
       setItems([...items, { description_es: prod.es, description_en: prod.en, qty: 1, price: 0.00 }]);
     }
@@ -373,9 +436,11 @@ export default function Home() {
 
   const updateItem = (index: number, field: string, value: any) => {
     const newItems = [...items];
-    if (field === 'qty') newItems[index].qty = parseFloat(value) || 0;
-    else if (field === 'price') newItems[index].price = parseFloat(value) || 0;
-    else {
+    if (field === 'qty') {
+      newItems[index].qty = value === '' ? '' : (parseFloat(value) || 0);
+    } else if (field === 'price') {
+      newItems[index].price = value === '' ? '' : (parseFloat(value) || 0);
+    } else {
       newItems[index].description_es = value;
       newItems[index].description_en = value;
     }
@@ -387,7 +452,11 @@ export default function Home() {
   };
 
   // CÁLCULOS
-  const subtotal = items.reduce((acc, item) => acc + (item.qty * item.price), 0);
+  const subtotal = items.reduce((acc, item) => {
+    const q = typeof item.qty === 'number' ? item.qty : parseFloat(item.qty) || 0;
+    const p = typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0;
+    return acc + (q * p);
+  }, 0);
   const discountAmount = subtotal * (discount / 100);
   const subtotalWithDiscount = subtotal - discountAmount;
   const taxAmount = subtotalWithDiscount * (taxRate / 100);
@@ -546,7 +615,7 @@ export default function Home() {
   });
 
   return (
-    <div className="bg-slate-100 min-h-screen p-4 md:p-8 font-sans text-slate-800 print:bg-white print:p-0">
+    <div className="bg-slate-100 min-h-screen font-sans text-slate-800 print:bg-white print:p-0 flex flex-col md:flex-row">
       
       <style jsx global>{`
         @media print {
@@ -557,18 +626,97 @@ export default function Home() {
         }
       `}</style>
 
-      <div className="max-w-5xl mx-auto print:max-w-none print:w-full">
-        
-        {/* BARRA SUPERIOR */}
-        <div className="no-print bg-white p-4 rounded-xl shadow-md mb-6 space-y-4 border border-slate-200">
-          <div className="flex flex-wrap justify-between items-center gap-4">
-            <div>
-              <h1 className="text-xl font-bold text-slate-900">{t.appTitle}</h1>
-              <p className="text-xs text-slate-500">{t.appSub}</p>
-            </div>
+      {/* SIDEBAR / MENÚ IZQUIERDO DE ACCIONES */}
+      <aside className="no-print w-full md:w-64 bg-slate-900 text-slate-100 p-4 shrink-0 flex flex-col justify-between border-r border-slate-800 shadow-lg">
+        <div className="space-y-6">
+          <div className="pb-4 border-b border-slate-800">
+            <h1 className="text-lg font-bold text-white">{t.appTitle}</h1>
+            <p className="text-xs text-slate-400 mt-1">{t.appSub}</p>
+          </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-1 bg-slate-50 p-1.5 rounded-lg border border-slate-200">
+          <nav className="flex flex-col gap-2">
+            <button 
+              onClick={() => setIsClientsOpen(true)} 
+              className="flex items-center gap-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3 py-2.5 rounded-lg text-xs transition text-left shadow-sm"
+            >
+              {t.btnManageClients}
+            </button>
+
+            <button 
+              onClick={() => setIsConceptsModalOpen(true)} 
+              className="flex items-center gap-2.5 bg-teal-600 hover:bg-teal-700 text-white font-semibold px-3 py-2.5 rounded-lg text-xs transition text-left shadow-sm"
+            >
+              {t.btnManageCatalog}
+            </button>
+
+            <button 
+              onClick={() => setIsCompaniesOpen(true)} 
+              className="flex items-center gap-2.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-3 py-2.5 rounded-lg text-xs transition text-left shadow-sm"
+            >
+              {t.btnManageCompanies}
+            </button>
+
+            <button 
+              onClick={() => setIsBanksModalOpen(true)} 
+              className="flex items-center gap-2.5 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold px-3 py-2.5 rounded-lg text-xs transition text-left shadow-sm"
+            >
+              {t.btnManageBanks}
+            </button>
+
+            <button 
+              onClick={fetchQuotesHistory} 
+              disabled={isLoading} 
+              className="flex items-center gap-2.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold px-3 py-2.5 rounded-lg text-xs transition text-left shadow-sm"
+            >
+              {t.btnHistory}
+            </button>
+
+            <hr className="border-slate-800 my-2" />
+
+            <button 
+              onClick={() => window.print()} 
+              className="flex items-center gap-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-3 py-2.5 rounded-lg text-xs transition text-left shadow-sm"
+            >
+              {t.btnPrint}
+            </button>
+
+            <button 
+              onClick={saveQuoteToCloud} 
+              disabled={isSaving} 
+              className="flex items-center gap-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-3 py-2.5 rounded-lg text-xs transition text-left shadow-sm"
+            >
+              {isSaving ? "Guardando..." : t.btnSaveCloud}
+            </button>
+
+            <button 
+              onClick={sendPdfWhatsApp} 
+              disabled={isGeneratingPdf} 
+              className="flex items-center gap-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold px-3 py-2.5 rounded-lg text-xs transition text-left shadow-sm"
+            >
+              {isGeneratingPdf ? "Generando PDF..." : t.btnWhatsApp}
+            </button>
+          </nav>
+        </div>
+
+        <div className="pt-6 border-t border-slate-800 mt-6">
+          <button 
+            onClick={handleLogout} 
+            className="w-full flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold px-3 py-2.5 rounded-lg text-xs transition shadow-sm"
+          >
+            {t.btnLogout}
+          </button>
+        </div>
+      </aside>
+
+      {/* ÁREA PRINCIPAL */}
+      <main className="flex-1 p-4 md:p-8 overflow-x-hidden">
+        <div className="max-w-5xl mx-auto print:max-w-none print:w-full space-y-6">
+          
+          {/* BARRA SUPERIOR DE SELECTORES */}
+          <div className="no-print bg-white p-4 rounded-xl shadow-md space-y-3 border border-slate-200">
+            <div className="flex flex-wrap items-center gap-3">
+              {/* IDIOMA */}
+              <div className="flex items-center gap-1.5 bg-slate-50 p-1.5 rounded-lg border border-slate-200">
                 <label className="text-xs font-bold text-slate-600 pl-1">{t.lblLang}</label>
                 <select 
                   value={lang} 
@@ -580,6 +728,7 @@ export default function Home() {
                 </select>
               </div>
 
+              {/* IMPUESTOS */}
               <div className="flex items-center gap-1.5 bg-slate-50 p-1.5 rounded-lg border border-slate-200">
                 <label className="text-xs font-bold text-slate-600 pl-1">{t.lblTax}</label>
                 <select 
@@ -599,228 +748,368 @@ export default function Home() {
                 <span className="text-xs font-bold text-slate-500">%</span>
               </div>
 
-              <button onClick={() => setIsClientsOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3 py-2 rounded-lg text-xs shadow transition">
-                {t.btnManageClients}
-              </button>
+              {/* EMITIR CON (EMPRESA) */}
+              {companiesList.length > 0 && (
+                <div className="flex items-center gap-1.5 bg-purple-50 p-1.5 rounded-lg border border-purple-200">
+                  <label className="text-xs font-bold text-purple-900">{t.lblSelectCompany}</label>
+                  <select 
+                    onChange={(e) => {
+                      const comp = companiesList[Number(e.target.value)];
+                      if (comp) applyCompany(comp);
+                    }}
+                    className="bg-white text-purple-900 font-semibold text-xs rounded border border-purple-300 p-1 outline-none cursor-pointer"
+                  >
+                    {companiesList.map((c, idx) => (
+                      <option key={c.id} value={idx}>{c.company_name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
-              <button onClick={() => setIsCompaniesOpen(true)} className="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-3 py-2 rounded-lg text-xs shadow transition">
-                {t.btnManageCompanies}
-              </button>
+              {/* CLIENTE FRECUENTE */}
+              {clientsList.length > 0 && (
+                <div className="flex items-center gap-1.5 bg-blue-50 p-1.5 rounded-lg border border-blue-200">
+                  <label className="text-xs font-bold text-blue-900">{t.lblSelectClient}</label>
+                  <select 
+                    onChange={(e) => {
+                      const cli = clientsList[Number(e.target.value)];
+                      if (cli) handleSelectClient(cli);
+                    }}
+                    className="bg-white text-blue-900 font-semibold text-xs rounded border border-blue-300 p-1 outline-none cursor-pointer"
+                  >
+                    <option value="">-- Seleccionar --</option>
+                    {clientsList.map((c, idx) => (
+                      <option key={c.id} value={idx}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
-              <button onClick={fetchQuotesHistory} disabled={isLoading} className="bg-amber-500 hover:bg-amber-600 text-white font-semibold px-3 py-2 rounded-lg text-xs shadow transition">
-                {t.btnHistory}
-              </button>
-
-              <button onClick={saveQuoteToCloud} disabled={isSaving} className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-3 py-2 rounded-lg text-xs shadow transition">
-                {isSaving ? "Guardando..." : t.btnSaveCloud}
-              </button>
-
-              <button onClick={sendPdfWhatsApp} disabled={isGeneratingPdf} className="bg-green-600 hover:bg-green-700 text-white font-semibold px-3 py-2 rounded-lg text-xs shadow transition flex items-center gap-1">
-                {isGeneratingPdf ? "Generando PDF..." : t.btnWhatsApp}
-              </button>
-
-              <button onClick={() => window.print()} className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-3 py-2 rounded-lg text-xs shadow transition">
-                {t.btnPrint}
-              </button>
-
-              <button onClick={handleLogout} className="bg-rose-600 hover:bg-rose-700 text-white font-semibold px-3 py-2 rounded-lg text-xs shadow transition border border-rose-700">
-                {t.btnLogout}
-              </button>
+              {/* CUENTA BANCARIA */}
+              <div className="flex items-center gap-1.5 bg-cyan-50 p-1.5 rounded-lg border border-cyan-200">
+                <label className="text-xs font-bold text-cyan-900">{t.lblSelectBank}</label>
+                <select 
+                  onChange={(e) => {
+                    const account = bankAccountsList[Number(e.target.value)];
+                    if (account) setBankData(account);
+                  }}
+                  className="bg-white text-cyan-900 font-semibold text-xs rounded border border-cyan-300 p-1 outline-none cursor-pointer"
+                >
+                  {bankAccountsList.map((b, idx) => (
+                    <option key={idx} value={idx}>{b.alias || b.banco}</option>
+                  ))}
+                </select>
+              </div>
             </div>
-          </div>
 
-          <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-slate-100">
-            {companiesList.length > 0 && (
-              <div className="flex items-center gap-1.5 bg-purple-50 p-1.5 rounded-lg border border-purple-200">
-                <label className="text-xs font-bold text-purple-900">{t.lblSelectCompany}</label>
-                <select 
-                  onChange={(e) => {
-                    const comp = companiesList[Number(e.target.value)];
-                    if (comp) applyCompany(comp);
-                  }}
-                  className="bg-white text-purple-900 font-semibold text-xs rounded border border-purple-300 p-1 outline-none cursor-pointer"
-                >
-                  {companiesList.map((c, idx) => (
-                    <option key={c.id} value={idx}>{c.company_name}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {clientsList.length > 0 && (
-              <div className="flex items-center gap-1.5 bg-blue-50 p-1.5 rounded-lg border border-blue-200">
-                <label className="text-xs font-bold text-blue-900">{t.lblSelectClient}</label>
-                <select 
-                  onChange={(e) => {
-                    const cli = clientsList[Number(e.target.value)];
-                    if (cli) handleSelectClient(cli);
-                  }}
-                  className="bg-white text-blue-900 font-semibold text-xs rounded border border-blue-300 p-1 outline-none cursor-pointer"
-                >
-                  <option value="">-- Seleccionar --</option>
-                  {clientsList.map((c, idx) => (
-                    <option key={c.id} value={idx}>{c.name}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            <div className="flex items-center gap-2 ml-auto">
+            {/* CATÁLOGO RÁPIDO */}
+            <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100">
+              <span className="text-xs font-bold text-slate-500">{t.catalogLabel}</span>
               <select 
                 value={selectedCatalogIdx}
                 onChange={(e) => setSelectedCatalogIdx(Number(e.target.value))}
-                className="bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg p-1.5 outline-none font-medium max-w-[200px]"
+                className="bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg p-1.5 outline-none font-medium max-w-[240px] flex-1 md:flex-none"
               >
-                {catalog.map((item, idx) => (
-                  <option key={idx} value={idx}>{(lang === 'es' ? item.es : item.en)}</option>
+                {fullCatalog.map((item, idx) => (
+                  <option key={idx} value={idx}>
+                    {idx < 15 ? "📌 " : "⭐ "}
+                    {(lang === 'es' ? item.es : item.en)}
+                  </option>
                 ))}
               </select>
-              <button onClick={addItemFromCatalog} className="bg-slate-800 hover:bg-slate-900 text-white font-semibold px-2.5 py-1.5 rounded-lg text-xs">
+              <button onClick={addItemFromCatalog} className="bg-slate-800 hover:bg-slate-900 text-white font-semibold px-3 py-1.5 rounded-lg text-xs transition">
                 {t.btnCatalog}
               </button>
-              <button onClick={addBlankItem} className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold px-2.5 py-1.5 rounded-lg text-xs border border-indigo-200">
+              <button onClick={addBlankItem} className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold px-3 py-1.5 rounded-lg text-xs border border-indigo-200 transition">
                 {t.btnBlank}
               </button>
             </div>
           </div>
-        </div>
 
-        {/* DOCUMENTO COTIZACIÓN */}
-        <div id="quote-document" className="quote-container relative bg-white p-8 md:p-12 rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-          
-          {logo && (
-            <div className="hidden print:flex absolute inset-0 items-center justify-center pointer-events-none select-none z-0">
-              <img src={logo} alt="Watermark" className="w-1/2 max-w-md max-h-[500px] object-contain opacity-10 filter grayscale" />
-            </div>
-          )}
-
-          <div className="relative z-10">
-            <div className="flex flex-col md:flex-row justify-between items-start border-b border-slate-200 pb-8 gap-6">
-              <div className="w-full md:w-1/2">
-                <div className="relative border-2 border-dashed border-slate-300 bg-slate-50 rounded-lg h-24 w-52 flex items-center justify-center cursor-pointer overflow-hidden print:border-none print:bg-transparent">
-                  {logo ? (
-                    <img src={logo} alt="Logo" className="h-full object-contain" />
-                  ) : (
-                    <span className="text-[11px] font-semibold text-slate-500 text-center px-2 no-print">{t.logoPrompt}</span>
-                  )}
-                  <input type="file" accept="image/*" onChange={handleLogoUpload} className="absolute inset-0 opacity-0 cursor-pointer no-print" />
-                </div>
+          {/* DOCUMENTO COTIZACIÓN */}
+          <div id="quote-document" className="quote-container relative bg-white p-8 md:p-12 rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+            
+            {logo && (
+              <div className="hidden print:flex absolute inset-0 items-center justify-center pointer-events-none select-none z-0">
+                <img src={logo} alt="Watermark" className="w-1/2 max-w-md max-h-[500px] object-contain opacity-10 filter grayscale" />
               </div>
+            )}
 
-              <div className="w-full md:w-1/2 text-left md:text-right space-y-1">
-                <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="font-bold text-xl text-slate-900 w-full text-left md:text-right bg-transparent outline-none" />
-                <input value={companyTagline} onChange={(e) => setCompanyTagline(e.target.value)} className="text-xs text-slate-500 w-full text-left md:text-right bg-transparent outline-none" />
-                <input value={companyEmail} onChange={(e) => setCompanyEmail(e.target.value)} className="text-xs text-slate-500 w-full text-left md:text-right bg-transparent outline-none" />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8 bg-slate-50 p-4 rounded-xl border border-slate-100 print:bg-transparent print:p-0 print:border-none">
-              <div>
-                <span className="text-xs font-bold text-indigo-600 uppercase block mb-1">{t.quotedTo}</span>
-                <input value={clientName} onChange={(e) => setClientName(e.target.value)} className="font-semibold text-slate-800 w-full bg-transparent outline-none" />
-              </div>
-              <div className="md:text-right space-y-1 text-xs text-slate-600">
-                <span className="text-xs font-bold text-indigo-600 uppercase block mb-1">{t.details}</span>
-                <p><strong>{t.folio}</strong> <input value={folio} onChange={(e) => setFolio(e.target.value)} className="w-28 text-right bg-transparent outline-none font-semibold text-slate-800" /></p>
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b-2 border-slate-200 text-xs font-bold text-slate-500 uppercase">
-                    <th className="py-3 px-2">{t.thConcept}</th>
-                    <th className="py-3 px-2 w-20 text-center">{t.thQty}</th>
-                    <th className="py-3 px-2 w-28 text-right">{t.thPrice}</th>
-                    <th className="py-3 px-2 w-28 text-right">{t.thAmount}</th>
-                    <th className="py-3 px-2 w-10 no-print"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-sm">
-                  {items.map((item, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50">
-                      <td className="py-3 px-2">
-                        <input 
-                          value={lang === 'es' ? item.description_es : item.description_en} 
-                          onChange={(e) => updateItem(idx, 'description', e.target.value)}
-                          placeholder="Escribe un concepto..."
-                          className="w-full bg-transparent outline-none"
-                        />
-                      </td>
-                      <td className="py-3 px-2 text-center">
-                        <input type="number" value={item.qty} onChange={(e) => updateItem(idx, 'qty', e.target.value)} className="w-16 text-center bg-transparent outline-none" />
-                      </td>
-                      <td className="py-3 px-2 text-right">
-                        <input type="number" value={item.price} onChange={(e) => updateItem(idx, 'price', e.target.value)} className="w-24 text-right bg-transparent outline-none font-medium" placeholder="0.00" />
-                      </td>
-                      <td className="py-3 px-2 text-right font-medium text-slate-700">
-                        ${(item.qty * item.price).toFixed(2)}
-                      </td>
-                      <td className="py-3 px-2 text-center no-print">
-                        <button onClick={() => removeItem(idx)} className="text-rose-400 hover:text-rose-600 font-bold">✕</button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="flex justify-end mt-8 border-t border-slate-200 pt-6">
-              <div className="w-full md:w-72 space-y-2 text-sm">
-                <div className="flex justify-between text-slate-600">
-                  <span>{t.subtotal}</span>
-                  <span className="font-semibold">${subtotal.toFixed(2)} {currency}</span>
-                </div>
-                {discount > 0 && (
-                  <div className="flex justify-between text-slate-600">
-                    <span>{t.discount}</span>
-                    <span className="font-semibold">-${discountAmount.toFixed(2)} {currency}</span>
+            <div className="relative z-10">
+              <div className="flex flex-col md:flex-row justify-between items-start border-b border-slate-200 pb-8 gap-6">
+                <div className="w-full md:w-1/2">
+                  <div className="relative border-2 border-dashed border-slate-300 bg-slate-50 rounded-lg h-24 w-52 flex items-center justify-center cursor-pointer overflow-hidden print:border-none print:bg-transparent">
+                    {logo ? (
+                      <img src={logo} alt="Logo" className="h-full object-contain" />
+                    ) : (
+                      <span className="text-[11px] font-semibold text-slate-500 text-center px-2 no-print">{t.logoPrompt}</span>
+                    )}
+                    <input type="file" accept="image/*" onChange={handleLogoUpload} className="absolute inset-0 opacity-0 cursor-pointer no-print" />
                   </div>
-                )}
-                <div className="flex justify-between text-slate-600">
-                  <span>{t.taxLabel} ({taxRate}%)</span>
-                  <span className="font-semibold">${taxAmount.toFixed(2)} {currency}</span>
                 </div>
-                <div className="flex justify-between text-base font-bold text-slate-900 border-t border-slate-200 pt-2">
-                  <span>{t.total}</span>
-                  <span className="text-indigo-600">${total.toFixed(2)} {currency}</span>
+
+                <div className="w-full md:w-1/2 text-left md:text-right space-y-1">
+                  <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="font-bold text-xl text-slate-900 w-full text-left md:text-right bg-transparent outline-none" />
+                  <input value={companyTagline} onChange={(e) => setCompanyTagline(e.target.value)} className="text-xs text-slate-500 w-full text-left md:text-right bg-transparent outline-none" />
+                  <input value={companyEmail} onChange={(e) => setCompanyEmail(e.target.value)} className="text-xs text-slate-500 w-full text-left md:text-right bg-transparent outline-none" />
                 </div>
               </div>
-            </div>
 
-            <div className="mt-8 bg-slate-50 p-5 rounded-xl border border-slate-200 text-xs space-y-3 print:bg-transparent print:border-slate-300">
-              <p className="font-bold text-slate-800 text-sm">{t.bankHeader}</p>
-              <div className="flex flex-col space-y-2 text-slate-700 max-w-md">
-                <div className="grid grid-cols-[140px_1fr] items-center">
-                  <strong className="text-slate-900">{t.beneficiary}</strong>
-                  <input value={bankData.nombre} onChange={(e) => setBankData({ ...bankData, nombre: e.target.value })} className="bg-transparent outline-none font-medium text-slate-800" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8 bg-slate-50 p-4 rounded-xl border border-slate-100 print:bg-transparent print:p-0 print:border-none">
+                <div>
+                  <span className="text-xs font-bold text-indigo-600 uppercase block mb-1">{t.quotedTo}</span>
+                  <input value={clientName} onChange={(e) => setClientName(e.target.value)} className="font-semibold text-slate-800 w-full bg-transparent outline-none" />
                 </div>
-                <div className="grid grid-cols-[140px_1fr] items-center">
-                  <strong className="text-slate-900">{t.account}</strong>
-                  <input value={bankData.cuenta} onChange={(e) => setBankData({ ...bankData, cuenta: e.target.value })} className="bg-transparent outline-none font-medium text-slate-800" />
-                </div>
-                <div className="grid grid-cols-[140px_1fr] items-center">
-                  <strong className="text-slate-900">{t.rfc}</strong>
-                  <input value={bankData.rfc} onChange={(e) => setBankData({ ...bankData, rfc: e.target.value })} className="bg-transparent outline-none font-medium text-slate-800" />
-                </div>
-                <div className="grid grid-cols-[140px_1fr] items-center">
-                  <strong className="text-slate-900">{t.bank}</strong>
-                  <input value={bankData.banco} onChange={(e) => setBankData({ ...bankData, banco: e.target.value })} className="bg-transparent outline-none font-medium text-slate-800" />
-                </div>
-                <div className="grid grid-cols-[140px_1fr] items-center">
-                  <strong className="text-slate-900">{t.clabe}</strong>
-                  <input value={bankData.clabe} onChange={(e) => setBankData({ ...bankData, clabe: e.target.value })} className="bg-transparent outline-none font-medium text-slate-800" />
+                <div className="md:text-right space-y-1 text-xs text-slate-600">
+                  <span className="text-xs font-bold text-indigo-600 uppercase block mb-1">{t.details}</span>
+                  <p><strong>{t.folio}</strong> <input value={folio} onChange={(e) => setFolio(e.target.value)} className="w-28 text-right bg-transparent outline-none font-semibold text-slate-800" /></p>
                 </div>
               </div>
-            </div>
 
-            <div className="hidden print:block mt-4 text-[10px] text-slate-500 text-right font-medium">
-              {t.generatedAt} {currentDateTime}
-            </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b-2 border-slate-200 text-xs font-bold text-slate-500 uppercase">
+                      <th className="py-3 px-2">{t.thConcept}</th>
+                      <th className="py-3 px-2 w-20 text-center">{t.thQty}</th>
+                      <th className="py-3 px-2 w-28 text-right">{t.thPrice}</th>
+                      <th className="py-3 px-2 w-28 text-right">{t.thAmount}</th>
+                      <th className="py-3 px-2 w-10 no-print"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-sm">
+                    {items.map((item, idx) => {
+                      const q = typeof item.qty === 'number' ? item.qty : parseFloat(item.qty) || 0;
+                      const p = typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0;
 
+                      return (
+                        <tr key={idx} className="hover:bg-slate-50">
+                          <td className="py-3 px-2">
+                            <input 
+                              value={lang === 'es' ? item.description_es : item.description_en} 
+                              onChange={(e) => updateItem(idx, 'description', e.target.value)}
+                              placeholder="Escribe un concepto..."
+                              className="w-full bg-transparent outline-none"
+                            />
+                          </td>
+                          <td className="py-3 px-2 text-center">
+                            <input 
+                              type="number" 
+                              value={item.qty} 
+                              onFocus={() => updateItem(idx, 'qty', '')}
+                              onBlur={() => {
+                                if (item.qty === '') updateItem(idx, 'qty', 0);
+                              }}
+                              onChange={(e) => updateItem(idx, 'qty', e.target.value)} 
+                              className="w-16 text-center bg-transparent outline-none focus:bg-indigo-50/50 rounded" 
+                            />
+                          </td>
+                          <td className="py-3 px-2 text-right">
+                            <input 
+                              type="number" 
+                              value={item.price} 
+                              onFocus={() => updateItem(idx, 'price', '')}
+                              onBlur={() => {
+                                if (item.price === '') updateItem(idx, 'price', 0);
+                              }}
+                              onChange={(e) => updateItem(idx, 'price', e.target.value)} 
+                              className="w-24 text-right bg-transparent outline-none font-medium focus:bg-indigo-50/50 rounded" 
+                              placeholder="0.00" 
+                            />
+                          </td>
+                          <td className="py-3 px-2 text-right font-medium text-slate-700">
+                            ${(q * p).toFixed(2)}
+                          </td>
+                          <td className="py-3 px-2 text-center no-print">
+                            <button onClick={() => removeItem(idx)} className="text-rose-400 hover:text-rose-600 font-bold">✕</button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="flex justify-end mt-8 border-t border-slate-200 pt-6">
+                <div className="w-full md:w-72 space-y-2 text-sm">
+                  <div className="flex justify-between text-slate-600">
+                    <span>{t.subtotal}</span>
+                    <span className="font-semibold">${subtotal.toFixed(2)} {currency}</span>
+                  </div>
+                  {discount > 0 && (
+                    <div className="flex justify-between text-slate-600">
+                      <span>{t.discount}</span>
+                      <span className="font-semibold">-${discountAmount.toFixed(2)} {currency}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-slate-600">
+                    <span>{t.taxLabel} ({taxRate}%)</span>
+                    <span className="font-semibold">${taxAmount.toFixed(2)} {currency}</span>
+                  </div>
+                  <div className="flex justify-between text-base font-bold text-slate-900 border-t border-slate-200 pt-2">
+                    <span>{t.total}</span>
+                    <span className="text-indigo-600">${total.toFixed(2)} {currency}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 bg-slate-50 p-5 rounded-xl border border-slate-200 text-xs space-y-3 print:bg-transparent print:border-slate-300">
+                <p className="font-bold text-slate-800 text-sm">{t.bankHeader}</p>
+                <div className="flex flex-col space-y-2 text-slate-700 max-w-md">
+                  <div className="grid grid-cols-[140px_1fr] items-center">
+                    <strong className="text-slate-900">{t.beneficiary}</strong>
+                    <input value={bankData.nombre} onChange={(e) => setBankData({ ...bankData, nombre: e.target.value })} className="bg-transparent outline-none font-medium text-slate-800" />
+                  </div>
+                  <div className="grid grid-cols-[140px_1fr] items-center">
+                    <strong className="text-slate-900">{t.account}</strong>
+                    <input value={bankData.cuenta} onChange={(e) => setBankData({ ...bankData, cuenta: e.target.value })} className="bg-transparent outline-none font-medium text-slate-800" />
+                  </div>
+                  <div className="grid grid-cols-[140px_1fr] items-center">
+                    <strong className="text-slate-900">{t.rfc}</strong>
+                    <input value={bankData.rfc} onChange={(e) => setBankData({ ...bankData, rfc: e.target.value })} className="bg-transparent outline-none font-medium text-slate-800" />
+                  </div>
+                  <div className="grid grid-cols-[140px_1fr] items-center">
+                    <strong className="text-slate-900">{t.bank}</strong>
+                    <input value={bankData.banco} onChange={(e) => setBankData({ ...bankData, banco: e.target.value })} className="bg-transparent outline-none font-medium text-slate-800" />
+                  </div>
+                  <div className="grid grid-cols-[140px_1fr] items-center">
+                    <strong className="text-slate-900">{t.clabe}</strong>
+                    <input value={bankData.clabe} onChange={(e) => setBankData({ ...bankData, clabe: e.target.value })} className="bg-transparent outline-none font-medium text-slate-800" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="hidden print:block mt-4 text-[10px] text-slate-500 text-right font-medium">
+                {t.generatedAt} {currentDateTime}
+              </div>
+
+            </div>
           </div>
         </div>
-      </div>
+      </main>
+
+      {/* MODAL GESTOR DE CUENTAS BANCARIAS */}
+      {isBanksModalOpen && (
+        <div className="no-print fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-6 space-y-4 max-h-[85vh] flex flex-col">
+            <div className="flex justify-between items-center border-b pb-3">
+              <h3 className="font-bold text-slate-800 text-lg">{t.bankModalTitle}</h3>
+              <button onClick={() => setIsBanksModalOpen(false)} className="text-slate-400 font-bold text-xl">✕</button>
+            </div>
+
+            <div className="bg-cyan-50 p-3 rounded-xl border border-cyan-200 space-y-2 text-xs">
+              <span className="font-bold text-cyan-900 block">➕ Registrar Nueva Cuenta Bancaria:</span>
+              <div className="grid grid-cols-2 gap-2">
+                <input placeholder="Alias (Ej: BBVA Empresa, Banamex Dólares) *" value={newBankAccount.alias} onChange={(e) => setNewBankAccount({ ...newBankAccount, alias: e.target.value })} className="border p-2 rounded bg-white" />
+                <input placeholder="Banco (Ej: BBVA México, Banorte) *" value={newBankAccount.banco} onChange={(e) => setNewBankAccount({ ...newBankAccount, banco: e.target.value })} className="border p-2 rounded bg-white" />
+                <input placeholder="Nombre / Beneficiario" value={newBankAccount.nombre} onChange={(e) => setNewBankAccount({ ...newBankAccount, nombre: e.target.value })} className="border p-2 rounded bg-white" />
+                <input placeholder="RFC / Tax ID" value={newBankAccount.rfc} onChange={(e) => setNewBankAccount({ ...newBankAccount, rfc: e.target.value })} className="border p-2 rounded bg-white" />
+                <input placeholder="Número de Cuenta *" value={newBankAccount.cuenta} onChange={(e) => setNewBankAccount({ ...newBankAccount, cuenta: e.target.value })} className="border p-2 rounded bg-white" />
+                <input placeholder="CLABE / IBAN" value={newBankAccount.clabe} onChange={(e) => setNewBankAccount({ ...newBankAccount, clabe: e.target.value })} className="border p-2 rounded bg-white" />
+              </div>
+              <button 
+                onClick={handleAddBankAccount} 
+                className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 rounded text-xs transition"
+              >
+                + Guardar Cuenta Bancaria
+              </button>
+            </div>
+
+            <div className="overflow-y-auto flex-1 space-y-2 pr-1">
+              <h4 className="text-xs font-bold text-slate-500 uppercase border-b pb-1">Mis Cuentas Registradas:</h4>
+              {bankAccountsList.map((acc, idx) => (
+                <div key={idx} className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border text-xs">
+                  <div>
+                    <strong className="text-slate-800 block text-sm">💳 {acc.alias || acc.banco}</strong>
+                    <span className="text-slate-500">{acc.banco} • Cuenta: {acc.cuenta} {acc.clabe ? `• CLABE: ${acc.clabe}` : ''}</span>
+                  </div>
+                  <div className="flex gap-1">
+                    <button 
+                      onClick={() => { setBankData(acc); setIsBanksModalOpen(false); }} 
+                      className="bg-cyan-600 hover:bg-cyan-700 text-white font-semibold px-2.5 py-1 rounded text-xs"
+                    >
+                      Usar
+                    </button>
+                    <button onClick={() => handleRemoveBankAccount(idx)} className="text-rose-500 hover:text-rose-700 p-1 font-bold">
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-end border-t pt-3">
+              <button onClick={() => setIsBanksModalOpen(false)} className="bg-slate-200 text-slate-700 font-semibold text-xs px-4 py-2 rounded-lg">
+                {t.btnCloseModal}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL GESTOR DE CONCEPTOS FRECUENTES */}
+      {isConceptsModalOpen && (
+        <div className="no-print fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-6 space-y-4 max-h-[85vh] flex flex-col">
+            <div className="flex justify-between items-center border-b pb-3">
+              <div>
+                <h3 className="font-bold text-slate-800 text-lg">{t.modalTitle}</h3>
+                <p className="text-xs text-teal-700 font-semibold">
+                  Personalizados: {customCatalog.length} / 10
+                </p>
+              </div>
+              <button onClick={() => setIsConceptsModalOpen(false)} className="text-slate-400 font-bold text-xl">✕</button>
+            </div>
+
+            <div className="bg-teal-50 p-3 rounded-xl border border-teal-200 space-y-2 text-xs">
+              <span className="font-bold text-teal-900 block">{t.modalAddNew}</span>
+              <input 
+                placeholder="Descripción en Español *" 
+                value={newCustomConcept.es} 
+                onChange={(e) => setNewCustomConcept({ ...newCustomConcept, es: e.target.value })} 
+                className="w-full border p-2 rounded bg-white" 
+              />
+              <input 
+                placeholder="Descripción en Inglés (Opcional)" 
+                value={newCustomConcept.en} 
+                onChange={(e) => setNewCustomConcept({ ...newCustomConcept, en: e.target.value })} 
+                className="w-full border p-2 rounded bg-white" 
+              />
+              <button 
+                onClick={handleAddCustomConcept} 
+                className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 rounded text-xs transition"
+              >
+                {t.btnSaveCatItem}
+              </button>
+            </div>
+
+            <div className="overflow-y-auto flex-1 space-y-2 pr-1">
+              <h4 className="text-xs font-bold text-slate-500 uppercase border-b pb-1">Tus Conceptos Personalizados:</h4>
+              {customCatalog.length === 0 ? (
+                <p className="text-center text-slate-400 py-4 text-xs">No has agregado conceptos propios. Tendrás los 15 por defecto en el menú desplegable.</p>
+              ) : (
+                customCatalog.map((cat, idx) => (
+                  <div key={idx} className="flex justify-between items-center bg-slate-50 p-2.5 rounded-lg border text-xs">
+                    <div>
+                      <strong className="text-slate-800 block">⭐ {cat.es}</strong>
+                      {cat.en !== cat.es && <span className="text-slate-400 italic">{cat.en}</span>}
+                    </div>
+                    <button onClick={() => handleRemoveCustomConcept(idx)} className="text-rose-500 hover:text-rose-700 p-1 font-bold">
+                      🗑️
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="flex justify-end border-t pt-3">
+              <button onClick={() => setIsConceptsModalOpen(false)} className="bg-slate-200 text-slate-700 font-semibold text-xs px-4 py-2 rounded-lg">
+                {t.btnCloseModal}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL DIRECTORIO DE CLIENTES */}
       {isClientsOpen && (
@@ -888,7 +1177,6 @@ export default function Home() {
               <button onClick={() => setIsClientHistoryOpen(false)} className="text-slate-400 font-bold text-xl">✕</button>
             </div>
 
-            {/* ESTADÍSTICAS DEL CLIENTE */}
             <div className="bg-amber-50 p-3 rounded-xl border border-amber-200 flex justify-between items-center text-xs text-amber-900">
               <span><strong>Cotizaciones Registradas:</strong> {clientQuotesList.length}</span>
               <span><strong>Monto Total Cotizado:</strong> ${clientQuotesList.reduce((acc, q) => acc + (q.total_amount || 0), 0).toFixed(2)} {currency}</span>
