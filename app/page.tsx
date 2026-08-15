@@ -174,6 +174,9 @@ export default function Home() {
   const [discount, setDiscount] = useState<number>(0);
   const [currency] = useState<string>('MXN');
 
+  // CONTROL DE MENÚ MÓVIL
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
+
   // DATOS MI EMPRESA SELECCIONADA EN COTIZACIÓN
   const [companyName, setCompanyName] = useState<string>("Mi Empresa S.A. de C.V.");
   const [companyTagline, setCompanyTagline] = useState<string>("Servicios Profesionales");
@@ -710,6 +713,9 @@ export default function Home() {
 
   const cityStateText = [companyCity, companyState].filter(Boolean).join(', ');
 
+  // ESTILO UNIFICADO Y PROFESIONAL PARA BOTONES
+  const menuBtnClass = "w-full bg-slate-700 hover:bg-slate-600 text-white font-semibold px-4 py-3 rounded-xl text-sm transition-all duration-200 text-center shadow-md border border-slate-500/50 active:scale-[0.98]";
+
   return (
     <div className="bg-slate-100 min-h-screen font-sans text-slate-800 print:bg-white print:p-0 flex flex-col md:flex-row">
       
@@ -722,79 +728,91 @@ export default function Home() {
         }
       `}</style>
 
-      {/* SIDEBAR / MENÚ IZQUIERDO */}
-      <aside className="no-print w-full md:w-64 bg-slate-900 text-slate-100 p-4 shrink-0 flex flex-col justify-between border-r border-slate-800 shadow-lg">
-        <div className="space-y-6">
-          <div className="pb-4 border-b border-slate-800">
-            <h1 className="text-lg font-bold text-white text-center">{t.appTitle}</h1>
+      {/* BARRA SUPERIOR PARA MÓVILES (NO PRINT) */}
+      <div className="no-print md:hidden bg-slate-900 text-white px-4 py-3 flex justify-between items-center shadow-lg sticky top-0 z-40">
+        <h1 className="font-bold text-base tracking-tight">{t.appTitle}</h1>
+        <button 
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+          className="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg text-sm font-semibold flex items-center gap-1.5 active:bg-slate-700"
+        >
+          <span>{isMobileMenuOpen ? "✕" : "☰"}</span>
+          <span>{isMobileMenuOpen ? "Cerrar" : "Menú"}</span>
+        </button>
+      </div>
+
+      {/* SIDEBAR / MENÚ IZQUIERDO (RESPONSIVO EN MÓVIL Y DESKTOP) */}
+      <aside className={`no-print w-full md:w-64 bg-slate-900 text-slate-100 p-4 shrink-0 flex-col justify-between border-r border-slate-800 shadow-xl z-30 ${isMobileMenuOpen ? 'flex' : 'hidden md:flex'}`}>
+        <div className="space-y-4">
+          <div className="pb-3 border-b border-slate-800/80 hidden md:block">
+            <h1 className="text-xl font-bold text-white text-center tracking-tight">{t.appTitle}</h1>
           </div>
 
           <nav className="flex flex-col gap-2.5">
             <button 
-              onClick={() => setIsClientsOpen(true)} 
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3 py-3 rounded-lg text-xs transition text-center shadow-sm"
+              onClick={() => { setIsClientsOpen(true); setIsMobileMenuOpen(false); }} 
+              className={menuBtnClass}
             >
               {t.btnManageClients}
             </button>
 
             <button 
-              onClick={() => setIsConceptsModalOpen(true)} 
-              className="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold px-3 py-3 rounded-lg text-xs transition text-center shadow-sm"
+              onClick={() => { setIsConceptsModalOpen(true); setIsMobileMenuOpen(false); }} 
+              className={menuBtnClass}
             >
               {t.btnManageCatalog}
             </button>
 
             <button 
-              onClick={() => setIsCompaniesOpen(true)} 
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold px-3 py-3 rounded-lg text-xs transition text-center shadow-sm"
+              onClick={() => { setIsCompaniesOpen(true); setIsMobileMenuOpen(false); }} 
+              className={menuBtnClass}
             >
               {t.btnManageCompanies}
             </button>
 
             <button 
-              onClick={() => setIsBanksModalOpen(true)} 
-              className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-semibold px-3 py-3 rounded-lg text-xs transition text-center shadow-sm"
+              onClick={() => { setIsBanksModalOpen(true); setIsMobileMenuOpen(false); }} 
+              className={menuBtnClass}
             >
               {t.btnManageBanks}
             </button>
 
             <button 
-              onClick={fetchQuotesHistory} 
+              onClick={() => { fetchQuotesHistory(); setIsMobileMenuOpen(false); }} 
               disabled={isLoading} 
-              className="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold px-3 py-3 rounded-lg text-xs transition text-center shadow-sm"
+              className={menuBtnClass}
             >
               {t.btnHistory}
             </button>
 
             <button 
-              onClick={() => window.print()} 
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-3 py-3 rounded-lg text-xs transition text-center shadow-sm"
+              onClick={() => { setIsMobileMenuOpen(false); window.print(); }} 
+              className={menuBtnClass}
             >
               {t.btnPrint}
             </button>
 
             <button 
-              onClick={saveQuoteToCloud} 
+              onClick={() => { setIsMobileMenuOpen(false); saveQuoteToCloud(); }} 
               disabled={isSaving} 
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-3 py-3 rounded-lg text-xs transition text-center shadow-sm"
+              className={menuBtnClass}
             >
               {isSaving ? "Guardando..." : t.btnSaveCloud}
             </button>
 
             <button 
-              onClick={sendPdfWhatsApp} 
+              onClick={() => { setIsMobileMenuOpen(false); sendPdfWhatsApp(); }} 
               disabled={isGeneratingPdf} 
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold px-3 py-3 rounded-lg text-xs transition text-center shadow-sm"
+              className={menuBtnClass}
             >
               {isGeneratingPdf ? "Generando PDF..." : t.btnWhatsApp}
             </button>
           </nav>
         </div>
 
-        <div className="pt-6 border-t border-slate-800 mt-6">
+        <div className="pt-4 border-t border-slate-800/80 mt-4">
           <button 
             onClick={handleLogout} 
-            className="w-full flex items-center justify-center bg-rose-600 hover:bg-rose-700 text-white font-semibold px-3 py-3 rounded-lg text-xs transition shadow-sm text-center"
+            className="w-full flex items-center justify-center bg-rose-900/80 hover:bg-rose-800 text-rose-100 font-semibold px-4 py-3 rounded-xl text-sm transition-all duration-200 shadow-md text-center border border-rose-800/50"
           >
             {t.btnLogout}
           </button>
@@ -802,11 +820,11 @@ export default function Home() {
       </aside>
 
       {/* ÁREA PRINCIPAL */}
-      <main className="flex-1 p-4 md:p-8 overflow-x-hidden">
+      <main className="flex-1 p-3 md:p-8 overflow-x-hidden">
         <div className="max-w-5xl mx-auto print:max-w-none print:w-full space-y-6">
           
           {/* BARRA SUPERIOR DE SELECTORES */}
-          <div className="no-print bg-white p-5 rounded-xl shadow-md border border-slate-200 space-y-4">
+          <div className="no-print bg-white p-4 md:p-5 rounded-xl shadow-md border border-slate-200 space-y-4">
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
               
@@ -946,7 +964,7 @@ export default function Home() {
           </div>
 
           {/* DOCUMENTO COTIZACIÓN */}
-          <div id="quote-document" className="quote-container relative bg-white p-8 md:p-12 rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+          <div id="quote-document" className="quote-container relative bg-white p-5 md:p-12 rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
             
             {logo && (
               <div className="hidden print:flex absolute inset-0 items-center justify-center pointer-events-none select-none z-0">
@@ -955,9 +973,9 @@ export default function Home() {
             )}
 
             <div className="relative z-10">
-              {/* ENCABEZADO Y DATOS DE LA EMPRESA (CADA DATO EN SU RENGLÓN Y SÚPER UNIDOS) */}
+              {/* ENCABEZADO Y DATOS DE LA EMPRESA */}
               <div className="flex flex-col md:flex-row justify-between items-start border-b border-slate-200 pb-5 gap-6">
-                <div className="w-full md:w-1/2">
+                <div className="w-full md:w-1/2 flex justify-start">
                   <div className="relative border-2 border-dashed border-slate-300 bg-slate-50 rounded-lg h-24 w-52 flex items-center justify-center cursor-pointer overflow-hidden print:border-none print:bg-transparent">
                     {logo ? (
                       <img src={logo} alt="Logo" className="h-full object-contain" />
@@ -975,7 +993,7 @@ export default function Home() {
                     <input value={companyTagline} onChange={(e) => setCompanyTagline(e.target.value)} className="text-xs text-slate-500 w-full text-left md:text-right bg-transparent outline-none leading-none mb-1" />
                   )}
 
-                  {/* BLOQUE CON LÍNEAS INDIVIDUALES Y CERO ESPACIO INNECESARIO */}
+                  {/* BLOQUE CON LÍNEAS INDIVIDUALES */}
                   <div className="text-xs text-slate-600 flex flex-col items-start md:items-end leading-tight space-y-0.5 w-full">
                     {companyTaxId && <p className="font-semibold text-slate-800">RFC: {companyTaxId}</p>}
                     {companyAddress && <p>{companyAddress}</p>}
@@ -988,18 +1006,18 @@ export default function Home() {
               </div>
 
               {/* SECCIÓN CLIENTE Y FOLIO */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8 bg-slate-50 p-4 rounded-xl border border-slate-100 print:bg-transparent print:p-0 print:border-none">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6 md:my-8 bg-slate-50 p-4 rounded-xl border border-slate-100 print:bg-transparent print:p-0 print:border-none">
                 <div>
                   <span className="text-xs font-bold text-slate-900 uppercase block mb-1">{t.quotedTo}</span>
                   <input value={clientName} onChange={(e) => setClientName(e.target.value)} className="font-semibold text-slate-800 w-full bg-transparent outline-none" />
                 </div>
                 <div className="md:text-right space-y-1 text-xs text-slate-600">
-                  <p><strong>{t.folio}</strong> <input value={folio} onChange={(e) => setFolio(e.target.value)} className="w-28 text-right bg-transparent outline-none font-semibold text-slate-800" /></p>
+                  <p><strong>{t.folio}</strong> <input value={folio} onChange={(e) => setFolio(e.target.value)} className="w-28 text-left md:text-right bg-transparent outline-none font-semibold text-slate-800" /></p>
                 </div>
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+                <table className="w-full text-left border-collapse min-w-[500px]">
                   <thead>
                     <tr className="border-b-2 border-slate-200 text-xs font-bold text-slate-500 uppercase">
                       <th className="py-3 px-2">{t.thConcept}</th>
@@ -1089,23 +1107,23 @@ export default function Home() {
               <div className="mt-8 bg-slate-50 p-5 rounded-xl border border-slate-200 text-xs space-y-3 print:bg-transparent print:border-slate-300">
                 <p className="font-bold text-slate-800 text-sm">{t.bankHeader}</p>
                 <div className="flex flex-col space-y-2 text-slate-700 max-w-md">
-                  <div className="grid grid-cols-[140px_1fr] items-center">
+                  <div className="grid grid-cols-[120px_1fr] sm:grid-cols-[140px_1fr] items-center">
                     <strong className="text-slate-900">{t.beneficiary}</strong>
                     <span className="font-medium text-slate-800">{bankData.nombre || '—'}</span>
                   </div>
-                  <div className="grid grid-cols-[140px_1fr] items-center">
+                  <div className="grid grid-cols-[120px_1fr] sm:grid-cols-[140px_1fr] items-center">
                     <strong className="text-slate-900">{t.account}</strong>
                     <span className="font-medium text-slate-800">{bankData.cuenta || '—'}</span>
                   </div>
-                  <div className="grid grid-cols-[140px_1fr] items-center">
+                  <div className="grid grid-cols-[120px_1fr] sm:grid-cols-[140px_1fr] items-center">
                     <strong className="text-slate-900">{t.rfc}</strong>
                     <span className="font-medium text-slate-800">{bankData.rfc || '—'}</span>
                   </div>
-                  <div className="grid grid-cols-[140px_1fr] items-center">
+                  <div className="grid grid-cols-[120px_1fr] sm:grid-cols-[140px_1fr] items-center">
                     <strong className="text-slate-900">{t.bank}</strong>
                     <span className="font-medium text-slate-800">{bankData.banco || '—'}</span>
                   </div>
-                  <div className="grid grid-cols-[140px_1fr] items-center">
+                  <div className="grid grid-cols-[120px_1fr] sm:grid-cols-[140px_1fr] items-center">
                     <strong className="text-slate-900">{t.clabe}</strong>
                     <span className="font-medium text-slate-800">{bankData.clabe || '—'}</span>
                   </div>
@@ -1141,7 +1159,7 @@ export default function Home() {
                   </button>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <input placeholder="Alias (Ej: BBVA Empresa) *" value={bankForm.alias} onChange={(e) => setBankForm({ ...bankForm, alias: e.target.value })} className="border p-2 rounded bg-white" />
                 <input placeholder="Banco (Ej: BBVA México) *" value={bankForm.banco} onChange={(e) => setBankForm({ ...bankForm, banco: e.target.value })} className="border p-2 rounded bg-white" />
                 <input placeholder="Nombre / Beneficiario" value={bankForm.nombre} onChange={(e) => setBankForm({ ...bankForm, nombre: e.target.value })} className="border p-2 rounded bg-white" />
@@ -1268,12 +1286,12 @@ export default function Home() {
               <button onClick={() => setIsClientsOpen(false)} className="text-slate-400 font-bold text-xl">✕</button>
             </div>
 
-            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 grid grid-cols-2 gap-2 text-xs">
+            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
               <input placeholder="Nombre / Razón Social *" value={newClient.name} onChange={(e) => setNewClient({ ...newClient, name: e.target.value })} className="border p-2 rounded bg-white" />
               <input placeholder="RFC / Tax ID" value={newClient.tax_id} onChange={(e) => setNewClient({ ...newClient, tax_id: e.target.value })} className="border p-2 rounded bg-white" />
               <input placeholder="Correo Electrónico" value={newClient.email} onChange={(e) => setNewClient({ ...newClient, email: e.target.value })} className="border p-2 rounded bg-white" />
               <input placeholder="Teléfono WhatsApp (ej: 521662...)" value={newClient.phone} onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })} className="border p-2 rounded bg-white" />
-              <button onClick={handleSaveClient} className="col-span-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded text-xs transition">
+              <button onClick={handleSaveClient} className="col-span-1 sm:col-span-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded text-xs transition">
                 + Guardar Cliente
               </button>
             </div>
@@ -1389,7 +1407,7 @@ export default function Home() {
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
                 <input placeholder="Nombre de la Empresa *" value={newCompany.company_name} onChange={(e) => setNewCompany({ ...newCompany, company_name: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-purple-500" />
                 <input placeholder="Slogan / Giro" value={newCompany.tagline} onChange={(e) => setNewCompany({ ...newCompany, tagline: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-purple-500" />
                 <input placeholder="RFC / Tax ID" value={newCompany.tax_id} onChange={(e) => setNewCompany({ ...newCompany, tax_id: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-purple-500" />
@@ -1412,7 +1430,7 @@ export default function Home() {
                   <input type="file" accept="image/*" onChange={handleCompanyLogoUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
                 </div>
 
-                <input placeholder="Dirección Fiscal / Calle y Número" value={newCompany.address} onChange={(e) => setNewCompany({ ...newCompany, address: e.target.value })} className="md:col-span-3 border p-2 rounded bg-white outline-none focus:border-purple-500" />
+                <input placeholder="Dirección Fiscal / Calle y Número" value={newCompany.address} onChange={(e) => setNewCompany({ ...newCompany, address: e.target.value })} className="col-span-1 sm:col-span-2 md:col-span-3 border p-2 rounded bg-white outline-none focus:border-purple-500" />
               </div>
 
               <button onClick={handleSaveCompany} className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 rounded text-xs transition shadow-sm">
