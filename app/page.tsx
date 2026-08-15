@@ -7,25 +7,24 @@ import { supabase } from '@/lib/supabase';
 // DICCIONARIO DE TRADUCCIONES
 const translations: Record<string, any> = {
   es: {
-    appTitle: "⚡ Cotizador Express Pro",
-    appSub: "Selecciona el idioma, cliente y empresa emisora.",
-    lblLang: "🌐 Idioma:",
-    lblTax: "Impuesto:",
-    catalogLabel: "📦 Catálogo Rápido:",
-    btnCatalog: "⚡ Agregar",
-    btnManageCatalog: "⚙️ Conceptos",
-    btnManageBanks: "🏦 Cuentas Bancarias",
-    btnHistory: "📜 Mis Cotizaciones",
-    btnManageClients: "👥 Clientes",
-    btnManageCompanies: "🏢 Mis Empresas",
-    lblSelectBank: "💳 Cuenta Bancaria:",
-    lblSelectClient: "👤 Cliente Frecuente:",
-    lblSelectCompany: "🏢 Emitir con:",
-    btnBlank: "➕ Blanco",
-    btnPrint: "📄 Guardar / PDF",
-    btnSaveCloud: "☁️ Guardar en Nube",
-    btnWhatsApp: "📲 Enviar PDF por WhatsApp",
-    btnLogout: "🚪 Cerrar Sesión",
+    appTitle: "Cotizador Express Pro",
+    lblLang: "Idioma",
+    lblTax: "Impuesto",
+    catalogLabel: "Catálogo Rápido",
+    btnCatalog: "Agregar",
+    btnManageCatalog: "Conceptos",
+    btnManageBanks: "Cuentas Bancarias",
+    btnHistory: "Mis Cotizaciones",
+    btnManageClients: "Clientes",
+    btnManageCompanies: "Mis Empresas",
+    lblSelectBank: "Cuenta Bancaria",
+    lblSelectClient: "Cliente Frecuente",
+    lblSelectCompany: "Emitir con",
+    btnBlank: "Blanco",
+    btnPrint: "Guardar / PDF",
+    btnSaveCloud: "Guardar en Nube",
+    btnWhatsApp: "Enviar PDF por WhatsApp",
+    btnLogout: "Cerrar Sesión",
     logoPrompt: "Haz clic para subir tu Logo o cárgalo desde 'Mis Empresas'",
     quotedTo: "Cotizado Para:",
     details: "Detalles Comerciales:",
@@ -37,7 +36,7 @@ const translations: Record<string, any> = {
     thQty: "Cant.",
     thPrice: "P. Unitario",
     thAmount: "Importe",
-    bankHeader: "💳 Datos Bancarios para Pago:",
+    bankHeader: "Datos Bancarios para Pago:",
     beneficiary: "Nombre / Beneficiario:",
     bank: "Banco:",
     account: "Cuenta:",
@@ -47,46 +46,45 @@ const translations: Record<string, any> = {
     discount: "Descuento (%):",
     taxLabel: "Impuesto:",
     total: "Total Neto:",
-    modalTitle: "⚙️ Administrar Conceptos Frecuentes",
-    modalAddNew: "➕ Agregar Nuevo Concepto (Máx. 10 personalizados):",
-    btnSaveCatItem: "+ Guardar Concepto",
+    modalTitle: "Administrar Conceptos Frecuentes",
+    modalAddNew: "Agregar Nuevo Concepto (Máx. 10 personalizados):",
+    btnSaveCatItem: "Guardar Concepto",
     btnCloseModal: "Cerrar",
     generatedAt: "Fecha y hora de emisión:",
-    bankModalTitle: "🏦 Administrar Cuentas Bancarias",
-    historyModalTitle: "📜 Historial General de Cotizaciones Guardadas",
-    clientHistoryTitle: "📋 Historial de Cotizaciones del Cliente",
-    clientModalTitle: "👥 Directorio de Clientes Frecuentes",
-    companyModalTitle: "🏢 Administrar Mis Empresas",
+    bankModalTitle: "Administrar Cuentas Bancarias",
+    historyModalTitle: "Historial General de Cotizaciones Guardadas",
+    clientHistoryTitle: "Historial de Cotizaciones del Cliente",
+    clientModalTitle: "Directorio de Clientes Frecuentes",
+    companyModalTitle: "Administrar Mis Empresas",
     noHistory: "Aún no tienes cotizaciones guardadas en la nube.",
     noClientHistory: "Este cliente aún no tiene cotizaciones guardadas.",
     noClients: "No tienes clientes frecuentes registrados.",
     noCompanies: "No tienes empresas registradas.",
-    btnLoadQuote: "📥 Cargar",
-    btnDeleteQuote: "🗑️ Eliminar",
-    btnSelectClient: "⚡ Usar Cliente",
-    btnClientHistory: "📋 Historial",
-    btnSelectCompany: "⚡ Cargar Empresa"
+    btnLoadQuote: "Cargar",
+    btnDeleteQuote: "Eliminar",
+    btnSelectClient: "Usar Cliente",
+    btnClientHistory: "Historial",
+    btnSelectCompany: "Cargar Empresa"
   },
   en: {
-    appTitle: "⚡ Express Quote Pro",
-    appSub: "Select language, client, and issuing company.",
-    lblLang: "🌐 Language:",
-    lblTax: "Tax Rate:",
-    catalogLabel: "📦 Quick Catalog:",
-    btnCatalog: "⚡ Add Item",
-    btnManageCatalog: "⚙️ Concepts",
-    btnManageBanks: "🏦 Bank Accounts",
-    btnHistory: "📜 Saved Quotes",
-    btnManageClients: "👥 Clients",
-    btnManageCompanies: "🏢 My Companies",
-    lblSelectBank: "💳 Bank Account:",
-    lblSelectClient: "👤 Saved Client:",
-    lblSelectCompany: "🏢 Issue As:",
-    btnBlank: "➕ Blank Item",
-    btnPrint: "📄 Save / PDF",
-    btnSaveCloud: "☁️ Save to Cloud",
-    btnWhatsApp: "📲 Send PDF via WhatsApp",
-    btnLogout: "🚪 Log Out",
+    appTitle: "Express Quote Pro",
+    lblLang: "Language",
+    lblTax: "Tax Rate",
+    catalogLabel: "Quick Catalog",
+    btnCatalog: "Add Item",
+    btnManageCatalog: "Concepts",
+    btnManageBanks: "Bank Accounts",
+    btnHistory: "Saved Quotes",
+    btnManageClients: "Clients",
+    btnManageCompanies: "My Companies",
+    lblSelectBank: "Bank Account",
+    lblSelectClient: "Saved Client",
+    lblSelectCompany: "Issue As",
+    btnBlank: "Blank Item",
+    btnPrint: "Save / PDF",
+    btnSaveCloud: "Save to Cloud",
+    btnWhatsApp: "Send PDF via WhatsApp",
+    btnLogout: "Log Out",
     logoPrompt: "Click to upload Logo or load it from 'My Companies'",
     quotedTo: "Quoted To:",
     details: "Commercial Details:",
@@ -98,7 +96,7 @@ const translations: Record<string, any> = {
     thQty: "Qty",
     thPrice: "Unit Price",
     thAmount: "Amount",
-    bankHeader: "💳 Wire / Banking Details:",
+    bankHeader: "Wire / Banking Details:",
     beneficiary: "Beneficiary Name:",
     bank: "Bank:",
     account: "Account #:",
@@ -108,25 +106,25 @@ const translations: Record<string, any> = {
     discount: "Discount (%):",
     taxLabel: "Tax Rate:",
     total: "Net Total:",
-    modalTitle: "⚙️ Manage Frequent Concepts",
-    modalAddNew: "➕ Add New Concept (Max 10 custom):",
-    btnSaveCatItem: "+ Save Concept",
+    modalTitle: "Manage Frequent Concepts",
+    modalAddNew: "Add New Concept (Max 10 custom):",
+    btnSaveCatItem: "Save Concept",
     btnCloseModal: "Close",
     generatedAt: "Date and time of issue:",
-    bankModalTitle: "🏦 Manage Bank Accounts",
-    historyModalTitle: "📜 Saved Quotes History",
-    clientHistoryTitle: "📋 Client's Quote History",
-    clientModalTitle: "👥 Frequent Clients Directory",
-    companyModalTitle: "🏢 Manage My Companies",
+    bankModalTitle: "Manage Bank Accounts",
+    historyModalTitle: "Saved Quotes History",
+    clientHistoryTitle: "Client's Quote History",
+    clientModalTitle: "Frequent Clients Directory",
+    companyModalTitle: "Manage My Companies",
     noHistory: "You don't have any saved quotes in the cloud yet.",
     noClientHistory: "No quotes found for this client.",
     noClients: "No saved clients found.",
     noCompanies: "No companies registered.",
-    btnLoadQuote: "📥 Load",
-    btnDeleteQuote: "🗑️ Delete",
-    btnSelectClient: "⚡ Use Client",
-    btnClientHistory: "📋 History",
-    btnSelectCompany: "⚡ Load Company"
+    btnLoadQuote: "Load",
+    btnDeleteQuote: "Delete",
+    btnSelectClient: "Use Client",
+    btnClientHistory: "History",
+    btnSelectCompany: "Load Company"
   }
 };
 
@@ -201,7 +199,10 @@ export default function Home() {
   const [bankAccountsList, setBankAccountsList] = useState(initialBankAccounts);
   const [bankData, setBankData] = useState(initialBankAccounts[0]);
   const [isBanksModalOpen, setIsBanksModalOpen] = useState<boolean>(false);
-  const [newBankAccount, setNewBankAccount] = useState({
+  
+  // Estado para la cuenta bancaria en edición/creación
+  const [editingBankIndex, setEditingBankIndex] = useState<number | null>(null);
+  const [bankForm, setBankForm] = useState({
     alias: '', nombre: '', banco: '', cuenta: '', clabe: '', rfc: ''
   });
 
@@ -250,15 +251,37 @@ export default function Home() {
   };
 
   // GESTIÓN DE CUENTAS BANCARIAS
-  const handleAddBankAccount = () => {
-    if (!newBankAccount.alias || !newBankAccount.banco || !newBankAccount.cuenta) {
+  const handleSaveBankAccount = () => {
+    if (!bankForm.alias || !bankForm.banco || !bankForm.cuenta) {
       return alert("Por favor completa al menos el Alias, Banco y Número de Cuenta.");
     }
-    const updated = [...bankAccountsList, newBankAccount];
-    setBankAccountsList(updated);
-    setBankData(newBankAccount);
-    setNewBankAccount({ alias: '', nombre: '', banco: '', cuenta: '', clabe: '', rfc: '' });
-    alert("✅ Cuenta bancaria guardada y seleccionada.");
+
+    let updatedAccounts = [...bankAccountsList];
+
+    if (editingBankIndex !== null) {
+      updatedAccounts[editingBankIndex] = bankForm;
+      if (bankData === bankAccountsList[editingBankIndex]) {
+        setBankData(bankForm);
+      }
+      alert("Cuenta bancaria actualizada.");
+    } else {
+      updatedAccounts.push(bankForm);
+      setBankData(bankForm);
+      alert("Cuenta bancaria guardada y seleccionada.");
+    }
+
+    setBankAccountsList(updatedAccounts);
+    resetBankForm();
+  };
+
+  const handleEditBankClick = (index: number) => {
+    setEditingBankIndex(index);
+    setBankForm(bankAccountsList[index]);
+  };
+
+  const resetBankForm = () => {
+    setEditingBankIndex(null);
+    setBankForm({ alias: '', nombre: '', banco: '', cuenta: '', clabe: '', rfc: '' });
   };
 
   const handleRemoveBankAccount = (index: number) => {
@@ -268,6 +291,9 @@ export default function Home() {
     const updated = bankAccountsList.filter((_, i) => i !== index);
     setBankAccountsList(updated);
     setBankData(updated[0]);
+    if (editingBankIndex === index) {
+      resetBankForm();
+    }
   };
 
   // AGREGAR CONCEPTO PERSONALIZADO
@@ -277,7 +303,7 @@ export default function Home() {
     }
 
     if (customCatalog.length >= 10) {
-      return alert("⚠️ Has alcanzado el límite máximo de 10 conceptos personalizados.");
+      return alert("Has alcanzado el límite máximo de 10 conceptos personalizados.");
     }
 
     const newItem = {
@@ -287,7 +313,7 @@ export default function Home() {
 
     setCustomCatalog([...customCatalog, newItem]);
     setNewCustomConcept({ es: '', en: '' });
-    alert("✅ Concepto guardado e integrado a la lista rápida.");
+    alert("Concepto guardado e integrado a la lista rápida.");
   };
 
   const handleRemoveCustomConcept = (index: number) => {
@@ -311,7 +337,7 @@ export default function Home() {
       const { error } = await supabase.from('clients').insert([{ ...newClient, user_id: user?.id }]);
       if (error) throw error;
       
-      alert("✅ Cliente guardado con éxito.");
+      alert("Cliente guardado con éxito.");
       setNewClient({ name: '', email: '', phone: '', tax_id: '', address: '' });
       fetchClients();
     } catch (err: any) {
@@ -396,7 +422,7 @@ export default function Home() {
       const { error } = await supabase.from('companies').insert([{ ...newCompany, user_id: user?.id }]);
       if (error) throw error;
 
-      alert("🏢 Empresa registrada con éxito.");
+      alert("Empresa registrada con éxito.");
       setNewCompany({ company_name: '', tagline: '', email: '', phone: '', address: '', logo_url: '' });
       fetchCompanies();
     } catch (err: any) {
@@ -517,19 +543,19 @@ export default function Home() {
       }
 
       const cleanPhone = clientPhone.replace(/\D/g, '');
-      let text = `📄 *COTIZACIÓN DE SERVICIOS*\n`;
-      text += `🏢 *${companyName}*\n`;
-      text += `👤 *${clientName}*\n`;
-      text += `📌 *Folio:* ${folio}\n`;
-      text += `💰 *Total Neto:* *$${total.toFixed(2)} ${currency}*\n\n`;
+      let text = `COTIZACIÓN DE SERVICIOS\n`;
+      text += `${companyName}\n`;
+      text += `${clientName}\n`;
+      text += `Folio: ${folio}\n`;
+      text += `Total Neto: $${total.toFixed(2)} ${currency}\n\n`;
       
       if (pdfUrl) {
-        text += `📥 *Puedes descargar/ver el PDF completo aquí:*\n${pdfUrl}\n\n`;
+        text += `Puedes descargar/ver el PDF completo aquí:\n${pdfUrl}\n\n`;
       } else {
-        text += `📎 *Cotización adjunta.*\n\n`;
+        text += `Cotización adjunta.\n\n`;
       }
       
-      text += `¡Quedamos a tus órdenes! 🙌`;
+      text += `¡Quedamos a tus órdenes!`;
 
       const encodedText = encodeURIComponent(text);
       const waUrl = cleanPhone 
@@ -538,7 +564,7 @@ export default function Home() {
 
       window.open(waUrl, '_blank');
     } catch (err: any) {
-      alert("⚠️ Error al generar/enviar PDF: " + err.message);
+      alert("Error al generar/enviar PDF: " + err.message);
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -562,9 +588,9 @@ export default function Home() {
       ]);
 
       if (error) throw error;
-      alert("☁️ ¡Cotización guardada exitosamente en la nube!");
+      alert("¡Cotización guardada exitosamente en la nube!");
     } catch (err: any) {
-      alert("⚠️ Error al guardar en la nube: " + err.message);
+      alert("Error al guardar en la nube: " + err.message);
     } finally {
       setIsSaving(false);
     }
@@ -595,7 +621,7 @@ export default function Home() {
     setIsHistoryOpen(false);
     setIsClientHistoryOpen(false);
     setIsClientsOpen(false);
-    alert(`📥 Cotización "${quote.client_name}" cargada.`);
+    alert(`Cotización "${quote.client_name}" cargada.`);
   };
 
   const deleteQuoteFromHistory = async (id: string) => {
@@ -626,39 +652,38 @@ export default function Home() {
         }
       `}</style>
 
-      {/* SIDEBAR / MENÚ IZQUIERDO DE ACCIONES */}
+      {/* SIDEBAR / MENÚ IZQUIERDO */}
       <aside className="no-print w-full md:w-64 bg-slate-900 text-slate-100 p-4 shrink-0 flex flex-col justify-between border-r border-slate-800 shadow-lg">
         <div className="space-y-6">
           <div className="pb-4 border-b border-slate-800">
-            <h1 className="text-lg font-bold text-white">{t.appTitle}</h1>
-            <p className="text-xs text-slate-400 mt-1">{t.appSub}</p>
+            <h1 className="text-lg font-bold text-white text-center">{t.appTitle}</h1>
           </div>
 
-          <nav className="flex flex-col gap-2">
+          <nav className="flex flex-col gap-2.5">
             <button 
               onClick={() => setIsClientsOpen(true)} 
-              className="flex items-center gap-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3 py-2.5 rounded-lg text-xs transition text-left shadow-sm"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3 py-3 rounded-lg text-xs transition text-center shadow-sm"
             >
               {t.btnManageClients}
             </button>
 
             <button 
               onClick={() => setIsConceptsModalOpen(true)} 
-              className="flex items-center gap-2.5 bg-teal-600 hover:bg-teal-700 text-white font-semibold px-3 py-2.5 rounded-lg text-xs transition text-left shadow-sm"
+              className="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold px-3 py-3 rounded-lg text-xs transition text-center shadow-sm"
             >
               {t.btnManageCatalog}
             </button>
 
             <button 
               onClick={() => setIsCompaniesOpen(true)} 
-              className="flex items-center gap-2.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-3 py-2.5 rounded-lg text-xs transition text-left shadow-sm"
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold px-3 py-3 rounded-lg text-xs transition text-center shadow-sm"
             >
               {t.btnManageCompanies}
             </button>
 
             <button 
               onClick={() => setIsBanksModalOpen(true)} 
-              className="flex items-center gap-2.5 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold px-3 py-2.5 rounded-lg text-xs transition text-left shadow-sm"
+              className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-semibold px-3 py-3 rounded-lg text-xs transition text-center shadow-sm"
             >
               {t.btnManageBanks}
             </button>
@@ -666,16 +691,14 @@ export default function Home() {
             <button 
               onClick={fetchQuotesHistory} 
               disabled={isLoading} 
-              className="flex items-center gap-2.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold px-3 py-2.5 rounded-lg text-xs transition text-left shadow-sm"
+              className="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold px-3 py-3 rounded-lg text-xs transition text-center shadow-sm"
             >
               {t.btnHistory}
             </button>
 
-            <hr className="border-slate-800 my-2" />
-
             <button 
               onClick={() => window.print()} 
-              className="flex items-center gap-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-3 py-2.5 rounded-lg text-xs transition text-left shadow-sm"
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-3 py-3 rounded-lg text-xs transition text-center shadow-sm"
             >
               {t.btnPrint}
             </button>
@@ -683,7 +706,7 @@ export default function Home() {
             <button 
               onClick={saveQuoteToCloud} 
               disabled={isSaving} 
-              className="flex items-center gap-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-3 py-2.5 rounded-lg text-xs transition text-left shadow-sm"
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-3 py-3 rounded-lg text-xs transition text-center shadow-sm"
             >
               {isSaving ? "Guardando..." : t.btnSaveCloud}
             </button>
@@ -691,7 +714,7 @@ export default function Home() {
             <button 
               onClick={sendPdfWhatsApp} 
               disabled={isGeneratingPdf} 
-              className="flex items-center gap-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold px-3 py-2.5 rounded-lg text-xs transition text-left shadow-sm"
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold px-3 py-3 rounded-lg text-xs transition text-center shadow-sm"
             >
               {isGeneratingPdf ? "Generando PDF..." : t.btnWhatsApp}
             </button>
@@ -701,7 +724,7 @@ export default function Home() {
         <div className="pt-6 border-t border-slate-800 mt-6">
           <button 
             onClick={handleLogout} 
-            className="w-full flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold px-3 py-2.5 rounded-lg text-xs transition shadow-sm"
+            className="w-full flex items-center justify-center bg-rose-600 hover:bg-rose-700 text-white font-semibold px-3 py-3 rounded-lg text-xs transition shadow-sm text-center"
           >
             {t.btnLogout}
           </button>
@@ -712,118 +735,144 @@ export default function Home() {
       <main className="flex-1 p-4 md:p-8 overflow-x-hidden">
         <div className="max-w-5xl mx-auto print:max-w-none print:w-full space-y-6">
           
-          {/* BARRA SUPERIOR DE SELECTORES */}
-          <div className="no-print bg-white p-4 rounded-xl shadow-md space-y-3 border border-slate-200">
-            <div className="flex flex-wrap items-center gap-3">
+          {/* BARRA SUPERIOR DE SELECTORES COMPLETAMENTE SIMÉTRICA */}
+          <div className="no-print bg-white p-5 rounded-xl shadow-md border border-slate-200 space-y-4">
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+              
               {/* IDIOMA */}
-              <div className="flex items-center gap-1.5 bg-slate-50 p-1.5 rounded-lg border border-slate-200">
-                <label className="text-xs font-bold text-slate-600 pl-1">{t.lblLang}</label>
+              <div className="flex flex-col justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{t.lblLang}</label>
                 <select 
                   value={lang} 
                   onChange={(e) => setLang(e.target.value as 'es' | 'en')}
-                  className="bg-white text-slate-800 font-semibold text-xs rounded border border-slate-300 p-1 cursor-pointer outline-none"
+                  className="w-full bg-white text-slate-800 font-semibold text-xs rounded border border-slate-300 p-2 cursor-pointer outline-none focus:border-indigo-500 transition"
                 >
-                  <option value="es">🇪🇸 Español</option>
-                  <option value="en">🇺🇸 English</option>
+                  <option value="es">Español</option>
+                  <option value="en">English</option>
                 </select>
               </div>
 
               {/* IMPUESTOS */}
-              <div className="flex items-center gap-1.5 bg-slate-50 p-1.5 rounded-lg border border-slate-200">
-                <label className="text-xs font-bold text-slate-600 pl-1">{t.lblTax}</label>
-                <select 
-                  onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
-                  className="bg-white text-slate-800 font-semibold text-xs rounded border border-slate-300 p-1 cursor-pointer outline-none max-w-[130px]"
-                >
-                  <option value="">-- Seleccionar --</option>
-                  {taxPresets.map((preset, idx) => (
-                    <option key={idx} value={preset.value}>{preset.label}</option>
-                  ))}
-                </select>
-                <input 
-                  type="number" step="0.01" value={taxRate} 
-                  onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
-                  className="w-12 text-center font-bold text-xs bg-white border border-slate-300 rounded p-1 text-indigo-700 outline-none"
-                />
-                <span className="text-xs font-bold text-slate-500">%</span>
+              <div className="flex flex-col justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{t.lblTax}</label>
+                <div className="flex gap-1.5 items-center">
+                  <select 
+                    onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
+                    className="w-full bg-white text-slate-800 font-semibold text-xs rounded border border-slate-300 p-2 cursor-pointer outline-none focus:border-indigo-500 transition"
+                  >
+                    <option value="">-- Seleccionar --</option>
+                    {taxPresets.map((preset, idx) => (
+                      <option key={idx} value={preset.value}>{preset.label}</option>
+                    ))}
+                  </select>
+                  <div className="flex items-center bg-white border border-slate-300 rounded px-1.5 py-1">
+                    <input 
+                      type="number" step="0.01" value={taxRate} 
+                      onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
+                      className="w-10 text-center font-bold text-xs text-indigo-700 outline-none"
+                    />
+                    <span className="text-xs font-bold text-slate-400">%</span>
+                  </div>
+                </div>
               </div>
 
               {/* EMITIR CON (EMPRESA) */}
-              {companiesList.length > 0 && (
-                <div className="flex items-center gap-1.5 bg-purple-50 p-1.5 rounded-lg border border-purple-200">
-                  <label className="text-xs font-bold text-purple-900">{t.lblSelectCompany}</label>
-                  <select 
-                    onChange={(e) => {
-                      const comp = companiesList[Number(e.target.value)];
-                      if (comp) applyCompany(comp);
-                    }}
-                    className="bg-white text-purple-900 font-semibold text-xs rounded border border-purple-300 p-1 outline-none cursor-pointer"
-                  >
-                    {companiesList.map((c, idx) => (
+              <div className="flex flex-col justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{t.lblSelectCompany}</label>
+                <select 
+                  onChange={(e) => {
+                    const comp = companiesList[Number(e.target.value)];
+                    if (comp) applyCompany(comp);
+                  }}
+                  disabled={companiesList.length === 0}
+                  className="w-full bg-white text-slate-800 font-semibold text-xs rounded border border-slate-300 p-2 outline-none cursor-pointer focus:border-indigo-500 transition disabled:opacity-50"
+                >
+                  {companiesList.length === 0 ? (
+                    <option value="">Sin empresas</option>
+                  ) : (
+                    companiesList.map((c, idx) => (
                       <option key={c.id} value={idx}>{c.company_name}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
+                    ))
+                  )}
+                </select>
+              </div>
 
               {/* CLIENTE FRECUENTE */}
-              {clientsList.length > 0 && (
-                <div className="flex items-center gap-1.5 bg-blue-50 p-1.5 rounded-lg border border-blue-200">
-                  <label className="text-xs font-bold text-blue-900">{t.lblSelectClient}</label>
-                  <select 
-                    onChange={(e) => {
-                      const cli = clientsList[Number(e.target.value)];
-                      if (cli) handleSelectClient(cli);
-                    }}
-                    className="bg-white text-blue-900 font-semibold text-xs rounded border border-blue-300 p-1 outline-none cursor-pointer"
-                  >
-                    <option value="">-- Seleccionar --</option>
-                    {clientsList.map((c, idx) => (
-                      <option key={c.id} value={idx}>{c.name}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
+              <div className="flex flex-col justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{t.lblSelectClient}</label>
+                <select 
+                  onChange={(e) => {
+                    const cli = clientsList[Number(e.target.value)];
+                    if (cli) handleSelectClient(cli);
+                  }}
+                  disabled={clientsList.length === 0}
+                  className="w-full bg-white text-slate-800 font-semibold text-xs rounded border border-slate-300 p-2 outline-none cursor-pointer focus:border-indigo-500 transition disabled:opacity-50"
+                >
+                  {clientsList.length === 0 ? (
+                    <option value="">Sin clientes</option>
+                  ) : (
+                    <>
+                      <option value="">-- Seleccionar --</option>
+                      {clientsList.map((c, idx) => (
+                        <option key={c.id} value={idx}>{c.name}</option>
+                      ))}
+                    </>
+                  )}
+                </select>
+              </div>
 
               {/* CUENTA BANCARIA */}
-              <div className="flex items-center gap-1.5 bg-cyan-50 p-1.5 rounded-lg border border-cyan-200">
-                <label className="text-xs font-bold text-cyan-900">{t.lblSelectBank}</label>
+              <div className="flex flex-col justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{t.lblSelectBank}</label>
                 <select 
                   onChange={(e) => {
                     const account = bankAccountsList[Number(e.target.value)];
                     if (account) setBankData(account);
                   }}
-                  className="bg-white text-cyan-900 font-semibold text-xs rounded border border-cyan-300 p-1 outline-none cursor-pointer"
+                  className="w-full bg-white text-slate-800 font-semibold text-xs rounded border border-slate-300 p-2 outline-none cursor-pointer focus:border-indigo-500 transition"
                 >
                   {bankAccountsList.map((b, idx) => (
                     <option key={idx} value={idx}>{b.alias || b.banco}</option>
                   ))}
                 </select>
               </div>
+
             </div>
 
-            {/* CATÁLOGO RÁPIDO */}
-            <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100">
-              <span className="text-xs font-bold text-slate-500">{t.catalogLabel}</span>
-              <select 
-                value={selectedCatalogIdx}
-                onChange={(e) => setSelectedCatalogIdx(Number(e.target.value))}
-                className="bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg p-1.5 outline-none font-medium max-w-[240px] flex-1 md:flex-none"
-              >
-                {fullCatalog.map((item, idx) => (
-                  <option key={idx} value={idx}>
-                    {idx < 15 ? "📌 " : "⭐ "}
-                    {(lang === 'es' ? item.es : item.en)}
-                  </option>
-                ))}
-              </select>
-              <button onClick={addItemFromCatalog} className="bg-slate-800 hover:bg-slate-900 text-white font-semibold px-3 py-1.5 rounded-lg text-xs transition">
-                {t.btnCatalog}
-              </button>
-              <button onClick={addBlankItem} className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold px-3 py-1.5 rounded-lg text-xs border border-indigo-200 transition">
-                {t.btnBlank}
-              </button>
+            {/* CATÁLOGO RÁPIDO Y BOTONES CENTRADOS */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-slate-100">
+              <div className="flex items-center gap-2 flex-1">
+                <span className="text-xs font-bold text-slate-500 shrink-0">{t.catalogLabel}</span>
+                <select 
+                  value={selectedCatalogIdx}
+                  onChange={(e) => setSelectedCatalogIdx(Number(e.target.value))}
+                  className="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg p-2 outline-none font-medium focus:border-indigo-500 transition"
+                >
+                  {fullCatalog.map((item, idx) => (
+                    <option key={idx} value={idx}>
+                      {(lang === 'es' ? item.es : item.en)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex gap-2 shrink-0">
+                <button 
+                  onClick={addItemFromCatalog} 
+                  className="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-900 text-white font-semibold px-4 py-2 rounded-lg text-xs transition text-center shadow-sm"
+                >
+                  {t.btnCatalog}
+                </button>
+                <button 
+                  onClick={addBlankItem} 
+                  className="flex-1 sm:flex-none bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold px-4 py-2 rounded-lg text-xs border border-indigo-200 transition text-center"
+                >
+                  {t.btnBlank}
+                </button>
+              </div>
             </div>
+
           </div>
 
           {/* DOCUMENTO COTIZACIÓN */}
@@ -953,28 +1002,29 @@ export default function Home() {
                 </div>
               </div>
 
+              {/* DATOS BANCARIOS FIJOS */}
               <div className="mt-8 bg-slate-50 p-5 rounded-xl border border-slate-200 text-xs space-y-3 print:bg-transparent print:border-slate-300">
                 <p className="font-bold text-slate-800 text-sm">{t.bankHeader}</p>
                 <div className="flex flex-col space-y-2 text-slate-700 max-w-md">
                   <div className="grid grid-cols-[140px_1fr] items-center">
                     <strong className="text-slate-900">{t.beneficiary}</strong>
-                    <input value={bankData.nombre} onChange={(e) => setBankData({ ...bankData, nombre: e.target.value })} className="bg-transparent outline-none font-medium text-slate-800" />
+                    <span className="font-medium text-slate-800">{bankData.nombre || '—'}</span>
                   </div>
                   <div className="grid grid-cols-[140px_1fr] items-center">
                     <strong className="text-slate-900">{t.account}</strong>
-                    <input value={bankData.cuenta} onChange={(e) => setBankData({ ...bankData, cuenta: e.target.value })} className="bg-transparent outline-none font-medium text-slate-800" />
+                    <span className="font-medium text-slate-800">{bankData.cuenta || '—'}</span>
                   </div>
                   <div className="grid grid-cols-[140px_1fr] items-center">
                     <strong className="text-slate-900">{t.rfc}</strong>
-                    <input value={bankData.rfc} onChange={(e) => setBankData({ ...bankData, rfc: e.target.value })} className="bg-transparent outline-none font-medium text-slate-800" />
+                    <span className="font-medium text-slate-800">{bankData.rfc || '—'}</span>
                   </div>
                   <div className="grid grid-cols-[140px_1fr] items-center">
                     <strong className="text-slate-900">{t.bank}</strong>
-                    <input value={bankData.banco} onChange={(e) => setBankData({ ...bankData, banco: e.target.value })} className="bg-transparent outline-none font-medium text-slate-800" />
+                    <span className="font-medium text-slate-800">{bankData.banco || '—'}</span>
                   </div>
                   <div className="grid grid-cols-[140px_1fr] items-center">
                     <strong className="text-slate-900">{t.clabe}</strong>
-                    <input value={bankData.clabe} onChange={(e) => setBankData({ ...bankData, clabe: e.target.value })} className="bg-transparent outline-none font-medium text-slate-800" />
+                    <span className="font-medium text-slate-800">{bankData.clabe || '—'}</span>
                   </div>
                 </div>
               </div>
@@ -998,20 +1048,29 @@ export default function Home() {
             </div>
 
             <div className="bg-cyan-50 p-3 rounded-xl border border-cyan-200 space-y-2 text-xs">
-              <span className="font-bold text-cyan-900 block">➕ Registrar Nueva Cuenta Bancaria:</span>
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-cyan-900 block">
+                  {editingBankIndex !== null ? "Editar Cuenta Bancaria:" : "Registrar Nueva Cuenta Bancaria:"}
+                </span>
+                {editingBankIndex !== null && (
+                  <button onClick={resetBankForm} className="text-xs text-cyan-700 hover:underline font-semibold">
+                    Cancelar edición
+                  </button>
+                )}
+              </div>
               <div className="grid grid-cols-2 gap-2">
-                <input placeholder="Alias (Ej: BBVA Empresa, Banamex Dólares) *" value={newBankAccount.alias} onChange={(e) => setNewBankAccount({ ...newBankAccount, alias: e.target.value })} className="border p-2 rounded bg-white" />
-                <input placeholder="Banco (Ej: BBVA México, Banorte) *" value={newBankAccount.banco} onChange={(e) => setNewBankAccount({ ...newBankAccount, banco: e.target.value })} className="border p-2 rounded bg-white" />
-                <input placeholder="Nombre / Beneficiario" value={newBankAccount.nombre} onChange={(e) => setNewBankAccount({ ...newBankAccount, nombre: e.target.value })} className="border p-2 rounded bg-white" />
-                <input placeholder="RFC / Tax ID" value={newBankAccount.rfc} onChange={(e) => setNewBankAccount({ ...newBankAccount, rfc: e.target.value })} className="border p-2 rounded bg-white" />
-                <input placeholder="Número de Cuenta *" value={newBankAccount.cuenta} onChange={(e) => setNewBankAccount({ ...newBankAccount, cuenta: e.target.value })} className="border p-2 rounded bg-white" />
-                <input placeholder="CLABE / IBAN" value={newBankAccount.clabe} onChange={(e) => setNewBankAccount({ ...newBankAccount, clabe: e.target.value })} className="border p-2 rounded bg-white" />
+                <input placeholder="Alias (Ej: BBVA Empresa) *" value={bankForm.alias} onChange={(e) => setBankForm({ ...bankForm, alias: e.target.value })} className="border p-2 rounded bg-white" />
+                <input placeholder="Banco (Ej: BBVA México) *" value={bankForm.banco} onChange={(e) => setBankForm({ ...bankForm, banco: e.target.value })} className="border p-2 rounded bg-white" />
+                <input placeholder="Nombre / Beneficiario" value={bankForm.nombre} onChange={(e) => setBankForm({ ...bankForm, nombre: e.target.value })} className="border p-2 rounded bg-white" />
+                <input placeholder="RFC / Tax ID" value={bankForm.rfc} onChange={(e) => setBankForm({ ...bankForm, rfc: e.target.value })} className="border p-2 rounded bg-white" />
+                <input placeholder="Número de Cuenta *" value={bankForm.cuenta} onChange={(e) => setBankForm({ ...bankForm, cuenta: e.target.value })} className="border p-2 rounded bg-white" />
+                <input placeholder="CLABE / IBAN" value={bankForm.clabe} onChange={(e) => setBankForm({ ...bankForm, clabe: e.target.value })} className="border p-2 rounded bg-white" />
               </div>
               <button 
-                onClick={handleAddBankAccount} 
+                onClick={handleSaveBankAccount} 
                 className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 rounded text-xs transition"
               >
-                + Guardar Cuenta Bancaria
+                {editingBankIndex !== null ? "Guardar Cambios" : "Guardar Cuenta Bancaria"}
               </button>
             </div>
 
@@ -1020,10 +1079,16 @@ export default function Home() {
               {bankAccountsList.map((acc, idx) => (
                 <div key={idx} className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border text-xs">
                   <div>
-                    <strong className="text-slate-800 block text-sm">💳 {acc.alias || acc.banco}</strong>
+                    <strong className="text-slate-800 block text-sm">{acc.alias || acc.banco}</strong>
                     <span className="text-slate-500">{acc.banco} • Cuenta: {acc.cuenta} {acc.clabe ? `• CLABE: ${acc.clabe}` : ''}</span>
                   </div>
                   <div className="flex gap-1">
+                    <button 
+                      onClick={() => handleEditBankClick(idx)} 
+                      className="bg-amber-500 hover:bg-amber-600 text-white font-semibold px-2 py-1 rounded text-xs"
+                    >
+                      Editar
+                    </button>
                     <button 
                       onClick={() => { setBankData(acc); setIsBanksModalOpen(false); }} 
                       className="bg-cyan-600 hover:bg-cyan-700 text-white font-semibold px-2.5 py-1 rounded text-xs"
@@ -1031,7 +1096,7 @@ export default function Home() {
                       Usar
                     </button>
                     <button onClick={() => handleRemoveBankAccount(idx)} className="text-rose-500 hover:text-rose-700 p-1 font-bold">
-                      🗑️
+                      ✕
                     </button>
                   </div>
                 </div>
@@ -1091,11 +1156,11 @@ export default function Home() {
                 customCatalog.map((cat, idx) => (
                   <div key={idx} className="flex justify-between items-center bg-slate-50 p-2.5 rounded-lg border text-xs">
                     <div>
-                      <strong className="text-slate-800 block">⭐ {cat.es}</strong>
+                      <strong className="text-slate-800 block">{cat.es}</strong>
                       {cat.en !== cat.es && <span className="text-slate-400 italic">{cat.en}</span>}
                     </div>
                     <button onClick={() => handleRemoveCustomConcept(idx)} className="text-rose-500 hover:text-rose-700 p-1 font-bold">
-                      🗑️
+                      ✕
                     </button>
                   </div>
                 ))
@@ -1148,7 +1213,7 @@ export default function Home() {
                         {t.btnSelectClient}
                       </button>
                       <button onClick={() => handleDeleteClient(cli.id)} className="bg-rose-100 hover:bg-rose-200 text-rose-700 px-2 py-1 rounded">
-                        🗑️
+                        ✕
                       </button>
                     </div>
                   </div>
@@ -1197,7 +1262,7 @@ export default function Home() {
                         {t.btnLoadQuote}
                       </button>
                       <button onClick={() => deleteQuoteFromHistory(q.id)} className="bg-rose-100 hover:bg-rose-200 text-rose-700 px-2 py-1 rounded">
-                        🗑️
+                        ✕
                       </button>
                     </div>
                   </div>
@@ -1233,10 +1298,10 @@ export default function Home() {
                 {newCompany.logo_url ? (
                   <div className="flex items-center justify-center gap-2">
                     <img src={newCompany.logo_url} alt="Preview Logo" className="h-10 object-contain" />
-                    <span className="text-emerald-600 font-bold text-xs">✓ Logotipo listo</span>
+                    <span className="text-emerald-600 font-bold text-xs">Logotipo listo</span>
                   </div>
                 ) : (
-                  <span className="text-slate-500 font-medium">📷 Haz clic para seleccionar el Logotipo de esta empresa</span>
+                  <span className="text-slate-500 font-medium">Haz clic para seleccionar el Logotipo de esta empresa</span>
                 )}
                 <input type="file" accept="image/*" onChange={handleCompanyLogoUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
               </div>
@@ -1266,7 +1331,7 @@ export default function Home() {
                         {t.btnSelectCompany}
                       </button>
                       <button onClick={() => handleDeleteCompany(comp.id)} className="bg-rose-100 hover:bg-rose-200 text-rose-700 px-2 py-1 rounded">
-                        🗑️
+                        ✕
                       </button>
                     </div>
                   </div>
