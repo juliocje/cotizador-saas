@@ -1543,20 +1543,20 @@ export default function Home() {
         </div>
       )}
 
-      {/* MODAL MIS EMPRESAS */}
+      {/* MODAL MIS EMPRESAS (OPTIMIZADO Y COMPLETAMENTE RESPONSIVO EN MÓVILES) */}
       {isCompaniesOpen && (
-        <div className="no-print fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-6 space-y-4 max-h-[90vh] flex flex-col">
+        <div className="no-print fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-4 sm:p-6 space-y-4 max-h-[95vh] flex flex-col overflow-y-auto">
             
             <div className="flex justify-between items-center border-b pb-3 shrink-0">
               <div>
-                <h3 className="font-bold text-slate-800 text-lg">{t.companyModalTitle}</h3>
+                <h3 className="font-bold text-slate-800 text-base sm:text-lg">{t.companyModalTitle}</h3>
                 <p className="text-xs text-slate-500">Administra tus marcas, datos fiscales y logotipos</p>
               </div>
-              <button onClick={() => { setIsCompaniesOpen(false); resetCompanyForm(); }} className="text-slate-400 hover:text-slate-600 font-bold text-xl">✕</button>
+              <button onClick={() => { setIsCompaniesOpen(false); resetCompanyForm(); }} className="text-slate-400 hover:text-slate-600 font-bold text-xl p-1">✕</button>
             </div>
 
-            <div className="bg-slate-100 p-4 rounded-xl border border-slate-300 text-xs shrink-0 space-y-3">
+            <div className="bg-slate-100 p-3 sm:p-4 rounded-xl border border-slate-300 text-xs shrink-0 space-y-3">
               <div className="flex justify-between items-center">
                 <span className="font-bold text-slate-900 block text-xs uppercase tracking-wide">
                   {editingCompanyId ? "✏️ Editar Datos de Empresa:" : "➕ Registrar Nueva Empresa:"}
@@ -1598,7 +1598,7 @@ export default function Home() {
               </button>
             </div>
 
-            <div className="overflow-y-auto flex-1 space-y-2 pr-1 max-h-[320px]">
+            <div className="space-y-2 pr-1">
               <h4 className="text-xs font-bold text-slate-500 uppercase border-b pb-1">Empresas Registradas ({companiesList.length}):</h4>
               {companiesList.length === 0 ? (
                 <p className="text-center text-slate-500 py-6 text-xs">{t.noCompanies}</p>
@@ -1606,7 +1606,7 @@ export default function Home() {
                 companiesList.map((comp) => {
                   const compLoc = [comp.city, comp.state].filter(Boolean).join(', ');
                   return (
-                    <div key={comp.id} className="flex justify-between items-center bg-slate-50 p-2.5 rounded-lg border border-slate-200 hover:border-slate-400 transition text-xs">
+                    <div key={comp.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-50 p-3 rounded-xl border border-slate-200 hover:border-slate-400 transition text-xs gap-3">
                       <div className="flex items-center gap-3">
                         {comp.logo_url ? (
                           <img src={comp.logo_url} alt="Logo" className="w-10 h-10 object-contain bg-white rounded border p-1 shrink-0" />
@@ -1616,9 +1616,9 @@ export default function Home() {
                           </div>
                         )}
                         <div className="space-y-0.5">
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-1.5">
                             <strong className="text-slate-800 text-sm">{comp.company_name}</strong>
-                            {comp.tagline && <span className="text-[11px] text-slate-700 font-medium bg-slate-200 px-1.5 py-0.5 rounded">{comp.tagline}</span>}
+                            {comp.tagline && <span className="text-[10px] text-slate-700 font-medium bg-slate-200 px-1.5 py-0.5 rounded">{comp.tagline}</span>}
                           </div>
                           <span className="text-slate-500 block text-[11px]">
                             {comp.tax_id ? `RFC: ${comp.tax_id} • ` : ''}
@@ -1633,14 +1633,14 @@ export default function Home() {
                         </div>
                       </div>
 
-                      <div className="flex gap-1.5 shrink-0">
-                        <button onClick={() => handleEditCompanyClick(comp)} className="bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1.5 rounded text-xs font-semibold shadow-sm transition">
+                      <div className="flex gap-2 w-full sm:w-auto justify-end border-t sm:border-none pt-2 sm:pt-0">
+                        <button onClick={() => handleEditCompanyClick(comp)} className="flex-1 sm:flex-none bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded text-xs font-semibold shadow-sm transition text-center">
                           Editar
                         </button>
-                        <button onClick={() => { applyCompany(comp); setIsCompaniesOpen(false); resetCompanyForm(); }} className="bg-slate-700 hover:bg-slate-800 text-white px-2.5 py-1.5 rounded text-xs font-semibold shadow-sm transition">
+                        <button onClick={() => { applyCompany(comp); setIsCompaniesOpen(false); resetCompanyForm(); }} className="flex-1 sm:flex-none bg-slate-700 hover:bg-slate-800 text-white px-3 py-1.5 rounded text-xs font-semibold shadow-sm transition text-center">
                           {t.btnSelectCompany}
                         </button>
-                        <button onClick={() => handleDeleteCompany(comp.id)} className="bg-rose-100 hover:bg-rose-200 text-rose-700 px-2 py-1.5 rounded font-bold transition">
+                        <button onClick={() => handleDeleteCompany(comp.id)} className="bg-rose-100 hover:bg-rose-200 text-rose-700 px-2.5 py-1.5 rounded font-bold transition">
                           ✕
                         </button>
                       </div>
