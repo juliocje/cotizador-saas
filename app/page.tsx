@@ -898,7 +898,7 @@ export default function Home() {
   const menuBtnClass = "w-full bg-slate-700 hover:bg-slate-600 text-white font-semibold px-4 py-3 rounded-xl text-sm transition-all duration-200 text-center shadow-md border border-slate-500/50 active:scale-[0.98]";
 
   return (
-    <div className="bg-slate-100 min-h-screen font-sans text-slate-800 print:bg-white print:p-0 flex flex-col md:flex-row">
+    <div className="bg-slate-100 min-h-screen font-sans text-slate-800 print:bg-white print:p-0 flex flex-col md:flex-row pt-14 md:pt-0">
       
       <style jsx global>{`
         @media print {
@@ -909,8 +909,8 @@ export default function Home() {
         }
       `}</style>
 
-      {/* BARRA SUPERIOR MÓVIL */}
-      <div className="no-print md:hidden bg-slate-900 text-white px-4 py-3 flex justify-between items-center shadow-lg sticky top-0 z-40">
+      {/* BARRA SUPERIOR FIJA MÓVIL */}
+      <div className="no-print md:hidden fixed top-0 left-0 right-0 bg-slate-900 text-white px-4 py-3 flex justify-between items-center shadow-lg z-50 h-14">
         <h1 className="font-bold text-base tracking-tight">{t.appTitle}</h1>
         <button 
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
@@ -921,8 +921,9 @@ export default function Home() {
         </button>
       </div>
 
-      {/* MENÚ LATERAL */}
-      <aside className={`no-print w-full md:w-64 bg-slate-900 text-slate-100 p-4 shrink-0 flex-col justify-between border-r border-slate-800 shadow-xl z-30 ${isMobileMenuOpen ? 'flex' : 'hidden md:flex'}`}>
+      {/* MENÚ LATERAL (DESPLEGABLE FIJO EN CUALQUIER POSICIÓN EN MÓVILES) */}
+      <aside className={`no-print w-full md:w-64 bg-slate-900 text-slate-100 p-4 shrink-0 flex-col justify-between border-r border-slate-800 shadow-xl z-40 
+        ${isMobileMenuOpen ? 'fixed inset-x-0 top-14 bottom-0 flex overflow-y-auto' : 'hidden md:flex'}`}>
         <div className="space-y-4">
           <div className="pb-3 border-b border-slate-800/80 hidden md:block">
             <h1 className="text-xl font-bold text-white text-center tracking-tight">{t.appTitle}</h1>
@@ -1005,7 +1006,7 @@ export default function Home() {
           </nav>
         </div>
 
-        <div className="pt-4 border-t border-slate-800/80 mt-4">
+        <div className="pt-4 border-t border-slate-800/80 mt-4 pb-6 md:pb-0">
           <button 
             onClick={handleLogout} 
             className="w-full flex items-center justify-center bg-rose-900/80 hover:bg-rose-800 text-rose-100 font-semibold px-4 py-3 rounded-xl text-sm transition-all duration-200 shadow-md text-center border border-rose-800/50"
