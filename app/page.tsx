@@ -681,7 +681,7 @@ export default function Home() {
   const taxAmount = subtotalWithDiscount * (taxRate / 100);
   const total = subtotalWithDiscount + taxAmount;
 
-  // GENERAR Y ENVIAR POR WHATSAPP (CON CONTROL DE LÍMITE)
+  // GENERAR Y ENVIAR POR WHATSAPP (ACOMPAÑADO DE REEMPLAZO TEMPORAL DE INPUTS PARA EVITAR TEXTO RECORTADO)
   const sendPdfWhatsApp = async () => {
     const canProceed = await checkFreePlanUsageLimit();
     if (!canProceed) return;
@@ -695,6 +695,27 @@ export default function Home() {
       const { default: jsPDF } = await import('jspdf');
       const { default: html2canvas } = await import('html2canvas-pro');
 
+      // CONVERTIR TEMPORALMENTE INPUTS EN DIVS DE TEXTO LISOS
+      const inputs = element.querySelectorAll('input');
+      const replacements: { input: HTMLInputElement; span: HTMLDivElement }[] = [];
+
+      inputs.forEach((input) => {
+        if (input.type === 'file') return;
+        const span = document.createElement('div');
+        span.innerText = input.value;
+        span.className = input.className + ' pdf-text-render';
+        span.style.display = 'inline-block';
+        span.style.whiteSpace = 'pre-wrap';
+        span.style.width = '100%';
+
+        if (input.parentNode) {
+          input.parentNode.insertBefore(span, input);
+          input.style.display = 'none';
+          replacements.push({ input, span });
+        }
+      });
+
+      // CAPTURAR EL DOCUMENTO COMPLETO
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
@@ -702,18 +723,39 @@ export default function Home() {
         backgroundColor: '#ffffff'
       });
 
+      // RESTAURAR INPUTS ORIGINALES TRAS LA CAPTURA
+      replacements.forEach(({ input, span }) => {
+        input.style.display = '';
+        if (span.parentNode) span.parentNode.removeChild(span);
+      });
+
       const imgData = canvas.toDataURL('image/jpeg', 0.98);
+      
       const pdf = new jsPDF({
         orientation: 'portrait',
-        unit: 'in',
+        unit: 'pt',
         format: 'letter'
       });
 
-      const imgProps = pdf.getImageProperties(imgData);
       const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      const pdfHeight = pdf.internal.pageSize.getHeight();
 
-      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+      // DEDICAR MARGEN MÍNIMO DE 15pt PARA MAXIMIZAR ÁREA IMPRESA
+      const margin = 15;
+      const printableWidth = pdfWidth - (margin * 2);
+      const printableHeight = pdfHeight - (margin * 2);
+
+      const widthRatio = printableWidth / canvas.width;
+      const heightRatio = printableHeight / canvas.height;
+      const ratio = Math.min(widthRatio, heightRatio);
+
+      const finalWidth = canvas.width * ratio;
+      const finalHeight = canvas.height * ratio;
+
+      const xOffset = (pdfWidth - finalWidth) / 2;
+      const yOffset = margin;
+
+      pdf.addImage(imgData, 'JPEG', xOffset, yOffset, finalWidth, finalHeight);
 
       const pdfBlob = pdf.output('blob');
       const fileName = `cotizacion_${Date.now()}_${folio.replace(/#/g, '')}.pdf`;
@@ -1121,10 +1163,10 @@ export default function Home() {
             )}
 
             <div className="relative z-10">
-              {/* ENCABEZADO Y DATOS DE LA EMPRESA */}
+              {/* ENCABEZADO Y DATOS DE LA EMPRESA (LIMPIO SIN BORDES PUNTEADOS) */}
               <div className="flex flex-col md:flex-row justify-between items-start border-b border-slate-200 pb-5 gap-6">
                 <div className="w-full md:w-1/2 flex justify-start">
-                  <div className="relative border-2 border-dashed border-slate-300 bg-slate-50 rounded-lg h-24 w-52 flex items-center justify-center cursor-pointer overflow-hidden print:border-none print:bg-transparent">
+                  <div className="relative bg-transparent rounded-lg h-24 w-52 flex items-center justify-center cursor-pointer overflow-hidden">
                     {logo ? (
                       <img src={logo} alt="Logo" className="h-full object-contain" />
                     ) : (
@@ -1159,7 +1201,10 @@ export default function Home() {
                   <input value={clientName} onChange={(e) => setClientName(e.target.value)} className="font-semibold text-slate-800 w-full bg-transparent outline-none text-sm md:text-base" />
                 </div>
                 <div className="md:text-right space-y-1 text-xs text-slate-600">
-                  <p><strong>{t.folio}</strong> <input value={folio} onChange={(e) => setFolio(e.target.value)} className="w-28 text-left md:text-right bg-transparent outline-none font-semibold text-slate-800" /></p>
+                  <p className="flex items-center justify-start md:justify-end gap-1">
+                    <strong>{t.folio}</strong> 
+                    <input value={folio} onChange={(e) => setFolio(e.target.value)} className="w-32 text-left md:text-right bg-transparent outline-none font-semibold text-slate-800" />
+                  </p>
                 </div>
               </div>
 
@@ -1543,7 +1588,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* MODAL MIS EMPRESAS (OPTIMIZADO Y COMPLETAMENTE RESPONSIVO EN MÓVILES) */}
+      {/* MODAL MIS EMPRESAS */}
       {isCompaniesOpen && (
         <div className="no-print fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 z-50">
           <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-4 sm:p-6 space-y-4 max-h-[95vh] flex flex-col overflow-y-auto">
