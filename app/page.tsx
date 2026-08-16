@@ -34,6 +34,7 @@ const translations: Record<string, any> = {
     validity: "Vigencia:",
     delivery: "Entrega:",
     thConcept: "Concepto / Descripción",
+    thUnit: "Unidad",
     thQty: "Cant.",
     thPrice: "P. Unitario",
     thAmount: "Importe",
@@ -95,6 +96,7 @@ const translations: Record<string, any> = {
     validity: "Validity:",
     delivery: "Delivery:",
     thConcept: "Item / Description",
+    thUnit: "Unit",
     thQty: "Qty",
     thPrice: "Unit Price",
     thAmount: "Amount",
@@ -139,6 +141,17 @@ const taxPresets = [
   { label: "USA - Florida (6.00%)", value: 6.00 },
   { label: "USA - New York (4.00%)", value: 4.00 },
   { label: "USA - Washington (6.50%)", value: 6.50 },
+];
+
+const unitOptions = [
+  { label: "pieza", value: "pieza" },
+  { label: "metro", value: "metro" },
+  { label: "kilo", value: "kilo" },
+  { label: "tonelada", value: "tonelada" },
+  { label: "m2", value: "m2" },
+  { label: "m3", value: "m3" },
+  { label: "servicio", value: "servicio" },
+  { label: "litro", value: "litro" },
 ];
 
 const initialCatalog = [
@@ -255,9 +268,9 @@ export default function Home() {
     logo_url: '' 
   });
 
-  // ÍTEMS
-  const [items, setItems] = useState<Array<{ description_es: string; description_en: string; qty: number | string; price: number | string }>>([
-    { description_es: initialCatalog[0].es, description_en: initialCatalog[0].en, qty: 1, price: 0.00 }
+  // ÍTEMS (CON UNIDAD DE MEDIDA INTEGRADA)
+  const [items, setItems] = useState<Array<{ description_es: string; description_en: string; unit: string; qty: number | string; price: number | string }>>([
+    { description_es: initialCatalog[0].es, description_en: initialCatalog[0].en, unit: 'pieza', qty: 1, price: 0.00 }
   ]);
 
   const t = translations[lang];
@@ -645,12 +658,12 @@ export default function Home() {
   const addItemFromCatalog = () => {
     const prod = fullCatalog[selectedCatalogIdx];
     if (prod) {
-      setItems([...items, { description_es: prod.es, description_en: prod.en, qty: 1, price: 0.00 }]);
+      setItems([...items, { description_es: prod.es, description_en: prod.en, unit: 'pieza', qty: 1, price: 0.00 }]);
     }
   };
 
   const addBlankItem = () => {
-    setItems([...items, { description_es: "", description_en: "", qty: 1, price: 0.00 }]);
+    setItems([...items, { description_es: "", description_en: "", unit: 'pieza', qty: 1, price: 0.00 }]);
   };
 
   const updateItem = (index: number, field: string, value: any) => {
@@ -659,6 +672,8 @@ export default function Home() {
       newItems[index].qty = value === '' ? '' : (parseFloat(value) || 0);
     } else if (field === 'price') {
       newItems[index].price = value === '' ? '' : (parseFloat(value) || 0);
+    } else if (field === 'unit') {
+      newItems[index].unit = value;
     } else {
       newItems[index].description_es = value;
       newItems[index].description_en = value;
@@ -681,7 +696,7 @@ export default function Home() {
   const taxAmount = subtotalWithDiscount * (taxRate / 100);
   const total = subtotalWithDiscount + taxAmount;
 
-  // GENERAR Y ENVIAR POR WHATSAPP (ACOMPAÑADO DE REEMPLAZO TEMPORAL DE INPUTS PARA EVITAR TEXTO RECORTADO)
+  // GENERAR Y ENVIAR POR WHATSAPP (SOPORTE DE CONVERSIÓN COMPLETA DE INPUTS Y SELECTS)
   const sendPdfWhatsApp = async () => {
     const canProceed = await checkFreePlanUsageLimit();
     if (!canProceed) return;
@@ -695,23 +710,25 @@ export default function Home() {
       const { default: jsPDF } = await import('jspdf');
       const { default: html2canvas } = await import('html2canvas-pro');
 
-      // CONVERTIR TEMPORALMENTE INPUTS EN DIVS DE TEXTO LISOS
-      const inputs = element.querySelectorAll('input');
-      const replacements: { input: HTMLInputElement; span: HTMLDivElement }[] = [];
+      // CONVERTIR TEMPORALMENTE INPUTS Y SELECTS EN DIVS DE TEXTO LISOS
+      const inputs = element.querySelectorAll('input, select');
+      const replacements: { element: HTMLElement; span: HTMLDivElement }[] = [];
 
-      inputs.forEach((input) => {
-        if (input.type === 'file') return;
+      inputs.forEach((el) => {
+        const inputEl = el as HTMLInputElement | HTMLSelectElement;
+        if (inputEl.type === 'file') return;
+        
         const span = document.createElement('div');
-        span.innerText = input.value;
-        span.className = input.className + ' pdf-text-render';
+        span.innerText = inputEl.value;
+        span.className = inputEl.className + ' pdf-text-render';
         span.style.display = 'inline-block';
         span.style.whiteSpace = 'pre-wrap';
         span.style.width = '100%';
 
-        if (input.parentNode) {
-          input.parentNode.insertBefore(span, input);
-          input.style.display = 'none';
-          replacements.push({ input, span });
+        if (inputEl.parentNode) {
+          inputEl.parentNode.insertBefore(span, inputEl);
+          inputEl.style.display = 'none';
+          replacements.push({ element: inputEl, span });
         }
       });
 
@@ -723,9 +740,9 @@ export default function Home() {
         backgroundColor: '#ffffff'
       });
 
-      // RESTAURAR INPUTS ORIGINALES TRAS LA CAPTURA
-      replacements.forEach(({ input, span }) => {
-        input.style.display = '';
+      // RESTAURAR CONTROLES ORIGINALES TRAS LA CAPTURA
+      replacements.forEach(({ element: el, span }) => {
+        el.style.display = '';
         if (span.parentNode) span.parentNode.removeChild(span);
       });
 
@@ -740,7 +757,6 @@ export default function Home() {
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
 
-      // DEDICAR MARGEN MÍNIMO DE 15pt PARA MAXIMIZAR ÁREA IMPRESA
       const margin = 15;
       const printableWidth = pdfWidth - (margin * 2);
       const printableHeight = pdfHeight - (margin * 2);
@@ -808,7 +824,7 @@ export default function Home() {
     }
   };
 
-  // GUARDAR EN LA NUBE (CON CONTROL DE LÍMITE DE PLAN GRATUITO)
+  // GUARDAR EN LA NUBE
   const saveQuoteToCloud = async () => {
     const canProceed = await checkFreePlanUsageLimit();
     if (!canProceed) return;
@@ -839,7 +855,7 @@ export default function Home() {
     }
   };
 
-  // OBTENER HISTORIAL GENERAL FILTRADO ÚNICAMENTE PARA EL USUARIO ACTIVO
+  // OBTENER HISTORIAL GENERAL
   const fetchQuotesHistory = async () => {
     setIsLoading(true);
     try {
@@ -894,7 +910,6 @@ export default function Home() {
 
   const cityStateText = [companyCity, companyState].filter(Boolean).join(', ');
 
-  // ESTILO UNIFICADO Y PROFESIONAL DE BOTONES
   const menuBtnClass = "w-full bg-slate-700 hover:bg-slate-600 text-white font-semibold px-4 py-3 rounded-xl text-sm transition-all duration-200 text-center shadow-md border border-slate-500/50 active:scale-[0.98]";
 
   return (
@@ -921,7 +936,7 @@ export default function Home() {
         </button>
       </div>
 
-      {/* MENÚ LATERAL (DESPLEGABLE FIJO EN CUALQUIER POSICIÓN EN MÓVILES) */}
+      {/* MENÚ LATERAL */}
       <aside className={`no-print w-full md:w-64 bg-slate-900 text-slate-100 p-4 shrink-0 flex-col justify-between border-r border-slate-800 shadow-xl z-40 
         ${isMobileMenuOpen ? 'fixed inset-x-0 top-14 bottom-0 flex overflow-y-auto' : 'hidden md:flex'}`}>
         <div className="space-y-4">
@@ -1164,7 +1179,7 @@ export default function Home() {
             )}
 
             <div className="relative z-10">
-              {/* ENCABEZADO Y DATOS DE LA EMPRESA (LIMPIO SIN BORDES PUNTEADOS) */}
+              {/* ENCABEZADO Y DATOS DE LA EMPRESA */}
               <div className="flex flex-col md:flex-row justify-between items-start border-b border-slate-200 pb-5 gap-6">
                 <div className="w-full md:w-1/2 flex justify-start">
                   <div className="relative bg-transparent rounded-lg h-24 w-52 flex items-center justify-center cursor-pointer overflow-hidden">
@@ -1209,14 +1224,14 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* VISTA DE TABLA / TARJETAS RESPONSIVAS PARA ÍTEMS DE LA COTIZACIÓN */}
+              {/* VISTA DE TABLA CON NUEVA COLUMNA UNIDAD DE MEDIDA */}
               <div className="mt-4">
                 <div className="hidden sm:grid grid-cols-12 border-b-2 border-slate-200 text-xs font-bold text-slate-500 uppercase pb-2">
-                  <div className="col-span-5 px-2">{t.thConcept}</div>
-                  <div className="col-span-2 text-center px-2">{t.thQty}</div>
+                  <div className="col-span-4 px-2">{t.thConcept}</div>
+                  <div className="col-span-2 text-center px-1">{t.thUnit}</div>
+                  <div className="col-span-2 text-center px-1">{t.thQty}</div>
                   <div className="col-span-2 text-right px-2">{t.thPrice}</div>
                   <div className="col-span-2 text-right px-2">{t.thAmount}</div>
-                  <div className="col-span-1 text-center no-print"></div>
                 </div>
 
                 <div className="divide-y divide-slate-100 sm:divide-y-0 space-y-3 sm:space-y-0">
@@ -1229,7 +1244,8 @@ export default function Home() {
                         key={idx} 
                         className="bg-slate-50 sm:bg-transparent p-3 sm:p-0 rounded-xl sm:rounded-none border sm:border-none border-slate-200 grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-0 items-center hover:bg-slate-50/80 transition"
                       >
-                        <div className="sm:col-span-5 sm:px-2 py-1">
+                        {/* CONCEPTO */}
+                        <div className="sm:col-span-4 sm:px-2 py-1">
                           <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thConcept}</label>
                           <input 
                             value={lang === 'es' ? item.description_es : item.description_en} 
@@ -1239,8 +1255,25 @@ export default function Home() {
                           />
                         </div>
 
-                        <div className="grid grid-cols-3 sm:contents gap-2 mt-1 sm:mt-0">
-                          <div className="sm:col-span-2 sm:px-2 sm:text-center">
+                        {/* CONTROLES NUMÉRICOS Y UNIDAD */}
+                        <div className="grid grid-cols-4 sm:contents gap-2 mt-1 sm:mt-0">
+                          
+                          {/* COLUMNA UNIDAD DE MEDIDA */}
+                          <div className="sm:col-span-2 sm:px-1 sm:text-center">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thUnit}</label>
+                            <select 
+                              value={item.unit || 'pieza'} 
+                              onChange={(e) => updateItem(idx, 'unit', e.target.value)}
+                              className="w-full bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 text-xs font-semibold text-slate-700 cursor-pointer outline-none focus:bg-indigo-50/50"
+                            >
+                              {unitOptions.map((u, uIdx) => (
+                                <option key={uIdx} value={u.value}>{u.label}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* CANTIDAD */}
+                          <div className="sm:col-span-2 sm:px-1 sm:text-center">
                             <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thQty}</label>
                             <input 
                               type="number" 
@@ -1250,10 +1283,11 @@ export default function Home() {
                                 if (item.qty === '') updateItem(idx, 'qty', 0);
                               }}
                               onChange={(e) => updateItem(idx, 'qty', e.target.value)} 
-                              className="w-full sm:w-16 text-center bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 text-sm font-semibold outline-none focus:bg-indigo-50/50" 
+                              className="w-full sm:w-16 text-center bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 text-sm font-semibold outline-none focus:bg-indigo-50/50 mx-auto" 
                             />
                           </div>
 
+                          {/* PRECIO UNITARIO */}
                           <div className="sm:col-span-2 sm:px-2 sm:text-right">
                             <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thPrice}</label>
                             <input 
@@ -1264,11 +1298,12 @@ export default function Home() {
                                 if (item.price === '') updateItem(idx, 'price', 0);
                               }}
                               onChange={(e) => updateItem(idx, 'price', e.target.value)} 
-                              className="w-full sm:w-24 text-right bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 text-sm font-semibold outline-none focus:bg-indigo-50/50" 
+                              className="w-full sm:w-20 text-right bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 text-sm font-semibold outline-none focus:bg-indigo-50/50 ml-auto" 
                               placeholder="0.00" 
                             />
                           </div>
 
+                          {/* IMPORTE */}
                           <div className="sm:col-span-2 sm:px-2 text-right">
                             <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thAmount}</label>
                             <span className="text-sm font-bold text-slate-800 block pt-1.5 sm:pt-0">
@@ -1277,9 +1312,9 @@ export default function Home() {
                           </div>
                         </div>
 
-                        <div className="sm:col-span-1 sm:px-2 text-right sm:text-center mt-2 sm:mt-0 no-print border-t sm:border-none pt-2 sm:pt-0 border-slate-200 flex justify-between sm:block items-center">
-                          <span className="text-xs text-slate-400 font-medium sm:hidden">Acción:</span>
-                          <button onClick={() => removeItem(idx)} className="text-rose-500 hover:text-rose-700 font-bold text-sm bg-rose-50 sm:bg-transparent px-2 py-1 sm:p-0 rounded">
+                        {/* ACCIÓN ELIMINAR */}
+                        <div className="sm:col-span-12 text-right mt-1 no-print flex justify-end">
+                          <button onClick={() => removeItem(idx)} className="text-rose-500 hover:text-rose-700 font-bold text-xs bg-rose-50 sm:bg-transparent px-2 py-0.5 rounded">
                             Eliminar ✕
                           </button>
                         </div>
