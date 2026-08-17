@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
@@ -71,7 +72,10 @@ const translations: Record<string, any> = {
     btnDeleteQuote: "Eliminar",
     btnSelectClient: "Usar Cliente",
     btnClientHistory: "Historial",
-    btnSelectCompany: "Cargar Empresa"
+    btnSelectCompany: "Cargar Empresa",
+    footerTerms: "Términos y Condiciones",
+    footerPrivacy: "Aviso de Privacidad",
+    footerLegalNotice: "Cotizador Express Pro es un software de elaboración de documentos comerciales. Las cotizaciones generadas no constituyen una factura o comprobante fiscal."
   },
   en: {
     appTitle: "Express Quote Pro",
@@ -138,7 +142,10 @@ const translations: Record<string, any> = {
     btnDeleteQuote: "Delete",
     btnSelectClient: "Use Client",
     btnClientHistory: "History",
-    btnSelectCompany: "Load Company"
+    btnSelectCompany: "Load Company",
+    footerTerms: "Terms & Conditions",
+    footerPrivacy: "Privacy Policy",
+    footerLegalNotice: "Express Quote Pro is commercial document creation software. Generated quotes do not constitute an official tax invoice."
   }
 };
 
@@ -1106,8 +1113,8 @@ export default function Home() {
       </aside>
 
       {/* ÁREA PRINCIPAL */}
-      <main className="flex-1 p-3 md:p-8 overflow-x-hidden">
-        <div className="max-w-5xl mx-auto print:max-w-none print:w-full space-y-6">
+      <main className="flex-1 p-3 md:p-8 overflow-x-hidden flex flex-col justify-between min-h-screen">
+        <div className="max-w-5xl mx-auto print:max-w-none print:w-full space-y-6 w-full">
           
           {/* BARRA SUPERIOR DE SELECTORES */}
           <div className="no-print bg-white p-4 md:p-5 rounded-xl shadow-md border border-slate-200 space-y-4">
@@ -1544,7 +1551,27 @@ export default function Home() {
 
             </div>
           </div>
+
         </div>
+
+        {/* PIE DE PÁGINA LEGAL (FOOTER CHECKLIST #1) */}
+        <footer className="no-print mt-12 pt-6 border-t border-slate-300/80 text-center text-xs text-slate-500 space-y-2 w-full max-w-5xl mx-auto">
+          <div className="flex justify-center items-center gap-4 font-semibold text-slate-600">
+            <Link href="/terminos" className="hover:text-slate-900 hover:underline transition">
+              {t.footerTerms}
+            </Link>
+            <span>•</span>
+            <Link href="/privacidad" className="hover:text-slate-900 hover:underline transition">
+              {t.footerPrivacy}
+            </Link>
+          </div>
+          <p className="text-[11px] text-slate-400 max-w-2xl mx-auto leading-relaxed">
+            {t.footerLegalNotice}
+          </p>
+          <p className="text-[11px] text-slate-400">
+            © {new Date().getFullYear()} {t.appTitle}. Todos los derechos reservados.
+          </p>
+        </footer>
       </main>
 
       {/* MODAL AJUSTES Y TEMAS DE DISEÑO */}
