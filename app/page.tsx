@@ -17,8 +17,8 @@ const translations: Record<string, any> = {
     btnHistory: "Mis Cotizaciones",
     btnManageClients: "Clientes",
     btnManageCompanies: "Mis Empresas",
-    btnSubscribePro: "⭐ Plan Pro ($199/mes)",
-    planProActive: "✅ Plan Pro Activo",
+    btnSubscribePro: "Plan Premium ($99/mes)",
+    planProActive: "✅ Plan Premium Activo",
     lblSelectBank: "Cuenta Bancaria",
     lblSelectClient: "Cliente Frecuente",
     lblSelectCompany: "Emitir con",
@@ -26,9 +26,10 @@ const translations: Record<string, any> = {
     btnPrint: "Guardar / PDF",
     btnSaveCloud: "Guardar en Nube",
     btnWhatsApp: "Enviar PDF por WhatsApp",
+    btnEmail: "Enviar por Correo",
     btnLogout: "Cerrar Sesión",
     logoPrompt: "Haz clic para subir tu Logo o cárgalo desde 'Mis Empresas'",
-    quotedTo: "Cotizado Para:",
+    quotedTo: "COTIZACION",
     folio: "Folio:",
     date: "Fecha:",
     validity: "Vigencia:",
@@ -44,7 +45,7 @@ const translations: Record<string, any> = {
     account: "Cuenta:",
     clabe: "CLABE:",
     rfc: "RFC:",
-    subtotal: "Subtotal Bruto:",
+    subtotal: "Subtotal:",
     discount: "Descuento (%):",
     taxLabel: "Impuesto:",
     total: "Total Neto:",
@@ -79,8 +80,8 @@ const translations: Record<string, any> = {
     btnHistory: "Saved Quotes",
     btnManageClients: "Clients",
     btnManageCompanies: "My Companies",
-    btnSubscribePro: "⭐ Pro Plan ($199/mo)",
-    planProActive: "✅ Pro Plan Active",
+    btnSubscribePro: "Premium Plan ($99/mo)",
+    planProActive: "✅ Premium Plan Active",
     lblSelectBank: "Bank Account",
     lblSelectClient: "Saved Client",
     lblSelectCompany: "Issue As",
@@ -88,9 +89,10 @@ const translations: Record<string, any> = {
     btnPrint: "Save / PDF",
     btnSaveCloud: "Save to Cloud",
     btnWhatsApp: "Send PDF via WhatsApp",
+    btnEmail: "Send via Email",
     btnLogout: "Log Out",
     logoPrompt: "Click to upload Logo or load it from 'My Companies'",
-    quotedTo: "Quoted To:",
+    quotedTo: "QUOTATION",
     folio: "Quote #:",
     date: "Date:",
     validity: "Validity:",
@@ -188,7 +190,7 @@ export default function Home() {
 
   const [lang, setLang] = useState<'es' | 'en'>('es');
   const [taxRate, setTaxRate] = useState<number>(16);
-  const [discount, setDiscount] = useState<number>(0);
+  const [discount, setDiscount] = useState<number | string>(0);
   const [currency] = useState<string>('MXN');
 
   // PLAN DE SUSCRIPCIÓN DEL USUARIO ('free' | 'active')
@@ -212,6 +214,7 @@ export default function Home() {
   // DATOS CLIENTE
   const [clientName, setClientName] = useState<string>("Cliente: Juan Pérez / Empresa ABC");
   const [clientPhone, setClientPhone] = useState<string>("");
+  const [clientEmail, setClientEmail] = useState<string>("");
   const [folio, setFolio] = useState<string>("#COT-2026-001");
 
   // CATÁLOGOS Y CONCEPTOS
@@ -268,7 +271,7 @@ export default function Home() {
     logo_url: '' 
   });
 
-  // ÍTEMS (CON UNIDAD DE MEDIDA INTEGRADA)
+  // ÍTEMS
   const [items, setItems] = useState<Array<{ description_es: string; description_en: string; unit: string; qty: number | string; price: number | string }>>([
     { description_es: initialCatalog[0].es, description_en: initialCatalog[0].en, unit: 'pieza', qty: 1, price: 0.00 }
   ]);
@@ -318,7 +321,7 @@ export default function Home() {
         .eq('user_id', user.id);
 
       if (!error && count !== null && count >= 3) {
-        alert("⚠️ Has alcanzado el límite de 3 cotizaciones/PDFs del Plan Gratuito.\n\nSuscríbete al Plan Pro para generar e imprimir cotizaciones ilimitadas.");
+        alert("⚠️ Has alcanzado el límite de 3 cotizaciones/PDFs del Plan Gratuito.\n\nSuscríbete al Plan Premium para generar e imprimir cotizaciones ilimitadas.");
         return false;
       }
     } catch (err) {
@@ -345,7 +348,7 @@ export default function Home() {
     window.print();
   };
 
-  // REDIRECCIÓN A MERCADO PAGO PARA SUSCRIPCIÓN/PAGO
+  // REDIRECCIÓN A MERCADO PAGO PARA SUSCRIPCIÓN PREMIUM ($99/MES)
   const handleCheckoutPro = async () => {
     setIsProcessingPayment(true);
 
@@ -356,8 +359,8 @@ export default function Home() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: 'Suscripción Plan Pro - Cotizador Express Pro',
-          price: 199,
+          title: 'Suscripción Plan Premium - Cotizador Express Pro',
+          price: 99,
           quantity: 1,
           userEmail: user?.email || 'cliente@cotizador.com'
         })
@@ -486,6 +489,7 @@ export default function Home() {
   const handleSelectClient = (client: any) => {
     setClientName(`Cliente: ${client.name} ${client.tax_id ? `(${client.tax_id})` : ''}`);
     if (client.phone) setClientPhone(client.phone);
+    if (client.email) setClientEmail(client.email);
     setIsClientsOpen(false);
   };
 
@@ -686,17 +690,62 @@ export default function Home() {
   };
 
   // CÁLCULOS
+  const numDiscount = typeof discount === 'number' ? discount : parseFloat(discount) || 0;
   const subtotal = items.reduce((acc, item) => {
     const q = typeof item.qty === 'number' ? item.qty : parseFloat(item.qty) || 0;
     const p = typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0;
     return acc + (q * p);
   }, 0);
-  const discountAmount = subtotal * (discount / 100);
+  const discountAmount = subtotal * (numDiscount / 100);
   const subtotalWithDiscount = subtotal - discountAmount;
   const taxAmount = subtotalWithDiscount * (taxRate / 100);
   const total = subtotalWithDiscount + taxAmount;
 
-  // GENERAR Y ENVIAR POR WHATSAPP (SOPORTE DE CONVERSIÓN COMPLETA DE INPUTS Y SELECTS)
+  // ENVIAR VÍA CORREO ELECTRÓNICO (MAILTO)
+  const sendEmailQuote = async () => {
+    const canProceed = await checkFreePlanUsageLimit();
+    if (!canProceed) return;
+
+    const subject = encodeURIComponent(`Cotización ${folio} - ${companyName}`);
+    
+    let bodyText = `Hola,\n\nAdjuntamos el resumen de la cotización realizada para usted:\n\n`;
+    bodyText += `--- DETALLES DE LA COTIZACIÓN ---\n`;
+    bodyText += `Empresa: ${companyName}\n`;
+    bodyText += `Cliente: ${clientName}\n`;
+    bodyText += `Folio: ${folio}\n`;
+    bodyText += `Fecha: ${new Date().toLocaleDateString()}\n\n`;
+    bodyText += `--- CONCEPTOS ---\n`;
+
+    items.forEach((item, i) => {
+      const q = typeof item.qty === 'number' ? item.qty : parseFloat(item.qty) || 0;
+      const p = typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0;
+      const desc = lang === 'es' ? item.description_es : item.description_en;
+      bodyText += `${i + 1}. ${desc || 'Sin descripción'} (${q} ${item.unit || 'pieza'}) x $${p.toFixed(2)} = $${(q * p).toFixed(2)}\n`;
+    });
+
+    bodyText += `\n--- RESUMEN FINANCIERO ---\n`;
+    bodyText += `Subtotal: $${subtotal.toFixed(2)} ${currency}\n`;
+    if (discountAmount > 0) {
+      bodyText += `Descuento (${numDiscount}%): -$${discountAmount.toFixed(2)} ${currency}\n`;
+    }
+    bodyText += `Impuesto (${taxRate}%): $${taxAmount.toFixed(2)} ${currency}\n`;
+    bodyText += `TOTAL NETO: $${total.toFixed(2)} ${currency}\n\n`;
+
+    if (bankData && bankData.banco) {
+      bodyText += `--- DATOS DE PAGO ---\n`;
+      bodyText += `Beneficiario: ${bankData.nombre || '—'}\n`;
+      bodyText += `Banco: ${bankData.banco}\n`;
+      bodyText += `Cuenta: ${bankData.cuenta || '—'}\n`;
+      bodyText += `CLABE: ${bankData.clabe || '—'}\n\n`;
+    }
+
+    bodyText += `Quedamos a sus órdenes para cualquier duda o aclaración.\n\nSaludos cordiales,\n${companyName}`;
+
+    const mailtoUrl = `mailto:${clientEmail}?subject=${subject}&body=${encodeURIComponent(bodyText)}`;
+    window.location.href = mailtoUrl;
+  };
+
+  // GENERAR Y ENVIAR POR WHATSAPP
   const sendPdfWhatsApp = async () => {
     const canProceed = await checkFreePlanUsageLimit();
     if (!canProceed) return;
@@ -841,7 +890,7 @@ export default function Home() {
           total_amount: total,
           items: items,
           tax_rate: taxRate,
-          discount: discount,
+          discount: numDiscount,
           folio: folio
         }
       ]);
@@ -944,7 +993,7 @@ export default function Home() {
             <h1 className="text-xl font-bold text-white text-center tracking-tight">{t.appTitle}</h1>
           </div>
 
-          {/* BOTÓN O BADGE DEL PLAN DE SUSCRIPCIÓN */}
+          {/* BOTÓN O BADGE DEL PLAN DE SUSCRIPCIÓN PREMIUM ($99/MES) */}
           {subscriptionStatus === 'active' ? (
             <div className="w-full bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 font-bold px-4 py-3 rounded-xl text-sm text-center shadow-md">
               {t.planProActive}
@@ -1017,6 +1066,14 @@ export default function Home() {
               className={menuBtnClass}
             >
               {isGeneratingPdf ? "Generando PDF..." : t.btnWhatsApp}
+            </button>
+
+            {/* NUEVO BOTÓN: ENVIAR POR CORREO ELECTRÓNICO */}
+            <button 
+              onClick={() => { setIsMobileMenuOpen(false); sendEmailQuote(); }} 
+              className={menuBtnClass}
+            >
+              {t.btnEmail}
             </button>
           </nav>
         </div>
@@ -1172,9 +1229,18 @@ export default function Home() {
           {/* DOCUMENTO COTIZACIÓN */}
           <div id="quote-document" className="quote-container relative bg-white p-4 md:p-12 rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
             
-            {logo && (
-              <div className="hidden print:flex absolute inset-0 items-center justify-center pointer-events-none select-none z-0">
-                <img src={logo} alt="Watermark" className="w-1/2 max-w-md max-h-[500px] object-contain opacity-10 filter grayscale" />
+            {/* MARCA DE AGUA EN MOSAICO ULTRA TUPIDO PARA USUARIOS DEL PLAN GRATUITO (OCULTA EN IMPRESIÓN/PDF) */}
+            {subscriptionStatus === 'free' && (
+              <div className="absolute inset-0 pointer-events-none select-none z-0 no-print overflow-hidden opacity-15">
+                <div 
+                  className="w-[220%] h-[220%] -translate-x-1/4 -translate-y-1/4 -rotate-12 flex flex-wrap gap-x-4 gap-y-2 items-center justify-center p-2"
+                >
+                  {Array.from({ length: 160 }).map((_, i) => (
+                    <span key={i} className="text-slate-900 font-black text-[10px] sm:text-xs tracking-tight uppercase leading-none">
+                      VERSIÓN FREE
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -1224,7 +1290,7 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* VISTA DE TABLA CON NUEVA COLUMNA UNIDAD DE MEDIDA */}
+              {/* VISTA DE TABLA CON COLUMNA UNIDAD DE MEDIDA */}
               <div className="mt-4">
                 <div className="hidden sm:grid grid-cols-12 border-b-2 border-slate-200 text-xs font-bold text-slate-500 uppercase pb-2">
                   <div className="col-span-4 px-2">{t.thConcept}</div>
@@ -1324,26 +1390,52 @@ export default function Home() {
                 </div>
               </div>
 
+              {/* DESGLOSE FINAL CÁLCULOS */}
               <div className="flex justify-end mt-8 border-t border-slate-200 pt-6">
-                <div className="w-full md:w-72 space-y-2 text-sm">
-                  <div className="flex justify-between text-slate-600">
+                <div className="w-full md:w-80 space-y-2 text-sm">
+                  
+                  {/* SUBTOTAL */}
+                  <div className="flex justify-between items-center text-slate-600">
                     <span>{t.subtotal}</span>
                     <span className="font-semibold">${subtotal.toFixed(2)} {currency}</span>
                   </div>
-                  {discount > 0 && (
-                    <div className="flex justify-between text-slate-600">
-                      <span>{t.discount}</span>
-                      <span className="font-semibold">-${discountAmount.toFixed(2)} {currency}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between text-slate-600">
+
+                  {/* DESCUENTO EDITABLE CON AUTO-CLEAR AL DAR CLIC */}
+                  <div className="flex justify-between items-center text-slate-600">
+                    <span className="flex items-center gap-1">
+                      {t.discount}
+                      <div className="flex items-center border border-slate-300 rounded bg-white px-1 py-0.5 no-print">
+                        <input 
+                          type="number" 
+                          min="0" 
+                          max="100"
+                          step="1"
+                          value={discount} 
+                          onFocus={() => { if (discount === 0 || discount === '0') setDiscount(''); }}
+                          onBlur={() => { if (discount === '') setDiscount(0); }}
+                          onChange={(e) => setDiscount(e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))}
+                          className="w-10 text-center font-bold text-xs text-slate-800 outline-none"
+                        />
+                        <span className="text-[10px] font-bold text-slate-400">%</span>
+                      </div>
+                    </span>
+                    <span className="font-semibold text-rose-600">
+                      -{discountAmount > 0 ? `$${discountAmount.toFixed(2)}` : '$0.00'} {currency}
+                    </span>
+                  </div>
+
+                  {/* IMPUESTO */}
+                  <div className="flex justify-between items-center text-slate-600">
                     <span>{t.taxLabel} ({taxRate}%)</span>
                     <span className="font-semibold">${taxAmount.toFixed(2)} {currency}</span>
                   </div>
-                  <div className="flex justify-between text-base font-bold text-slate-900 border-t border-slate-200 pt-2">
+
+                  {/* TOTAL NETO */}
+                  <div className="flex justify-between items-center text-base font-bold text-slate-900 border-t border-slate-200 pt-2">
                     <span>{t.total}</span>
                     <span className="text-indigo-600">${total.toFixed(2)} {currency}</span>
                   </div>
+
                 </div>
               </div>
 
@@ -1548,7 +1640,7 @@ export default function Home() {
                   <div key={cli.id} className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border text-xs">
                     <div>
                       <strong className="text-slate-800 text-sm block">{cli.name}</strong>
-                      <span className="text-slate-500">{cli.tax_id} {cli.phone ? `• Tel: ${cli.phone}` : ''}</span>
+                      <span className="text-slate-500">{cli.tax_id} {cli.phone ? `• Tel: ${cli.phone}` : ''} {cli.email ? `• Mail: ${cli.email}` : ''}</span>
                     </div>
                     <div className="flex gap-1">
                       <button onClick={() => handleViewClientHistory(cli)} className="bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1 rounded text-xs font-semibold">
