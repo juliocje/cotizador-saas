@@ -1,112 +1,153 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const router = useRouter();
+  
+  const [isSignUp, setIsSignUp] = useState<boolean>(false);
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [legalAccepted, setLegalAccepted] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage('');
+
+    // Validación obligatoria de términos al registrarse por primera vez
+    if (isSignUp && !legalAccepted) {
+      setErrorMessage('Debes aceptar los Términos y Condiciones y el Aviso de Privacidad para crear tu cuenta.');
+      return;
+    }
+
     setLoading(true);
-    setMessage("");
 
     try {
       if (isSignUp) {
+        // REGISTRO DE NUEVO USUARIO EN SUPABASE
         const { error } = await supabase.auth.signUp({
           email,
           password,
         });
+
         if (error) throw error;
-        setMessage("¡Registro exitoso! Revisa tu correo para confirmar.");
+        alert('¡Registro exitoso! Verifica tu correo electrónico o inicia sesión.');
+        setIsSignUp(false);
       } else {
+        // INICIO DE SESIÓN
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
-        
-        if (error) throw error;
 
-        // Ahora sí, recargamos hacia la ruta principal
-        window.location.href = "/";
+        if (error) throw error;
+        router.push('/');
       }
-    } catch (error: any) {
-      console.error(error);
-      setMessage(error.message || "Ocurrió un error al intentar ingresar");
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Ocurrió un error en la autenticación.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-slate-800/80 p-8 rounded-2xl border border-slate-700 shadow-2xl space-y-6">
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-white">
-            {isSignUp ? "Crear Cuenta" : "Iniciar Sesión"}
-          </h1>
-          <p className="text-sm text-slate-400">
-            {isSignUp ? "Regístrate para guardar tus cotizaciones" : "Ingresa a tu cotizador SaaS"}
+    <div className="bg-slate-100 min-h-screen flex items-center justify-center p-4 font-sans">
+      <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8 border border-slate-200 space-y-6">
+        
+        <div className="text-center space-y-1">
+          <h1 className="text-2xl font-extrabold text-slate-900">Cotizador Express Pro</h1>
+          <p className="text-xs text-slate-500">
+            {isSignUp ? 'Crea una cuenta nueva' : 'Inicia sesión en tu cuenta'}
           </p>
         </div>
 
-        {message && (
-          <div className="p-3 bg-indigo-900/50 border border-indigo-500 rounded-lg text-xs text-indigo-200 text-center">
-            {message}
+        {errorMessage && (
+          <div className="bg-rose-50 border border-rose-200 text-rose-700 text-xs p-3 rounded-xl font-medium">
+            {errorMessage}
           </div>
         )}
 
         <form onSubmit={handleAuth} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
-              Correo Electrónico
-            </label>
-            <input
-              type="email"
+            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-1">Correo Electrónico</label>
+            <input 
+              type="email" 
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="tu@correo.com"
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500 transition"
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm outline-none focus:border-indigo-600 transition"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
-              Contraseña
-            </label>
-            <input
-              type="password"
+            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-1">Contraseña</label>
+            <input 
+              type="password" 
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500 transition"
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm outline-none focus:border-indigo-600 transition"
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg transition shadow-lg disabled:opacity-50"
+          {/* CHECKBOX OBLIGATORIO DE TÉRMINOS Y PRIVACIDAD (SOLO EN REGISTRO / SIGN UP) */}
+          {isSignUp && (
+            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1">
+              <label className="flex items-start gap-2.5 cursor-pointer text-xs text-slate-700 select-none">
+                <input 
+                  type="checkbox" 
+                  checked={legalAccepted}
+                  onChange={(e) => setLegalAccepted(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer shrink-0" 
+                />
+                <span className="leading-tight">
+                  Acepto los{' '}
+                  <Link href="/terminos" target="_blank" className="text-indigo-600 font-bold underline hover:text-indigo-800">
+                    Términos y Condiciones
+                  </Link>{' '}
+                  y el{' '}
+                  <Link href="/privacidad" target="_blank" className="text-indigo-600 font-bold underline hover:text-indigo-800">
+                    Aviso de Privacidad
+                  </Link>.
+                </span>
+              </label>
+            </div>
+          )}
+
+          <button 
+            type="submit" 
+            disabled={loading || (isSignUp && !legalAccepted)}
+            className={`w-full font-bold py-3 rounded-xl text-sm transition shadow-md text-white ${
+              loading || (isSignUp && !legalAccepted)
+                ? 'bg-slate-400 cursor-not-allowed opacity-70'
+                : 'bg-slate-900 hover:bg-slate-800 active:scale-[0.98]'
+            }`}
           >
-            {loading ? "Cargando..." : (isSignUp ? "Registrarme" : "Entrar al Sistema")}
+            {loading ? 'Procesando...' : (isSignUp ? 'Registrarme' : 'Iniciar Sesión')}
           </button>
         </form>
 
-        <div className="text-center pt-2">
-          <button
+        <div className="text-center pt-2 border-t border-slate-100">
+          <button 
             type="button"
-            onClick={() => setIsSignUp(!isSignUp)}
-            className="text-xs text-indigo-400 hover:underline"
+            onClick={() => {
+              setIsSignUp(!isSignUp);
+              setLegalAccepted(false);
+              setErrorMessage('');
+            }}
+            className="text-xs text-indigo-600 hover:underline font-semibold"
           >
-            {isSignUp ? "¿Ya tienes cuenta? Inicia sesión aquí" : "¿No tienes cuenta? Regístrate gratis"}
+            {isSignUp ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate aquí'}
           </button>
         </div>
+
       </div>
     </div>
   );
