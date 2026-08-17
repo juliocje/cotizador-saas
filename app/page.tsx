@@ -26,7 +26,6 @@ const translations: Record<string, any> = {
     btnPrint: "Guardar / PDF",
     btnSaveCloud: "Guardar en Nube",
     btnWhatsApp: "Enviar PDF por WhatsApp",
-    btnEmail: "Enviar por Correo",
     btnLogout: "Cerrar Sesión",
     logoPrompt: "Haz clic para subir tu Logo o cárgalo desde 'Mis Empresas'",
     quotedTo: "COTIZACION",
@@ -89,7 +88,6 @@ const translations: Record<string, any> = {
     btnPrint: "Save / PDF",
     btnSaveCloud: "Save to Cloud",
     btnWhatsApp: "Send PDF via WhatsApp",
-    btnEmail: "Send via Email",
     btnLogout: "Log Out",
     logoPrompt: "Click to upload Logo or load it from 'My Companies'",
     quotedTo: "QUOTATION",
@@ -214,7 +212,6 @@ export default function Home() {
   // DATOS CLIENTE
   const [clientName, setClientName] = useState<string>("Cliente: Juan Pérez / Empresa ABC");
   const [clientPhone, setClientPhone] = useState<string>("");
-  const [clientEmail, setClientEmail] = useState<string>("");
   const [folio, setFolio] = useState<string>("#COT-2026-001");
 
   // CATÁLOGOS Y CONCEPTOS
@@ -489,7 +486,6 @@ export default function Home() {
   const handleSelectClient = (client: any) => {
     setClientName(`Cliente: ${client.name} ${client.tax_id ? `(${client.tax_id})` : ''}`);
     if (client.phone) setClientPhone(client.phone);
-    if (client.email) setClientEmail(client.email);
     setIsClientsOpen(false);
   };
 
@@ -700,50 +696,6 @@ export default function Home() {
   const subtotalWithDiscount = subtotal - discountAmount;
   const taxAmount = subtotalWithDiscount * (taxRate / 100);
   const total = subtotalWithDiscount + taxAmount;
-
-  // ENVIAR VÍA CORREO ELECTRÓNICO (MAILTO)
-  const sendEmailQuote = async () => {
-    const canProceed = await checkFreePlanUsageLimit();
-    if (!canProceed) return;
-
-    const subject = encodeURIComponent(`Cotización ${folio} - ${companyName}`);
-    
-    let bodyText = `Hola,\n\nAdjuntamos el resumen de la cotización realizada para usted:\n\n`;
-    bodyText += `--- DETALLES DE LA COTIZACIÓN ---\n`;
-    bodyText += `Empresa: ${companyName}\n`;
-    bodyText += `Cliente: ${clientName}\n`;
-    bodyText += `Folio: ${folio}\n`;
-    bodyText += `Fecha: ${new Date().toLocaleDateString()}\n\n`;
-    bodyText += `--- CONCEPTOS ---\n`;
-
-    items.forEach((item, i) => {
-      const q = typeof item.qty === 'number' ? item.qty : parseFloat(item.qty) || 0;
-      const p = typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0;
-      const desc = lang === 'es' ? item.description_es : item.description_en;
-      bodyText += `${i + 1}. ${desc || 'Sin descripción'} (${q} ${item.unit || 'pieza'}) x $${p.toFixed(2)} = $${(q * p).toFixed(2)}\n`;
-    });
-
-    bodyText += `\n--- RESUMEN FINANCIERO ---\n`;
-    bodyText += `Subtotal: $${subtotal.toFixed(2)} ${currency}\n`;
-    if (discountAmount > 0) {
-      bodyText += `Descuento (${numDiscount}%): -$${discountAmount.toFixed(2)} ${currency}\n`;
-    }
-    bodyText += `Impuesto (${taxRate}%): $${taxAmount.toFixed(2)} ${currency}\n`;
-    bodyText += `TOTAL NETO: $${total.toFixed(2)} ${currency}\n\n`;
-
-    if (bankData && bankData.banco) {
-      bodyText += `--- DATOS DE PAGO ---\n`;
-      bodyText += `Beneficiario: ${bankData.nombre || '—'}\n`;
-      bodyText += `Banco: ${bankData.banco}\n`;
-      bodyText += `Cuenta: ${bankData.cuenta || '—'}\n`;
-      bodyText += `CLABE: ${bankData.clabe || '—'}\n\n`;
-    }
-
-    bodyText += `Quedamos a sus órdenes para cualquier duda o aclaración.\n\nSaludos cordiales,\n${companyName}`;
-
-    const mailtoUrl = `mailto:${clientEmail}?subject=${subject}&body=${encodeURIComponent(bodyText)}`;
-    window.location.href = mailtoUrl;
-  };
 
   // GENERAR Y ENVIAR POR WHATSAPP
   const sendPdfWhatsApp = async () => {
@@ -1066,14 +1018,6 @@ export default function Home() {
               className={menuBtnClass}
             >
               {isGeneratingPdf ? "Generando PDF..." : t.btnWhatsApp}
-            </button>
-
-            {/* NUEVO BOTÓN: ENVIAR POR CORREO ELECTRÓNICO */}
-            <button 
-              onClick={() => { setIsMobileMenuOpen(false); sendEmailQuote(); }} 
-              className={menuBtnClass}
-            >
-              {t.btnEmail}
             </button>
           </nav>
         </div>
@@ -1640,7 +1584,7 @@ export default function Home() {
                   <div key={cli.id} className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border text-xs">
                     <div>
                       <strong className="text-slate-800 text-sm block">{cli.name}</strong>
-                      <span className="text-slate-500">{cli.tax_id} {cli.phone ? `• Tel: ${cli.phone}` : ''} {cli.email ? `• Mail: ${cli.email}` : ''}</span>
+                      <span className="text-slate-500">{cli.tax_id} {cli.phone ? `• Tel: ${cli.phone}` : ''}</span>
                     </div>
                     <div className="flex gap-1">
                       <button onClick={() => handleViewClientHistory(cli)} className="bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1 rounded text-xs font-semibold">
