@@ -208,6 +208,9 @@ export default function Home() {
   const [discount, setDiscount] = useState<number | string>(0);
   const [currency] = useState<string>('MXN');
 
+  // ACEPTACIÓN LEGAL OBLIGATORIA
+  const [legalAccepted, setLegalAccepted] = useState<boolean>(false);
+
   // ANTICIPO / ENGANCHE
   const [advanceRate, setAdvanceRate] = useState<number | string>(50);
   const [advanceCustomNote, setAdvanceCustomNote] = useState<string>(
@@ -374,6 +377,11 @@ export default function Home() {
 
   // REDIRECCIÓN A MERCADO PAGO PARA SUSCRIPCIÓN PREMIUM ($99/MES)
   const handleCheckoutPro = async () => {
+    if (!legalAccepted) {
+      alert("Debes aceptar los Términos y Condiciones y el Aviso de Privacidad para continuar.");
+      return;
+    }
+
     setIsProcessingPayment(true);
 
     try {
@@ -1018,19 +1026,44 @@ export default function Home() {
             <h1 className="text-xl font-bold text-white text-center tracking-tight">{t.appTitle}</h1>
           </div>
 
-          {/* BOTÓN O BADGE DEL PLAN DE SUSCRIPCIÓN PREMIUM ($99/MES) */}
+          {/* BOTÓN O BADGE DEL PLAN DE SUSCRIPCIÓN PREMIUM ($99/MES) CON CHECKBOX OBLIGATORIO DE TÉRMINOS */}
           {subscriptionStatus === 'active' ? (
             <div className="w-full bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 font-bold px-4 py-3 rounded-xl text-sm text-center shadow-md">
               {t.planProActive}
             </div>
           ) : (
-            <button 
-              onClick={handleCheckoutPro} 
-              disabled={isProcessingPayment} 
-              className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-900 font-extrabold px-4 py-3 rounded-xl text-sm transition-all duration-200 text-center shadow-lg border border-amber-300 active:scale-[0.98] animate-pulse"
-            >
-              {isProcessingPayment ? "Conectando..." : t.btnSubscribePro}
-            </button>
+            <div className="space-y-2.5 bg-slate-800/80 p-3 rounded-2xl border border-slate-700/80">
+              <label className="flex items-start gap-2 cursor-pointer text-[11px] text-slate-300 px-1 select-none">
+                <input 
+                  type="checkbox" 
+                  checked={legalAccepted} 
+                  onChange={(e) => setLegalAccepted(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-slate-600 bg-slate-900 text-amber-500 focus:ring-amber-500 cursor-pointer shrink-0" 
+                />
+                <span className="leading-tight">
+                  Acepto los{' '}
+                  <Link href="/terminos" target="_blank" className="underline hover:text-white font-semibold text-amber-400">
+                    Términos
+                  </Link>{' '}
+                  y el{' '}
+                  <Link href="/privacidad" target="_blank" className="underline hover:text-white font-semibold text-amber-400">
+                    Aviso de Privacidad
+                  </Link>.
+                </span>
+              </label>
+
+              <button 
+                onClick={handleCheckoutPro} 
+                disabled={isProcessingPayment || !legalAccepted} 
+                className={`w-full font-extrabold px-4 py-3 rounded-xl text-sm transition-all duration-200 text-center shadow-lg border text-slate-900 ${
+                  legalAccepted && !isProcessingPayment
+                    ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 border-amber-300 active:scale-[0.98] animate-pulse'
+                    : 'bg-slate-700 border-slate-600 text-slate-400 cursor-not-allowed opacity-60'
+                }`}
+              >
+                {isProcessingPayment ? "Conectando..." : t.btnSubscribePro}
+              </button>
+            </div>
           )}
 
           <nav className="flex flex-col gap-2.5">
@@ -1554,7 +1587,7 @@ export default function Home() {
 
         </div>
 
-        {/* PIE DE PÁGINA LEGAL (FOOTER CHECKLIST #1) */}
+        {/* PIE DE PÁGINA LEGAL (FOOTER) */}
         <footer className="no-print mt-12 pt-6 border-t border-slate-300/80 text-center text-xs text-slate-500 space-y-2 w-full max-w-5xl mx-auto">
           <div className="flex justify-center items-center gap-4 font-semibold text-slate-600">
             <Link href="/terminos" className="hover:text-slate-900 hover:underline transition">
