@@ -1,10 +1,6 @@
 import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
-import { createClient } from '@supabase/supabase-js';
-
-// Inicializar cliente de Supabase con Service Role Key (opcional pero recomendado para webhooks del servidor)
-// O usando tu cliente estándar si tiene permisos de escritura en profiles.
-import { supabase } from '@/lib/supabase';
+import { supabaseServer } from '@/lib/supabase';
 
 const client = new MercadoPagoConfig({
   accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN || '',
@@ -12,61 +8,41 @@ const client = new MercadoPagoConfig({
 
 export async function POST(request: Request) {
   try {
-    const url = new URL(request.url);
-    const searchParams = url.searchParams;
-    
-    // Leer tanto de query params como de posibles cuerpos JSON enviados por Mercado Pago
-    let topic = searchParams.get('topic') || searchParams.get('type');
-    let id = searchParams.get('id') || searchParams.get('data.id');
+    const body = await request.json();
 
-    // Si viene en el body JSON (formato moderno de Webhooks de MP)
-    if (!id) {
-      try {
-        const body = await request.json();
-        topic = topic || body.type || body.topic;
-        id = id || body.data?.id || body.id;
-      } catch (e) {
-        // Si no hay body JSON, ignoramos el error y seguimos con los params
-      }
-    }
+    // Solo procesamos si es un evento de pago
+    if (body.type === 'payment' || body.action === 'payment.updated') {
+      const paymentId = body.data?.id;
 
-    if ((topic === 'payment' || topic === 'subscription_preapproval') && id) {
-      const payment = new Payment(client);
-      const paymentData = await payment.get({ id });
+      if (paymentId) {
+        const paymentClient = new Payment(client);
+        const paymentInfo = await paymentClient.get({ id: paymentId });
 
-      if (paymentData.status === 'approved') {
-        // Mercado Pago a veces guarda el correo en metadata, payer.email o external_reference
-        const userEmail = paymentData.payer?.email || paymentData.metadata?.user_email;
-        const externalRef = paymentData.external_reference; // ID de usuario si lo mandaste al crear la preferencia
+        if (paymentInfo.status === 'approved') {
+          // El ID del usuario que guardamos en el checkout
+          const userId = paymentInfo.external_reference;
 
-        if (externalRef || userEmail) {
-          let query = supabase.from('profiles').update({ subscription_status: 'active' });
+          if (userId) {
+            // Actualizamos la columna subscription_status en tu tabla profiles
+            const { error } = await supabaseServer
+              .from('profiles')
+              .update({ subscription_status: 'pro' }) // Cambiamos de 'free' a 'pro'
+              .eq('id', userId);
 
-          // Priorizar buscar por ID exacto si se pasó en el external_reference
-          if (externalRef) {
-            query = query.eq('id', externalRef);
-          } else if (userEmail) {
-            // Si usas email, asegúrate de que la tabla profiles tenga la columna email o haz match por auth
-            query = query.eq('email', userEmail);
+            if (error) {
+              console.error('Error al actualizar Supabase:', error);
+              return NextResponse.json({ error: 'DB Error' }, { status: 500 });
+            }
+
+            console.log(`✅ Usuario ${userId} actualizado a 'pro' correctamente.`);
           }
-
-          const { error } = await query;
-
-          if (error) {
-            console.error('Error al actualizar suscripción en Supabase:', error);
-          } else {
-            console.log(`✅ Suscripción Pro activada con éxito para referencia/email: ${externalRef || userEmail}`);
-          }
-        } else {
-          console.warn('⚠️ Pago aprobado pero no se encontró email ni external_reference en la transacción.');
         }
       }
     }
 
-    // Mercado Pago exige siempre un status 200 rápido para confirmar la recepción
     return NextResponse.json({ received: true }, { status: 200 });
   } catch (error: any) {
-    console.error('❌ Error crítico en el webhook de Mercado Pago:', error);
+    console.error('Error en webhook:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

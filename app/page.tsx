@@ -1579,8 +1579,8 @@ export default function Home() {
               </div>
 
               <div className="hidden print:block mt-4 text-[10px] text-slate-500 text-right font-medium">
-                {t.generatedAt} {currentDateTime}
-              </div>
+  {t?.generatedAt || 'Generado el:'} {currentDateTime || ''}
+</div>
 
             </div>
           </div>
