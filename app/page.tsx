@@ -17,6 +17,7 @@ const translations: Record<string, any> = {
     btnHistory: "Mis Cotizaciones",
     btnManageClients: "Clientes",
     btnManageCompanies: "Mis Empresas",
+    btnSettings: "⚙️ Ajustes",
     btnSubscribePro: "Plan Premium ($99/mes)",
     planProActive: "✅ Plan Premium Activo",
     lblSelectBank: "Cuenta Bancaria",
@@ -48,6 +49,9 @@ const translations: Record<string, any> = {
     discount: "Descuento (%):",
     taxLabel: "Impuesto:",
     total: "Total Neto:",
+    advancePercent: "Anticipo requerido",
+    advanceNote: "Nota de Anticipo:",
+    advanceAmount: "Importe de Anticipo a Pagar:",
     modalTitle: "Administrar Conceptos Frecuentes",
     modalAddNew: "Agregar Nuevo Concepto (Máx. 10 personalizados):",
     btnSaveCatItem: "Guardar Concepto",
@@ -58,6 +62,7 @@ const translations: Record<string, any> = {
     clientHistoryTitle: "Historial de Cotizaciones del Cliente",
     clientModalTitle: "Directorio de Clientes Frecuentes",
     companyModalTitle: "Administrar Mis Empresas",
+    settingsModalTitle: "Ajustes y Personalización del Documento",
     noHistory: "Aún no tienes cotizaciones guardadas en la nube.",
     noClientHistory: "Este cliente aún no tiene cotizaciones guardadas.",
     noClients: "No tienes clientes frecuentes registrados.",
@@ -79,6 +84,7 @@ const translations: Record<string, any> = {
     btnHistory: "Saved Quotes",
     btnManageClients: "Clients",
     btnManageCompanies: "My Companies",
+    btnSettings: "⚙️ Settings",
     btnSubscribePro: "Premium Plan ($99/mo)",
     planProActive: "✅ Premium Plan Active",
     lblSelectBank: "Bank Account",
@@ -110,6 +116,9 @@ const translations: Record<string, any> = {
     discount: "Discount (%):",
     taxLabel: "Tax Rate:",
     total: "Net Total:",
+    advancePercent: "Required Down Payment",
+    advanceNote: "Down Payment Note:",
+    advanceAmount: "Down Payment Amount Due:",
     modalTitle: "Manage Frequent Concepts",
     modalAddNew: "Add New Concept (Max 10 custom):",
     btnSaveCatItem: "Save Concept",
@@ -120,6 +129,7 @@ const translations: Record<string, any> = {
     clientHistoryTitle: "Client's Quote History",
     clientModalTitle: "Frequent Clients Directory",
     companyModalTitle: "Manage My Companies",
+    settingsModalTitle: "Settings & Document Customization",
     noHistory: "You don't have any saved quotes in the cloud yet.",
     noClientHistory: "No quotes found for this client.",
     noClients: "No saved clients found.",
@@ -191,6 +201,15 @@ export default function Home() {
   const [discount, setDiscount] = useState<number | string>(0);
   const [currency] = useState<string>('MXN');
 
+  // ANTICIPO / ENGANCHE
+  const [advanceRate, setAdvanceRate] = useState<number | string>(50);
+  const [advanceCustomNote, setAdvanceCustomNote] = useState<string>(
+    "Nota: Al aceptar la cotización se requiere el pago de un anticipo para iniciar los trabajos."
+  );
+
+  // PLANTILLA/TEMA DE DISEÑO DEL DOCUMENTO ('classic' | 'modern' | 'compact')
+  const [templateStyle, setTemplateStyle] = useState<'classic' | 'modern' | 'compact'>('classic');
+
   // PLAN DE SUSCRIPCIÓN DEL USUARIO ('free' | 'active')
   const [subscriptionStatus, setSubscriptionStatus] = useState<string>('free');
 
@@ -237,6 +256,7 @@ export default function Home() {
   const [isClientsOpen, setIsClientsOpen] = useState<boolean>(false);
   const [isCompaniesOpen, setIsCompaniesOpen] = useState<boolean>(false);
   const [isClientHistoryOpen, setIsClientHistoryOpen] = useState<boolean>(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   
   const [selectedClientForHistory, setSelectedClientForHistory] = useState<any>(null);
   const [clientQuotesList, setClientQuotesList] = useState<any[]>([]);
@@ -685,8 +705,10 @@ export default function Home() {
     setItems(items.filter((_, i) => i !== index));
   };
 
-  // CÁLCULOS
+  // CÁLCULOS DE SUBTOTAL, DESCUENTO, IMPUESTO, TOTAL Y ANTICIPO
   const numDiscount = typeof discount === 'number' ? discount : parseFloat(discount) || 0;
+  const numAdvance = typeof advanceRate === 'number' ? advanceRate : parseFloat(advanceRate) || 0;
+
   const subtotal = items.reduce((acc, item) => {
     const q = typeof item.qty === 'number' ? item.qty : parseFloat(item.qty) || 0;
     const p = typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0;
@@ -696,6 +718,7 @@ export default function Home() {
   const subtotalWithDiscount = subtotal - discountAmount;
   const taxAmount = subtotalWithDiscount * (taxRate / 100);
   const total = subtotalWithDiscount + taxAmount;
+  const advanceAmount = total * (numAdvance / 100);
 
   // GENERAR Y ENVIAR POR WHATSAPP
   const sendPdfWhatsApp = async () => {
@@ -711,7 +734,7 @@ export default function Home() {
       const { default: jsPDF } = await import('jspdf');
       const { default: html2canvas } = await import('html2canvas-pro');
 
-      // CONVERTIR TEMPORALMENTE INPUTS Y SELECTS EN DIVS DE TEXTO LISOS
+      // CONVERTIR TEMPORALMENTE INPUTS Y SELECTS EN DIVS DE TEXTO LISOS MANTENIENDO ESTILOS DEL TEMA
       const inputs = element.querySelectorAll('input, select');
       const replacements: { element: HTMLElement; span: HTMLDivElement }[] = [];
 
@@ -733,7 +756,7 @@ export default function Home() {
         }
       });
 
-      // CAPTURAR EL DOCUMENTO COMPLETO
+      // CAPTURAR EL DOCUMENTO COMPLETO CON LOS ESTILOS EXACTOS DEL TEMA SELECCIONADO
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
@@ -802,7 +825,11 @@ export default function Home() {
       text += `${companyName}\n`;
       text += `${clientName}\n`;
       text += `Folio: ${folio}\n`;
-      text += `Total Neto: $${total.toFixed(2)} ${currency}\n\n`;
+      text += `Total Neto: $${total.toFixed(2)} ${currency}\n`;
+      if (numAdvance > 0) {
+        text += `Anticipo (${numAdvance}%): $${advanceAmount.toFixed(2)} ${currency}\n`;
+      }
+      text += `\n`;
       
       if (pdfUrl) {
         text += `Puedes descargar/ver el PDF completo aquí:\n${pdfUrl}\n\n`;
@@ -913,6 +940,27 @@ export default function Home() {
 
   const menuBtnClass = "w-full bg-slate-700 hover:bg-slate-600 text-white font-semibold px-4 py-3 rounded-xl text-sm transition-all duration-200 text-center shadow-md border border-slate-500/50 active:scale-[0.98]";
 
+  // CLASES DINÁMICAS SEGÚN EL TEMA DE DISEÑO
+  const getContainerStyle = () => {
+    if (templateStyle === 'modern') {
+      return "quote-container pdf-theme-modern relative bg-white rounded-2xl shadow-xl border-t-[10px] border-t-slate-900 border-x border-b border-slate-200 overflow-hidden p-6 md:p-12";
+    }
+    if (templateStyle === 'compact') {
+      return "quote-container pdf-theme-compact relative bg-white p-3 md:p-6 rounded-xl shadow-lg border border-slate-300 overflow-hidden text-xs";
+    }
+    return "quote-container pdf-theme-classic relative bg-white p-4 md:p-12 rounded-2xl shadow-xl border border-slate-200 overflow-hidden";
+  };
+
+  const getHeaderTableStyle = () => {
+    if (templateStyle === 'modern') {
+      return "hidden sm:grid grid-cols-12 text-white text-xs font-bold uppercase py-2.5 px-3 rounded-lg shadow-sm";
+    }
+    if (templateStyle === 'compact') {
+      return "hidden sm:grid grid-cols-12 border-b-2 border-slate-800 text-[11px] font-black text-slate-800 uppercase pb-1 mb-1";
+    }
+    return "hidden sm:grid grid-cols-12 border-b-2 border-slate-300 text-xs font-bold text-slate-600 uppercase pb-2";
+  };
+
   return (
     <div className="bg-slate-100 min-h-screen font-sans text-slate-800 print:bg-white print:p-0 flex flex-col md:flex-row pt-14 md:pt-0">
       
@@ -922,6 +970,24 @@ export default function Home() {
           @page { margin: 0; size: auto; }
           body { background-color: white !important; padding: 0 !important; margin: 0 !important; }
           .quote-container { box-shadow: none !important; border: none !important; padding: 1.5cm !important; margin: 0 !important; width: 100% !important; max-width: 100% !important; }
+        }
+
+        /* ESTILOS ESPECÍFICOS PARA REFORZAR TEMAS EN PDF / CANVAS */
+        .pdf-theme-modern .header-table-modern {
+          background-color: #0f172a !important;
+          color: #ffffff !important;
+        }
+        .pdf-theme-modern .client-box-modern {
+          background-color: #f1f5f9 !important;
+          border-left: 6px solid #0f172a !important;
+        }
+        .pdf-theme-compact .client-box-compact {
+          background-color: #f8fafc !important;
+          border: 1px solid #cbd5e1 !important;
+        }
+        .pdf-theme-classic .client-box-classic {
+          background-color: #f8fafc !important;
+          border: 1px solid #f1f5f9 !important;
         }
       `}</style>
 
@@ -995,6 +1061,13 @@ export default function Home() {
               className={menuBtnClass}
             >
               {t.btnHistory}
+            </button>
+
+            <button 
+              onClick={() => { setIsSettingsOpen(true); setIsMobileMenuOpen(false); }} 
+              className={menuBtnClass}
+            >
+              {t.btnSettings}
             </button>
 
             <button 
@@ -1171,7 +1244,7 @@ export default function Home() {
           </div>
 
           {/* DOCUMENTO COTIZACIÓN */}
-          <div id="quote-document" className="quote-container relative bg-white p-4 md:p-12 rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+          <div id="quote-document" className={getContainerStyle()}>
             
             {/* MARCA DE AGUA EN MOSAICO ULTRA TUPIDO PARA USUARIOS DEL PLAN GRATUITO (OCULTA EN IMPRESIÓN/PDF) */}
             {subscriptionStatus === 'free' && (
@@ -1190,9 +1263,9 @@ export default function Home() {
 
             <div className="relative z-10">
               {/* ENCABEZADO Y DATOS DE LA EMPRESA */}
-              <div className="flex flex-col md:flex-row justify-between items-start border-b border-slate-200 pb-5 gap-6">
+              <div className={`flex flex-col md:flex-row justify-between items-start border-b border-slate-200 gap-6 ${templateStyle === 'compact' ? 'pb-2' : 'pb-5'}`}>
                 <div className="w-full md:w-1/2 flex justify-start">
-                  <div className="relative bg-transparent rounded-lg h-24 w-52 flex items-center justify-center cursor-pointer overflow-hidden">
+                  <div className={`relative bg-transparent rounded-lg flex items-center justify-center cursor-pointer overflow-hidden ${templateStyle === 'compact' ? 'h-16 w-36' : 'h-24 w-52'}`}>
                     {logo ? (
                       <img src={logo} alt="Logo" className="h-full object-contain" />
                     ) : (
@@ -1203,13 +1276,13 @@ export default function Home() {
                 </div>
 
                 <div className="w-full md:w-1/2 text-left md:text-right flex flex-col items-start md:items-end space-y-0.5">
-                  <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="font-extrabold text-2xl text-slate-900 w-full text-left md:text-right bg-transparent outline-none leading-none tracking-tight mb-0.5" />
+                  <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className={`font-extrabold text-slate-900 w-full text-left md:text-right bg-transparent outline-none leading-none tracking-tight mb-0.5 ${templateStyle === 'compact' ? 'text-lg' : 'text-2xl'}`} />
                   
                   {companyTagline && (
                     <input value={companyTagline} onChange={(e) => setCompanyTagline(e.target.value)} className="text-xs text-slate-500 w-full text-left md:text-right bg-transparent outline-none leading-none mb-1" />
                   )}
 
-                  <div className="text-xs text-slate-600 flex flex-col items-start md:items-end leading-tight space-y-0.5 w-full">
+                  <div className={`text-slate-600 flex flex-col items-start md:items-end leading-tight space-y-0.5 w-full ${templateStyle === 'compact' ? 'text-[10px]' : 'text-xs'}`}>
                     {companyTaxId && <p className="font-semibold text-slate-800">RFC: {companyTaxId}</p>}
                     {companyAddress && <p>{companyAddress}</p>}
                     {cityStateText && <p>{cityStateText}</p>}
@@ -1221,10 +1294,13 @@ export default function Home() {
               </div>
 
               {/* SECCIÓN CLIENTE Y FOLIO */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6 md:my-8 bg-slate-50 p-4 rounded-xl border border-slate-100 print:bg-transparent print:p-0 print:border-none">
+              <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 rounded-xl print:bg-transparent print:p-0 print:border-none ${
+                templateStyle === 'modern' ? 'client-box-modern bg-slate-100 p-4 my-4 md:my-6' : 
+                templateStyle === 'compact' ? 'client-box-compact bg-slate-50 p-2 my-2' : 'client-box-classic bg-slate-50 p-4 my-6 md:my-8'
+              }`}>
                 <div>
-                  <span className="text-xs font-bold text-slate-900 uppercase block mb-1">{t.quotedTo}</span>
-                  <input value={clientName} onChange={(e) => setClientName(e.target.value)} className="font-semibold text-slate-800 w-full bg-transparent outline-none text-sm md:text-base" />
+                  <span className={`font-bold uppercase block mb-0.5 ${templateStyle === 'modern' ? 'text-slate-900 text-xs tracking-wide' : 'text-slate-700 text-xs'}`}>{t.quotedTo}</span>
+                  <input value={clientName} onChange={(e) => setClientName(e.target.value)} className={`font-semibold text-slate-800 w-full bg-transparent outline-none ${templateStyle === 'compact' ? 'text-xs' : 'text-sm md:text-base'}`} />
                 </div>
                 <div className="md:text-right space-y-1 text-xs text-slate-600">
                   <p className="flex items-center justify-start md:justify-end gap-1">
@@ -1235,8 +1311,11 @@ export default function Home() {
               </div>
 
               {/* VISTA DE TABLA CON COLUMNA UNIDAD DE MEDIDA */}
-              <div className="mt-4">
-                <div className="hidden sm:grid grid-cols-12 border-b-2 border-slate-200 text-xs font-bold text-slate-500 uppercase pb-2">
+              <div className={templateStyle === 'compact' ? 'mt-2' : 'mt-4'}>
+                <div 
+                  className={getHeaderTableStyle()} 
+                  style={{ backgroundColor: templateStyle === 'modern' ? '#0f172a' : undefined }}
+                >
                   <div className="col-span-4 px-2">{t.thConcept}</div>
                   <div className="col-span-2 text-center px-1">{t.thUnit}</div>
                   <div className="col-span-2 text-center px-1">{t.thQty}</div>
@@ -1252,7 +1331,9 @@ export default function Home() {
                     return (
                       <div 
                         key={idx} 
-                        className="bg-slate-50 sm:bg-transparent p-3 sm:p-0 rounded-xl sm:rounded-none border sm:border-none border-slate-200 grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-0 items-center hover:bg-slate-50/80 transition"
+                        className={`bg-slate-50 sm:bg-transparent p-3 sm:p-0 rounded-xl sm:rounded-none border sm:border-none border-slate-200 grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-0 items-center hover:bg-slate-50/80 transition ${
+                          templateStyle === 'compact' ? 'py-0.5' : 'py-1.5'
+                        }`}
                       >
                         {/* CONCEPTO */}
                         <div className="sm:col-span-4 sm:px-2 py-1">
@@ -1261,7 +1342,9 @@ export default function Home() {
                             value={lang === 'es' ? item.description_es : item.description_en} 
                             onChange={(e) => updateItem(idx, 'description', e.target.value)}
                             placeholder="Escribe un concepto..."
-                            className="w-full bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 text-sm font-medium outline-none focus:border-indigo-500"
+                            className={`w-full bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 font-medium outline-none focus:border-indigo-500 ${
+                              templateStyle === 'compact' ? 'text-xs' : 'text-sm'
+                            }`}
                           />
                         </div>
 
@@ -1293,7 +1376,9 @@ export default function Home() {
                                 if (item.qty === '') updateItem(idx, 'qty', 0);
                               }}
                               onChange={(e) => updateItem(idx, 'qty', e.target.value)} 
-                              className="w-full sm:w-16 text-center bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 text-sm font-semibold outline-none focus:bg-indigo-50/50 mx-auto" 
+                              className={`w-full sm:w-16 text-center bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 font-semibold outline-none focus:bg-indigo-50/50 mx-auto ${
+                                templateStyle === 'compact' ? 'text-xs' : 'text-sm'
+                              }`} 
                             />
                           </div>
 
@@ -1308,7 +1393,9 @@ export default function Home() {
                                 if (item.price === '') updateItem(idx, 'price', 0);
                               }}
                               onChange={(e) => updateItem(idx, 'price', e.target.value)} 
-                              className="w-full sm:w-20 text-right bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 text-sm font-semibold outline-none focus:bg-indigo-50/50 ml-auto" 
+                              className={`w-full sm:w-20 text-right bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 font-semibold outline-none focus:bg-indigo-50/50 ml-auto ${
+                                templateStyle === 'compact' ? 'text-xs' : 'text-sm'
+                              }`} 
                               placeholder="0.00" 
                             />
                           </div>
@@ -1316,7 +1403,7 @@ export default function Home() {
                           {/* IMPORTE */}
                           <div className="sm:col-span-2 sm:px-2 text-right">
                             <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thAmount}</label>
-                            <span className="text-sm font-bold text-slate-800 block pt-1.5 sm:pt-0">
+                            <span className={`font-bold text-slate-800 block pt-1.5 sm:pt-0 ${templateStyle === 'compact' ? 'text-xs' : 'text-sm'}`}>
                               ${(q * p).toFixed(2)}
                             </span>
                           </div>
@@ -1334,9 +1421,9 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* DESGLOSE FINAL CÁLCULOS */}
-              <div className="flex justify-end mt-8 border-t border-slate-200 pt-6">
-                <div className="w-full md:w-80 space-y-2 text-sm">
+              {/* DESGLOSE FINAL CÁLCULOS Y SECCIÓN DE ANTICIPO */}
+              <div className={`flex justify-end border-t border-slate-200 ${templateStyle === 'compact' ? 'mt-3 pt-2' : 'mt-8 pt-6'}`}>
+                <div className="w-full md:w-96 space-y-2.5 text-sm">
                   
                   {/* SUBTOTAL */}
                   <div className="flex justify-between items-center text-slate-600">
@@ -1377,14 +1464,55 @@ export default function Home() {
                   {/* TOTAL NETO */}
                   <div className="flex justify-between items-center text-base font-bold text-slate-900 border-t border-slate-200 pt-2">
                     <span>{t.total}</span>
-                    <span className="text-indigo-600">${total.toFixed(2)} {currency}</span>
+                    <span className={templateStyle === 'modern' ? 'text-slate-900 font-extrabold text-lg' : 'text-indigo-600'}>
+                      ${total.toFixed(2)} {currency}
+                    </span>
+                  </div>
+
+                  {/* BLOQUE DE ANTICIPO / ENGANCHE DEBAJO DEL TOTAL NETO */}
+                  <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-3 space-y-2 mt-3 print:bg-transparent print:border-slate-300">
+                    <div className="flex justify-between items-center">
+                      <span className="flex items-center gap-1 font-bold text-amber-900 text-xs">
+                        {t.advancePercent} ({numAdvance}%):
+                        <div className="flex items-center border border-amber-300 rounded bg-white px-1 py-0.5 no-print">
+                          <input 
+                            type="number" 
+                            min="0" 
+                            max="100"
+                            step="1"
+                            value={advanceRate} 
+                            onFocus={() => { if (advanceRate === 0 || advanceRate === '0') setAdvanceRate(''); }}
+                            onBlur={() => { if (advanceRate === '') setAdvanceRate(0); }}
+                            onChange={(e) => setAdvanceRate(e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))}
+                            className="w-12 text-center font-bold text-xs text-amber-900 outline-none"
+                          />
+                          <span className="text-[10px] font-bold text-amber-600">%</span>
+                        </div>
+                      </span>
+                      <span className="font-extrabold text-amber-900 text-sm">
+                        ${advanceAmount.toFixed(2)} {currency}
+                      </span>
+                    </div>
+
+                    {/* LEYENDA EDITABLE DE ACEPTACIÓN / ANTICIPO */}
+                    <div className="pt-1 border-t border-amber-200/60">
+                      <textarea
+                        value={advanceCustomNote}
+                        onChange={(e) => setAdvanceCustomNote(e.target.value)}
+                        rows={2}
+                        className="w-full bg-transparent text-[11px] text-amber-950 italic outline-none resize-none leading-tight font-medium"
+                        placeholder="Escribe la leyenda o condición de anticipo..."
+                      />
+                    </div>
                   </div>
 
                 </div>
               </div>
 
               {/* DATOS BANCARIOS FIJOS */}
-              <div className="mt-8 bg-slate-50 p-5 rounded-xl border border-slate-200 text-xs space-y-3 print:bg-transparent print:border-slate-300">
+              <div className={`bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-3 print:bg-transparent print:border-slate-300 ${
+                templateStyle === 'compact' ? 'mt-3 p-3 space-y-1' : 'mt-8 p-5 space-y-3'
+              }`}>
                 <p className="font-bold text-slate-800 text-sm">{t.bankHeader}</p>
                 <div className="flex flex-col space-y-2 text-slate-700 max-w-md">
                   <div className="grid grid-cols-[120px_1fr] sm:grid-cols-[140px_1fr] items-center">
@@ -1418,6 +1546,83 @@ export default function Home() {
           </div>
         </div>
       </main>
+
+      {/* MODAL AJUSTES Y TEMAS DE DISEÑO */}
+      {isSettingsOpen && (
+        <div className="no-print fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-5 max-h-[85vh] flex flex-col">
+            <div className="flex justify-between items-center border-b pb-3">
+              <h3 className="font-bold text-slate-800 text-lg">{t.settingsModalTitle}</h3>
+              <button onClick={() => setIsSettingsOpen(false)} className="text-slate-400 font-bold text-xl">✕</button>
+            </div>
+
+            <div className="space-y-4 overflow-y-auto flex-1 pr-1">
+              <div>
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block mb-2">
+                  Plantillas / Temas de Diseño para el Documento y PDF:
+                </label>
+                <div className="grid grid-cols-1 gap-3">
+                  
+                  {/* TEMA 1: CORPORATIVO / CLÁSICO */}
+                  <div 
+                    onClick={() => setTemplateStyle('classic')} 
+                    className={`p-4 rounded-xl border-2 cursor-pointer transition flex items-center justify-between ${
+                      templateStyle === 'classic' 
+                        ? 'border-indigo-600 bg-indigo-50/50 ring-2 ring-indigo-500/20' 
+                        : 'border-slate-200 hover:border-slate-300 bg-white'
+                    }`}
+                  >
+                    <div>
+                      <strong className="text-sm font-bold text-slate-800 block">Corporativo / Clásico</strong>
+                      <span className="text-xs text-slate-500 block">Diseño tradicional con formato amplio y detalles neutros ejecutivos.</span>
+                    </div>
+                    {templateStyle === 'classic' && <span className="text-indigo-600 font-bold text-lg">✓</span>}
+                  </div>
+
+                  {/* TEMA 2: MODERNO / MINIMALISTA */}
+                  <div 
+                    onClick={() => setTemplateStyle('modern')} 
+                    className={`p-4 rounded-xl border-2 cursor-pointer transition flex items-center justify-between ${
+                      templateStyle === 'modern' 
+                        ? 'border-indigo-600 bg-indigo-50/50 ring-2 ring-indigo-500/20' 
+                        : 'border-slate-200 hover:border-slate-300 bg-white'
+                    }`}
+                  >
+                    <div>
+                      <strong className="text-sm font-bold text-slate-800 block">Moderno / Minimalista</strong>
+                      <span className="text-xs text-slate-500 block">Encabezado oscuro (#0f172a), bordes superiores elegantes y marco estilizado.</span>
+                    </div>
+                    {templateStyle === 'modern' && <span className="text-indigo-600 font-bold text-lg">✓</span>}
+                  </div>
+
+                  {/* TEMA 3: COMPACTO */}
+                  <div 
+                    onClick={() => setTemplateStyle('compact')} 
+                    className={`p-4 rounded-xl border-2 cursor-pointer transition flex items-center justify-between ${
+                      templateStyle === 'compact' 
+                        ? 'border-indigo-600 bg-indigo-50/50 ring-2 ring-indigo-500/20' 
+                        : 'border-slate-200 hover:border-slate-300 bg-white'
+                    }`}
+                  >
+                    <div>
+                      <strong className="text-sm font-bold text-slate-800 block">Compacto</strong>
+                      <span className="text-xs text-slate-500 block">Fuentes densas y márgenes mínimos ideales para cotizaciones cortas de una sola página.</span>
+                    </div>
+                    {templateStyle === 'compact' && <span className="text-indigo-600 font-bold text-lg">✓</span>}
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end border-t pt-3">
+              <button onClick={() => setIsSettingsOpen(false)} className="bg-slate-800 text-white hover:bg-slate-900 font-semibold text-xs px-5 py-2.5 rounded-lg transition">
+                {t.btnCloseModal}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL GESTOR DE CUENTAS BANCARIAS */}
       {isBanksModalOpen && (
