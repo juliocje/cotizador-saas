@@ -18,36 +18,85 @@ export default function TerminosPage() {
           </Link>
         </div>
 
-        <section className="space-y-4 text-sm text-slate-700 leading-relaxed">
-          <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide">1. Aceptación del Servicio</h2>
-          <p>
-            Al acceder y utilizar <strong>Cotizador Express Pro</strong>, el usuario acepta de manera plena y sin reservas los presentes Términos y Condiciones. Si no está de acuerdo con alguno de los términos, deberá abstenerse de utilizar la plataforma.
-          </p>
+        <section className="space-y-5 text-sm text-slate-700 leading-relaxed">
+          
+          <div>
+            <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide mb-1">1. Aceptación de los Términos</h2>
+            <p>
+              Al registrarse, acceder o utilizar el software <strong>Cotizador Express Pro</strong> (en adelante, &quot;la Plataforma&quot;), el usuario (en adelante, &quot;el Usuario&quot;) acepta de manera expresa, plena y sin reservas todos y cada uno de los presentes Términos y Condiciones de Uso. Si el Usuario no está de acuerdo con las condiciones aquí establecidas, deberá abstenerse de utilizar el servicio.
+            </p>
+          </div>
 
-          <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide">2. Naturaleza del Software y Deslinde Legal</h2>
-          <p>
-            <strong>Cotizador Express Pro</strong> es únicamente una herramienta digital de software diseñada para la facilitación y elaboración de documentos comerciales (cotizaciones, presupuestos y estimaciones). 
-          </p>
-          <ul className="list-disc pl-5 space-y-1">
-            <li><strong>No es un Comprobante Fiscal:</strong> Las cotizaciones o presupuestos generados no constituyen una factura ni comprobante fiscal oficial (CFDI) ante autoridades tributarias.</li>
-            <li><strong>Responsabilidad de Contenido:</strong> El usuario es el único responsable de la exactitud, veracidad y legalidad de los precios, conceptos, descuentos, impuestos e información comercial ingresados en sus documentos.</li>
-            <li><strong>Acuerdos Comerciales:</strong> La plataforma no interviene en las transacciones, contratos ni discrepancias que surjan entre el usuario y sus clientes finales.</li>
-          </ul>
+          <div>
+            <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide mb-1">2. Naturaleza del Software y Deslinde de Responsabilidad</h2>
+            <p>
+              La Plataforma proporciona herramientas exclusivamente tecnológicas orientadas a la elaboración, diseño, edición y exportación de documentos comerciales digitales (cotizaciones, presupuestos y estimaciones).
+            </p>
+            <ul className="list-disc pl-5 space-y-1 mt-2">
+              <li><strong>Inexistencia de Comprobante Fiscal:</strong> Los documentos generados mediante la Plataforma son estimaciones comerciales informativas y bajo ningún concepto constituyen facturas fiscales, Comprobantes Fiscales Digitales por Internet (CFDI) ni documentos de validez tributaria oficial ante el Servicio de Administración Tributaria (SAT) u órganos equivalentes.</li>
+              <li><strong>Independencia Comercial:</strong> La Plataforma no forma parte ni interviene en las operaciones, contratos, acuerdos, cobranzas o disputas comerciales que se susciten entre el Usuario y sus clientes finales.</li>
+              <li><strong>Veracidad e Importes:</strong> El Usuario es el único y exclusivo responsable de la veracidad, cálculo, precisión de impuestos, precios, descuentos y condiciones comerciales establecidas en los documentos generados.</li>
+            </ul>
+          </div>
 
-          <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide">3. Suscripción y Pagos (Plan Premium)</h2>
-          <p>
-            El acceso al Plan Premium otorga uso ilimitado de generación de cotizaciones. Los pagos son procesados de forma segura a través de pasarelas de pago de terceros (Mercado Pago). El usuario podrá cancelar su suscripción en cualquier momento. No se realizan reembolsos proporcionales por periodos mensuales ya iniciados.
-          </p>
+          <div>
+            <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide mb-1">3. Uso Aceptable y Prohibición de Actividades Ilícitas</h2>
+            <p>
+              El Usuario se compromete a hacer un uso lícito y ético de la Plataforma. Queda estrictamente prohibido utilizar el servicio para:
+            </p>
+            <ul className="list-disc pl-5 space-y-1 mt-2">
+              <li>Generar cotizaciones falsas, engañosas, fraudulentas o destinadas a esquemas de estafa.</li>
+              <li>Cotizar productos o servicios ilegales, regulados o cuya comercialización infrinja leyes vigentes.</li>
+              <li>Suplantar la identidad de personas físicas, morales o marcas registradas sin la debida autorización.</li>
+            </ul>
+            <p className="mt-2">
+              Nos reservamos el derecho indiscutible de suspender, bloquear o eliminar definitivamente de manera inmediata y sin previo aviso la cuenta de cualquier Usuario que infrinja esta disposición, sin derecho a reembolso o indemnización.
+            </p>
+          </div>
 
-          <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide">4. Disponibilidad del Servicio</h2>
-          <p>
-            El servicio se provee &quot;tal cual&quot; (&quot;as is&quot;). No se garantiza una disponibilidad ininterrumpida del 100% ni nos hacemos responsables por pérdidas económicas derivadas de interrupciones técnicas imprevistas de los proveedores de infraestructura (hosting/base de datos).
-          </p>
+          <div>
+            <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide mb-1">4. Propiedad Intelectual, Logotipos y Marcas de Terceros</h2>
+            <p>
+              Todos los derechos de propiedad intelectual del diseño, código fuente, interfaz y marca <strong>Cotizador Express Pro</strong> pertenecen en su totalidad a sus desarrolladores. 
+            </p>
+            <p className="mt-2">
+              En relación con las imágenes, logotipos y marcas comerciales que el Usuario cargue en la Plataforma para personalizar sus cotizaciones, el Usuario declara y garantiza bajo protesta de decir verdad que cuenta con la titularidad, licencias o autorizaciones correspondientes para su uso. La Plataforma queda totalmente liberada de cualquier responsabilidad derivada de infracciones a derechos de autor o propiedad industrial cometidas por los Usuarios.
+            </p>
+          </div>
 
-          <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide">5. Modificaciones</h2>
-          <p>
-            Nos reservamos el derecho de modificar o actualizar estos Términos y Condiciones en cualquier momento. El uso continuado de la plataforma tras la publicación de cambios constituye la aceptación de los mismos.
-          </p>
+          <div>
+            <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide mb-1">5. Suscripciones, Planes de Pago y Reembolsos</h2>
+            <p>
+              El acceso a funcionalidades avanzadas (Plan Premium) requiere el pago de la tarifa correspondiente. Los pagos se procesan a través de pasarelas de pago de terceros cifradas y seguras (Mercado Pago).
+            </p>
+            <ul className="list-disc pl-5 space-y-1 mt-2">
+              <li>El Usuario puede cancelar la suscripción en cualquier momento.</li>
+              <li>No se otorgarán reembolsos ni devoluciones proporcionales por periodos de cobro ya procesados o transcurridos.</li>
+              <li>Las variaciones de tarifa serán notificadas oportunamente a través de la plataforma o correo electrónico.</li>
+            </ul>
+          </div>
+
+          <div>
+            <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide mb-1">6. Limitación de Responsabilidad y Garantías de Disponibilidad</h2>
+            <p>
+              El servicio se provee &quot;tal cual&quot; (&quot;as is&quot;) y &quot;según disponibilidad&quot;. A pesar de aplicar altos estándares de seguridad y estabilidad, no garantizamos que el servicio sea ininterrumpido o esté completamente libre de errores. La Plataforma no será responsable por daños indirectos, pérdida de ganancias, interrupción de negocios o pérdida de datos causados por fallas en servidores de infraestructura de terceros (hospedaje o base de datos).
+            </p>
+          </div>
+
+          <div>
+            <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide mb-1">7. Cláusula de Indemnización</h2>
+            <p>
+              El Usuario se obliga a defender, indemnizar y sacar en paz y a salvo a <strong>Cotizador Express Pro</strong>, sus administradores, desarrolladores y afiliados frente a cualquier demanda, reclamación, juicio, multa, sanción u honorarios legales que deriven del uso indebido de la Plataforma, incumplimiento de contratos con sus clientes o violación de estos Términos.
+            </p>
+          </div>
+
+          <div>
+            <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide mb-1">8. Jurisdicción y Ley Aplicable</h2>
+            <p>
+              Para la interpretación, cumplimiento y solución de cualquier controversia o litigio derivado de estos Términos y Condiciones, las partes se someten expresamente a la legislación vigente y a la jurisdicción de los tribunales competentes de la ciudad de <strong>Hermosillo, Sonora, México</strong>, renunciando expresamente a cualquier otro fuero que por razón de sus domicilios presentes o futuros pudiera corresponderles.
+            </p>
+          </div>
+
         </section>
 
         <div className="border-t pt-4 text-center text-xs text-slate-500">
