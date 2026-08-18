@@ -398,6 +398,11 @@ export default function Home() {
         })
       });
 
+      // --- AJUSTE: Verificar si la respuesta fue exitosa antes de parsear ---
+      if (!response.ok) {
+        throw new Error('El servidor de pagos no respondió correctamente.');
+      }
+
       const data = await response.json();
 
       if (data.init_point) {
@@ -410,7 +415,7 @@ export default function Home() {
     } finally {
       setIsProcessingPayment(false);
     }
-  };
+};
 
   // GESTIÓN DE CUENTAS BANCARIAS
   const handleSaveBankAccount = () => {

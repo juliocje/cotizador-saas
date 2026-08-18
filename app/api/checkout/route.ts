@@ -1,52 +1,49 @@
 import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, Preference } from 'mercadopago';
-import { supabaseServer } from '@/lib/supabase';
-
-const client = new MercadoPagoConfig({
-  accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN || '',
-});
 
 export async function POST(request: Request) {
   try {
-    const { title, price, quantity, userEmail } = await request.json();
+    const bodyData = await request.json().catch(() => ({}));
+    const { title, price, quantity } = bodyData;
 
-    // Obtener el usuario autenticado actual desde Supabase
-    const { data: { user } } = await supabaseServer.auth.getUser();
-    const userId = user?.id || '';
+    const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
+    if (!token) {
+      throw new Error("Falta MERCADOPAGO_ACCESS_TOKEN");
+    }
 
+    const client = new MercadoPagoConfig({ accessToken: token });
     const preference = new Preference(client);
 
-    const baseUrl = 'http://localhost:3000';
+    const host = request.headers.get('host') || 'localhost:3000';
+    const protocol = host.includes('localhost') ? 'http' : 'https';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`;
 
+    // Estructura limpia y probada que no genera conflicto de formato JSON
     const result = await preference.create({
       body: {
         items: [
           {
             id: 'plan-pro-mensual',
-            title: title || 'Suscripción Cotizador Express Pro',
-            quantity: Number(quantity) || 1,
-            unit_price: Number(price) || 99,
-            currency_id: 'MXN',
-          },
+            title: String(title || 'Suscripción Plan Premium - Cotizador Express Pro'),
+            quantity: Number(quantity || 1),
+            unit_price: Number(price || 99),
+            currency_id: 'MXN'
+          }
         ],
-        payer: {
-          email: userEmail || user?.email || 'comprador@test.com',
-        },
-        external_reference: userId, 
         back_urls: {
-          success: `${baseUrl}/?success=true`,
-          failure: `${baseUrl}/?success=false`,
-          pending: `${baseUrl}?success=pending`,
-        },
-        // Quitamos temporalmente auto_return para evitar bloqueos locales
-      },
+          success: `${baseUrl}/`,
+          failure: `${baseUrl}/`,
+          pending: `${baseUrl}/`
+        }
+      }
     });
 
     return NextResponse.json({ init_point: result.init_point });
   } catch (error: any) {
-    console.error('Error al crear preferencia de Mercado Pago:', error);
-    return NextResponse.json({ 
-      error: error.message || 'Error al procesar el pago' 
-    }, { status: 500 });
+    console.error("🔥 ERROR DETALLADO DE MERCADO PAGO:", {
+      message: error.message,
+      response: error.apiResponse?.cause || error.response
+    });
+    return NextResponse.json({ error: error.message || 'Error al procesar el pago' }, { status: 500 });
   }
 }
