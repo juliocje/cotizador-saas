@@ -56,7 +56,7 @@ const translations: Record<string, any> = {
     modalTitle: "Administrar Conceptos Frecuentes",
     modalAddNew: "Agregar Nuevo Concepto (Máx. 10 personalizados):",
     btnSaveCatItem: "Guardar Concepto",
-    btnCloseModal: "Cerrar",
+    btnClosureModal: "Cerrar",
     generatedAt: "Fecha y hora de emisión:",
     bankModalTitle: "Administrar Cuentas Bancarias",
     historyModalTitle: "Historial General de Cotizaciones Guardadas",
@@ -398,7 +398,6 @@ export default function Home() {
         })
       });
 
-      // --- AJUSTE: Verificar si la respuesta fue exitosa antes de parsear ---
       if (!response.ok) {
         throw new Error('El servidor de pagos no respondió correctamente.');
       }
@@ -415,7 +414,7 @@ export default function Home() {
     } finally {
       setIsProcessingPayment(false);
     }
-};
+  };
 
   // GESTIÓN DE CUENTAS BANCARIAS
   const handleSaveBankAccount = () => {
@@ -754,7 +753,6 @@ export default function Home() {
       const { default: jsPDF } = await import('jspdf');
       const { default: html2canvas } = await import('html2canvas-pro');
 
-      // CONVERTIR TEMPORALMENTE INPUTS Y SELECTS EN DIVS DE TEXTO LISOS MANTENIENDO ESTILOS DEL TEMA
       const inputs = element.querySelectorAll('input, select');
       const replacements: { element: HTMLElement; span: HTMLDivElement }[] = [];
 
@@ -776,7 +774,6 @@ export default function Home() {
         }
       });
 
-      // CAPTURAR EL DOCUMENTO COMPLETO CON LOS ESTILOS EXACTOS DEL TEMA SELECCIONADO
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
@@ -784,7 +781,6 @@ export default function Home() {
         backgroundColor: '#ffffff'
       });
 
-      // RESTAURAR CONTROLES ORIGINALES TRAS LA CAPTURA
       replacements.forEach(({ element: el, span }) => {
         el.style.display = '';
         if (span.parentNode) span.parentNode.removeChild(span);
@@ -960,7 +956,6 @@ export default function Home() {
 
   const menuBtnClass = "w-full bg-slate-700 hover:bg-slate-600 text-white font-semibold px-4 py-3 rounded-xl text-sm transition-all duration-200 text-center shadow-md border border-slate-500/50 active:scale-[0.98]";
 
-  // CLASES DINÁMICAS SEGÚN EL TEMA DE DISEÑO
   const getContainerStyle = () => {
     if (templateStyle === 'modern') {
       return "quote-container pdf-theme-modern relative bg-white rounded-2xl shadow-xl border-t-[10px] border-t-slate-900 border-x border-b border-slate-200 overflow-hidden p-6 md:p-12";
@@ -992,7 +987,6 @@ export default function Home() {
           .quote-container { box-shadow: none !important; border: none !important; padding: 1.5cm !important; margin: 0 !important; width: 100% !important; max-width: 100% !important; }
         }
 
-        /* ESTILOS ESPECÍFICOS PARA REFORZAR TEMAS EN PDF / CANVAS */
         .pdf-theme-modern .header-table-modern {
           background-color: #0f172a !important;
           color: #ffffff !important;
@@ -1031,7 +1025,6 @@ export default function Home() {
             <h1 className="text-xl font-bold text-white text-center tracking-tight">{t.appTitle}</h1>
           </div>
 
-          {/* BOTÓN O BADGE DEL PLAN DE SUSCRIPCIÓN PREMIUM ($99/MES) CON CHECKBOX OBLIGATORIO DE TÉRMINOS */}
           {subscriptionStatus === 'active' ? (
             <div className="w-full bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 font-bold px-4 py-3 rounded-xl text-sm text-center shadow-md">
               {t.planProActive}
@@ -1291,7 +1284,6 @@ export default function Home() {
           {/* DOCUMENTO COTIZACIÓN */}
           <div id="quote-document" className={getContainerStyle()}>
             
-            {/* MARCA DE AGUA EN MOSAICO ULTRA TUPIDO PARA USUARIOS DEL PLAN GRATUITO (OCULTA EN IMPRESIÓN/PDF) */}
             {subscriptionStatus === 'free' && (
               <div className="absolute inset-0 pointer-events-none select-none z-0 no-print overflow-hidden opacity-15">
                 <div 
@@ -1380,7 +1372,6 @@ export default function Home() {
                           templateStyle === 'compact' ? 'py-0.5' : 'py-1.5'
                         }`}
                       >
-                        {/* CONCEPTO */}
                         <div className="sm:col-span-4 sm:px-2 py-1">
                           <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thConcept}</label>
                           <input 
@@ -1393,10 +1384,7 @@ export default function Home() {
                           />
                         </div>
 
-                        {/* CONTROLES NUMÉRICOS Y UNIDAD */}
                         <div className="grid grid-cols-4 sm:contents gap-2 mt-1 sm:mt-0">
-                          
-                          {/* COLUMNA UNIDAD DE MEDIDA */}
                           <div className="sm:col-span-2 sm:px-1 sm:text-center">
                             <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thUnit}</label>
                             <select 
@@ -1410,7 +1398,6 @@ export default function Home() {
                             </select>
                           </div>
 
-                          {/* CANTIDAD */}
                           <div className="sm:col-span-2 sm:px-1 sm:text-center">
                             <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thQty}</label>
                             <input 
@@ -1427,7 +1414,6 @@ export default function Home() {
                             />
                           </div>
 
-                          {/* PRECIO UNITARIO */}
                           <div className="sm:col-span-2 sm:px-2 sm:text-right">
                             <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thPrice}</label>
                             <input 
@@ -1445,7 +1431,6 @@ export default function Home() {
                             />
                           </div>
 
-                          {/* IMPORTE */}
                           <div className="sm:col-span-2 sm:px-2 text-right">
                             <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thAmount}</label>
                             <span className={`font-bold text-slate-800 block pt-1.5 sm:pt-0 ${templateStyle === 'compact' ? 'text-xs' : 'text-sm'}`}>
@@ -1454,7 +1439,6 @@ export default function Home() {
                           </div>
                         </div>
 
-                        {/* ACCIÓN ELIMINAR */}
                         <div className="sm:col-span-12 text-right mt-1 no-print flex justify-end">
                           <button onClick={() => removeItem(idx)} className="text-rose-500 hover:text-rose-700 font-bold text-xs bg-rose-50 sm:bg-transparent px-2 py-0.5 rounded">
                             Eliminar ✕
@@ -1470,13 +1454,11 @@ export default function Home() {
               <div className={`flex justify-end border-t border-slate-200 ${templateStyle === 'compact' ? 'mt-3 pt-2' : 'mt-8 pt-6'}`}>
                 <div className="w-full md:w-96 space-y-2.5 text-sm">
                   
-                  {/* SUBTOTAL */}
                   <div className="flex justify-between items-center text-slate-600">
                     <span>{t.subtotal}</span>
                     <span className="font-semibold">${subtotal.toFixed(2)} {currency}</span>
                   </div>
 
-                  {/* DESCUENTO EDITABLE CON AUTO-CLEAR AL DAR CLIC */}
                   <div className="flex justify-between items-center text-slate-600">
                     <span className="flex items-center gap-1">
                       {t.discount}
@@ -1500,13 +1482,11 @@ export default function Home() {
                     </span>
                   </div>
 
-                  {/* IMPUESTO */}
                   <div className="flex justify-between items-center text-slate-600">
                     <span>{t.taxLabel} ({taxRate}%)</span>
                     <span className="font-semibold">${taxAmount.toFixed(2)} {currency}</span>
                   </div>
 
-                  {/* TOTAL NETO */}
                   <div className="flex justify-between items-center text-base font-bold text-slate-900 border-t border-slate-200 pt-2">
                     <span>{t.total}</span>
                     <span className={templateStyle === 'modern' ? 'text-slate-900 font-extrabold text-lg' : 'text-indigo-600'}>
@@ -1514,7 +1494,6 @@ export default function Home() {
                     </span>
                   </div>
 
-                  {/* BLOQUE DE ANTICIPO / ENGANCHE DEBAJO DEL TOTAL NETO */}
                   <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-3 space-y-2 mt-3 print:bg-transparent print:border-slate-300">
                     <div className="flex justify-between items-center">
                       <span className="flex items-center gap-1 font-bold text-amber-900 text-xs">
@@ -1539,7 +1518,6 @@ export default function Home() {
                       </span>
                     </div>
 
-                    {/* LEYENDA EDITABLE DE ACEPTACIÓN / ANTICIPO */}
                     <div className="pt-1 border-t border-amber-200/60">
                       <textarea
                         value={advanceCustomNote}
@@ -1584,8 +1562,8 @@ export default function Home() {
               </div>
 
               <div className="hidden print:block mt-4 text-[10px] text-slate-500 text-right font-medium">
-  {t?.generatedAt || 'Generado el:'} {currentDateTime || ''}
-</div>
+                {t?.generatedAt || 'Generado el:'} {currentDateTime || ''}
+              </div>
 
             </div>
           </div>
@@ -1628,7 +1606,6 @@ export default function Home() {
                 </label>
                 <div className="grid grid-cols-1 gap-3">
                   
-                  {/* TEMA 1: CORPORATIVO / CLÁSICO */}
                   <div 
                     onClick={() => setTemplateStyle('classic')} 
                     className={`p-4 rounded-xl border-2 cursor-pointer transition flex items-center justify-between ${
@@ -1644,7 +1621,6 @@ export default function Home() {
                     {templateStyle === 'classic' && <span className="text-indigo-600 font-bold text-lg">✓</span>}
                   </div>
 
-                  {/* TEMA 2: MODERNO / MINIMALISTA */}
                   <div 
                     onClick={() => setTemplateStyle('modern')} 
                     className={`p-4 rounded-xl border-2 cursor-pointer transition flex items-center justify-between ${
@@ -1660,7 +1636,6 @@ export default function Home() {
                     {templateStyle === 'modern' && <span className="text-indigo-600 font-bold text-lg">✓</span>}
                   </div>
 
-                  {/* TEMA 3: COMPACTO */}
                   <div 
                     onClick={() => setTemplateStyle('compact')} 
                     className={`p-4 rounded-xl border-2 cursor-pointer transition flex items-center justify-between ${

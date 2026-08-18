@@ -56,12 +56,13 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="bg-slate-100 min-h-screen flex items-center justify-center p-4 font-sans">
-      <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8 border border-slate-200 space-y-6">
+    // CONTENEDOR CON DEGRADADO OSCURO PROFESIONAL
+    <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-screen flex items-center justify-center p-4 font-sans">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 border border-slate-200 space-y-6">
         
         <div className="text-center space-y-1">
-          <h1 className="text-2xl font-extrabold text-slate-900">Cotizador Express Pro</h1>
-          <p className="text-xs text-slate-500">
+          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Cotizador Express Pro</h1>
+          <p className="text-xs text-slate-500 font-medium">
             {isSignUp ? 'Crea una cuenta nueva' : 'Inicia sesión en tu cuenta'}
           </p>
         </div>
