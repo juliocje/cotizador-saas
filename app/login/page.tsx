@@ -9,6 +9,7 @@ export default function LoginPage() {
   const router = useRouter();
   
   const [isSignUp, setIsSignUp] = useState<boolean>(false);
+  const [fullName, setFullName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [legalAccepted, setLegalAccepted] = useState<boolean>(false);
@@ -25,19 +26,32 @@ export default function LoginPage() {
       return;
     }
 
+    if (isSignUp && !fullName.trim()) {
+      setErrorMessage('Por favor ingresa tu nombre de pila.');
+      return;
+    }
+
     setLoading(true);
 
     try {
       if (isSignUp) {
-        // REGISTRO DE NUEVO USUARIO EN SUPABASE
+        // REGISTRO DE NUEVO USUARIO EN SUPABASE AUTH PASANDO EL NOMBRE EN METADATA
         const { error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            data: {
+              full_name: fullName.trim()
+            },
+            emailRedirectTo: `${window.location.origin}/auth/callback`
+          }
         });
 
         if (error) throw error;
-        alert('¡Registro exitoso! Verifica tu correo electrónico o inicia sesión.');
+
+        alert('¡Registro exitoso! Por favor inicia sesión.');
         setIsSignUp(false);
+        setFullName('');
       } else {
         // INICIO DE SESIÓN
         const { error } = await supabase.auth.signInWithPassword({
@@ -74,6 +88,22 @@ export default function LoginPage() {
         )}
 
         <form onSubmit={handleAuth} className="space-y-4">
+          
+          {/* CAMPO DE NOMBRE DE PILA (SOLO SE MUESTRA EN REGISTRO) */}
+          {isSignUp && (
+            <div>
+              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-1">Nombre de Pila</label>
+              <input 
+                type="text" 
+                required={isSignUp}
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Ej. Juan"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm outline-none focus:border-indigo-600 transition"
+              />
+            </div>
+          )}
+
           <div>
             <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-1">Correo Electrónico</label>
             <input 
@@ -98,7 +128,7 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* CHECKBOX OBLIGATORIO DE TÉRMINOS Y PRIVACIDAD (SOLO EN REGISTRO / SIGN UP) */}
+          {/* CHECKBOX OBLIGATORIO DE TÉRMINOS Y PRIVACIDAD (SOLO EN REGISTRO) */}
           {isSignUp && (
             <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1">
               <label className="flex items-start gap-2.5 cursor-pointer text-xs text-slate-700 select-none">
@@ -141,6 +171,7 @@ export default function LoginPage() {
             onClick={() => {
               setIsSignUp(!isSignUp);
               setLegalAccepted(false);
+              setFullName('');
               setErrorMessage('');
             }}
             className="text-xs text-indigo-600 hover:underline font-semibold"

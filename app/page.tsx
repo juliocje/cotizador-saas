@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase';
 const translations: Record<string, any> = {
   es: {
     appTitle: "Cotizador Express Pro",
+    welcomeUser: "Bienvenido,",
     lblLang: "Idioma",
     lblTax: "Impuesto",
     catalogLabel: "Catálogo Rápido",
@@ -29,6 +30,7 @@ const translations: Record<string, any> = {
     btnSaveCloud: "Guardar en Nube",
     btnWhatsApp: "Enviar PDF por WhatsApp",
     btnLogout: "Cerrar Sesión",
+    btnDeleteAccount: "🗑️ Eliminar mi cuenta",
     logoPrompt: "Haz clic para subir tu Logo o cárgalo desde 'Mis Empresas'",
     quotedTo: "COTIZACION",
     folio: "Folio:",
@@ -56,7 +58,7 @@ const translations: Record<string, any> = {
     modalTitle: "Administrar Conceptos Frecuentes",
     modalAddNew: "Agregar Nuevo Concepto (Máx. 10 personalizados):",
     btnSaveCatItem: "Guardar Concepto",
-    btnClosureModal: "Cerrar",
+    btnCloseModal: "Cerrar",
     generatedAt: "Fecha y hora de emisión:",
     bankModalTitle: "Administrar Cuentas Bancarias",
     historyModalTitle: "Historial General de Cotizaciones Guardadas",
@@ -79,6 +81,7 @@ const translations: Record<string, any> = {
   },
   en: {
     appTitle: "Express Quote Pro",
+    welcomeUser: "Welcome,",
     lblLang: "Language",
     lblTax: "Tax Rate",
     catalogLabel: "Quick Catalog",
@@ -99,6 +102,7 @@ const translations: Record<string, any> = {
     btnSaveCloud: "Save to Cloud",
     btnWhatsApp: "Send PDF via WhatsApp",
     btnLogout: "Log Out",
+    btnDeleteAccount: "🗑️ Delete my account",
     logoPrompt: "Click to upload Logo or load it from 'My Companies'",
     quotedTo: "QUOTATION",
     folio: "Quote #:",
@@ -155,9 +159,9 @@ const taxPresets = [
   { label: "Sin Impuesto (0%)", value: 0 },
   { label: "USA - California (7.25%)", value: 7.25 },
   { label: "USA - Texas (6.25%)", value: 6.25 },
-  { label: "USA - Florida (6.00%)", value: 6.00 },
-  { label: "USA - New York (4.00%)", value: 4.00 },
-  { label: "USA - Washington (6.50%)", value: 6.50 },
+  { label: "USA - Florida (6.00%)", value: 6 },
+  { label: "USA - New York (4.00%)", value: 4 },
+  { label: "USA - Washington (6.50%)", value: 6.5 },
 ];
 
 const unitOptions = [
@@ -204,29 +208,22 @@ export default function Home() {
   const router = useRouter();
 
   const [lang, setLang] = useState<'es' | 'en'>('es');
+  const [userName, setUserName] = useState<string>('Usuario');
   const [taxRate, setTaxRate] = useState<number>(16);
   const [discount, setDiscount] = useState<number | string>(0);
   const [currency] = useState<string>('MXN');
 
-  // ACEPTACIÓN LEGAL OBLIGATORIA
   const [legalAccepted, setLegalAccepted] = useState<boolean>(false);
 
-  // ANTICIPO / ENGANCHE
   const [advanceRate, setAdvanceRate] = useState<number | string>(50);
   const [advanceCustomNote, setAdvanceCustomNote] = useState<string>(
     "Nota: Al aceptar la cotización se requiere el pago de un anticipo para iniciar los trabajos."
   );
 
-  // PLANTILLA/TEMA DE DISEÑO DEL DOCUMENTO ('classic' | 'modern' | 'compact')
   const [templateStyle, setTemplateStyle] = useState<'classic' | 'modern' | 'compact'>('classic');
-
-  // PLAN DE SUSCRIPCIÓN DEL USUARIO ('free' | 'active')
   const [subscriptionStatus, setSubscriptionStatus] = useState<string>('free');
-
-  // CONTROL DE MENÚ MÓVIL
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
-  // DATOS MI EMPRESA SELECCIONADA EN COTIZACIÓN
   const [companyName, setCompanyName] = useState<string>("Mi Empresa S.A. de C.V.");
   const [companyTagline, setCompanyTagline] = useState<string>("Servicios Profesionales");
   const [companyEmail, setCompanyEmail] = useState<string>("contacto@miempresa.com");
@@ -238,12 +235,10 @@ export default function Home() {
   const [companyState, setCompanyState] = useState<string>("");
   const [logo, setLogo] = useState<string | null>(null);
 
-  // DATOS CLIENTE
   const [clientName, setClientName] = useState<string>("Cliente: Juan Pérez / Empresa ABC");
   const [clientPhone, setClientPhone] = useState<string>("");
   const [folio, setFolio] = useState<string>("#COT-2026-001");
 
-  // CATÁLOGOS Y CONCEPTOS
   const [customCatalog, setCustomCatalog] = useState<{ es: string, en: string }[]>([]);
   const [newCustomConcept, setNewCustomConcept] = useState({ es: '', en: '' });
   const [isConceptsModalOpen, setIsConceptsModalOpen] = useState<boolean>(false);
@@ -251,7 +246,6 @@ export default function Home() {
 
   const fullCatalog = [...initialCatalog, ...customCatalog];
 
-  // BANCOS
   const [bankAccountsList, setBankAccountsList] = useState(initialBankAccounts);
   const [bankData, setBankData] = useState(initialBankAccounts[0]);
   const [isBanksModalOpen, setIsBanksModalOpen] = useState<boolean>(false);
@@ -261,7 +255,6 @@ export default function Home() {
     alias: '', nombre: '', banco: '', cuenta: '', clabe: '', rfc: ''
   });
 
-  // MODALES
   const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
   const [isClientsOpen, setIsClientsOpen] = useState<boolean>(false);
   const [isCompaniesOpen, setIsCompaniesOpen] = useState<boolean>(false);
@@ -280,10 +273,8 @@ export default function Home() {
   const [companiesList, setCompaniesList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // FORMULARIO NUEVO CLIENTE
   const [newClient, setNewClient] = useState({ name: '', email: '', phone: '', tax_id: '', address: '' });
 
-  // FORMULARIO Y EDICIÓN DE EMPRESAS
   const [editingCompanyId, setEditingCompanyId] = useState<string | null>(null);
   const [newCompany, setNewCompany] = useState({ 
     company_name: '', 
@@ -298,7 +289,6 @@ export default function Home() {
     logo_url: '' 
   });
 
-  // ÍTEMS
   const [items, setItems] = useState<Array<{ description_es: string; description_en: string; unit: string; qty: number | string; price: number | string }>>([
     { description_es: initialCatalog[0].es, description_en: initialCatalog[0].en, unit: 'pieza', qty: 1, price: 0.00 }
   ]);
@@ -311,27 +301,34 @@ export default function Home() {
     fetchCompanies();
   }, []);
 
-  // OBTENER PLAN DEL USUARIO DESDE SUPABASE
   const fetchUserProfile = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      if (user.user_metadata?.full_name) {
+        setUserName(user.user_metadata.full_name);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('profiles')
-        .select('subscription_status')
+        .select('subscription_status, full_name, name')
         .eq('id', user.id)
         .single();
 
       if (!error && data) {
         setSubscriptionStatus(data.subscription_status || 'free');
+        if (data.full_name) setUserName(data.full_name);
+        else if (data.name) setUserName(data.name);
+        else if (user.email) setUserName(user.email.split('@')[0]);
       }
     } catch (err) {
       console.error("Error al obtener perfil del usuario:", err);
     }
   };
 
-  // VERIFICACIÓN DEL LÍMITE DE USO PARA USUARIOS GRATUITOS
+  // CONTROL UNIFICADO DE LÍMITE MENSUAL (3 COTIZACIONES MÁXIMO EN PLAN FREE)
   const checkFreePlanUsageLimit = async (): Promise<boolean> => {
     if (subscriptionStatus === 'active') return true;
 
@@ -342,17 +339,21 @@ export default function Home() {
         return false;
       }
 
+      const now = new Date();
+      const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
       const { count, error } = await supabase
         .from('quotes')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .gte('created_at', firstDayOfMonth);
 
       if (!error && count !== null && count >= 3) {
-        alert("⚠️ Has alcanzado el límite de 3 cotizaciones/PDFs del Plan Gratuito.\n\nSuscríbete al Plan Premium para generar e imprimir cotizaciones ilimitadas.");
+        alert("⚠️ Has alcanzado el límite de 3 cotizaciones mensuales del Plan Gratuito.\n\nSuscríbete al Plan Premium para generar, guardar, descargar y enviar cotizaciones ilimitadas.");
         return false;
       }
     } catch (err) {
-      console.error("Error al verificar límite de uso:", err);
+      console.error("Error al verificar límite de uso mensual:", err);
     }
 
     return true;
@@ -361,13 +362,36 @@ export default function Home() {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      router.push('/');
+      router.push('/login');
     } catch (err: any) {
       alert("Error al cerrar sesión: " + err.message);
     }
   };
 
-  // IMPRIMIR / DESCARGAR PDF CON CONTROL DE LÍMITE
+  const handleDeleteAccount = async () => {
+    const confirmation = window.confirm(
+      "⚠️ ¿Estás completamente seguro de eliminar tu cuenta?\n\nEsta acción borrará todas tus cotizaciones, clientes, empresas registradas y no se podrá deshacer."
+    );
+
+    if (!confirmation) return;
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return alert("No hay sesión activa.");
+
+      await supabase.from('quotes').delete().eq('user_id', user.id);
+      await supabase.from('clients').delete().eq('user_id', user.id);
+      await supabase.from('companies').delete().eq('user_id', user.id);
+      await supabase.from('profiles').delete().eq('id', user.id);
+
+      await supabase.auth.signOut();
+      alert("Tu cuenta y datos asociados han sido eliminados correctamente.");
+      router.push('/login');
+    } catch (err: any) {
+      alert("Ocurrió un error al intentar eliminar la cuenta: " + err.message);
+    }
+  };
+
   const handlePrintPdf = async () => {
     const canProceed = await checkFreePlanUsageLimit();
     if (!canProceed) return;
@@ -375,7 +399,6 @@ export default function Home() {
     window.print();
   };
 
-  // REDIRECCIÓN A MERCADO PAGO PARA SUSCRIPCIÓN PREMIUM ($99/MES)
   const handleCheckoutPro = async () => {
     if (!legalAccepted) {
       alert("Debes aceptar los Términos y Condiciones y el Aviso de Privacidad para continuar.");
@@ -416,7 +439,6 @@ export default function Home() {
     }
   };
 
-  // GESTIÓN DE CUENTAS BANCARIAS
   const handleSaveBankAccount = () => {
     if (!bankForm.alias || !bankForm.banco || !bankForm.cuenta) {
       return alert("Por favor completa al menos el Alias, Banco y Número de Cuenta.");
@@ -462,7 +484,6 @@ export default function Home() {
     }
   };
 
-  // AGREGAR CONCEPTO PERSONALIZADO
   const handleAddCustomConcept = () => {
     if (!newCustomConcept.es.trim()) {
       return alert("Escribe al menos el nombre del concepto en español.");
@@ -486,7 +507,6 @@ export default function Home() {
     setCustomCatalog(customCatalog.filter((_, i) => i !== index));
   };
 
-  // OBTENER CLIENTES FILTRADOS POR EL USUARIO ACTUAL
   const fetchClients = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -539,7 +559,6 @@ export default function Home() {
     }
   };
 
-  // HISTORIAL DE COTIZACIONES DE UN CLIENTE FILTRADO POR USUARIO
   const handleViewClientHistory = async (client: any) => {
     setSelectedClientForHistory(client);
     setIsLoading(true);
@@ -566,7 +585,6 @@ export default function Home() {
     }
   };
 
-  // OBTENER EMPRESAS FILTRADAS POR EL USUARIO ACTUAL
   const fetchCompanies = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -724,7 +742,6 @@ export default function Home() {
     setItems(items.filter((_, i) => i !== index));
   };
 
-  // CÁLCULOS DE SUBTOTAL, DESCUENTO, IMPUESTO, TOTAL Y ANTICIPO
   const numDiscount = typeof discount === 'number' ? discount : parseFloat(discount) || 0;
   const numAdvance = typeof advanceRate === 'number' ? advanceRate : parseFloat(advanceRate) || 0;
 
@@ -739,7 +756,6 @@ export default function Home() {
   const total = subtotalWithDiscount + taxAmount;
   const advanceAmount = total * (numAdvance / 100);
 
-  // GENERAR Y ENVIAR POR WHATSAPP
   const sendPdfWhatsApp = async () => {
     const canProceed = await checkFreePlanUsageLimit();
     if (!canProceed) return;
@@ -868,7 +884,6 @@ export default function Home() {
     }
   };
 
-  // GUARDAR EN LA NUBE
   const saveQuoteToCloud = async () => {
     const canProceed = await checkFreePlanUsageLimit();
     if (!canProceed) return;
@@ -899,7 +914,6 @@ export default function Home() {
     }
   };
 
-  // OBTENER HISTORIAL GENERAL
   const fetchQuotesHistory = async () => {
     setIsLoading(true);
     try {
@@ -1021,8 +1035,11 @@ export default function Home() {
       <aside className={`no-print w-full md:w-64 bg-slate-900 text-slate-100 p-4 shrink-0 flex-col justify-between border-r border-slate-800 shadow-xl z-40 
         ${isMobileMenuOpen ? 'fixed inset-x-0 top-14 bottom-0 flex overflow-y-auto' : 'hidden md:flex'}`}>
         <div className="space-y-4">
-          <div className="pb-3 border-b border-slate-800/80 hidden md:block">
-            <h1 className="text-xl font-bold text-white text-center tracking-tight">{t.appTitle}</h1>
+          <div className="pb-3 border-b border-slate-800/80 hidden md:block text-center space-y-1">
+            <h1 className="text-xl font-bold text-white tracking-tight">{t.appTitle}</h1>
+            <p className="text-xs text-amber-400 font-semibold">
+              {t.welcomeUser} <span className="text-white underline">{userName}</span>
+            </p>
           </div>
 
           {subscriptionStatus === 'active' ? (
@@ -1133,12 +1150,18 @@ export default function Home() {
           </nav>
         </div>
 
-        <div className="pt-4 border-t border-slate-800/80 mt-4 pb-6 md:pb-0">
+        <div className="pt-4 border-t border-slate-800/80 mt-4 pb-6 md:pb-0 space-y-2">
           <button 
             onClick={handleLogout} 
-            className="w-full flex items-center justify-center bg-rose-900/80 hover:bg-rose-800 text-rose-100 font-semibold px-4 py-3 rounded-xl text-sm transition-all duration-200 shadow-md text-center border border-rose-800/50"
+            className="w-full flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold px-4 py-2.5 rounded-xl text-xs transition-all duration-200 shadow-md text-center border border-slate-700"
           >
             {t.btnLogout}
+          </button>
+          <button 
+            onClick={handleDeleteAccount} 
+            className="w-full flex items-center justify-center bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 font-semibold px-4 py-2.5 rounded-xl text-xs transition-all duration-200 shadow-md text-center border border-rose-900/50"
+          >
+            {t.btnDeleteAccount}
           </button>
         </div>
       </aside>
@@ -1299,7 +1322,6 @@ export default function Home() {
             )}
 
             <div className="relative z-10">
-              {/* ENCABEZADO Y DATOS DE LA EMPRESA */}
               <div className={`flex flex-col md:flex-row justify-between items-start border-b border-slate-200 gap-6 ${templateStyle === 'compact' ? 'pb-2' : 'pb-5'}`}>
                 <div className="w-full md:w-1/2 flex justify-start">
                   <div className={`relative bg-transparent rounded-lg flex items-center justify-center cursor-pointer overflow-hidden ${templateStyle === 'compact' ? 'h-16 w-36' : 'h-24 w-52'}`}>
@@ -1330,7 +1352,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* SECCIÓN CLIENTE Y FOLIO */}
               <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 rounded-xl print:bg-transparent print:p-0 print:border-none ${
                 templateStyle === 'modern' ? 'client-box-modern bg-slate-100 p-4 my-4 md:my-6' : 
                 templateStyle === 'compact' ? 'client-box-compact bg-slate-50 p-2 my-2' : 'client-box-classic bg-slate-50 p-4 my-6 md:my-8'
@@ -1347,7 +1368,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* VISTA DE TABLA CON COLUMNA UNIDAD DE MEDIDA */}
               <div className={templateStyle === 'compact' ? 'mt-2' : 'mt-4'}>
                 <div 
                   className={getHeaderTableStyle()} 
@@ -1450,7 +1470,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* DESGLOSE FINAL CÁLCULOS Y SECCIÓN DE ANTICIPO */}
               <div className={`flex justify-end border-t border-slate-200 ${templateStyle === 'compact' ? 'mt-3 pt-2' : 'mt-8 pt-6'}`}>
                 <div className="w-full md:w-96 space-y-2.5 text-sm">
                   
@@ -1532,7 +1551,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* DATOS BANCARIOS FIJOS */}
               <div className={`bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-3 print:bg-transparent print:border-slate-300 ${
                 templateStyle === 'compact' ? 'mt-3 p-3 space-y-1' : 'mt-8 p-5 space-y-3'
               }`}>
@@ -1570,7 +1588,6 @@ export default function Home() {
 
         </div>
 
-        {/* PIE DE PÁGINA LEGAL (FOOTER) */}
         <footer className="no-print mt-12 pt-6 border-t border-slate-300/80 text-center text-xs text-slate-500 space-y-2 w-full max-w-5xl mx-auto">
           <div className="flex justify-center items-center gap-4 font-semibold text-slate-600">
             <Link href="/terminos" className="hover:text-slate-900 hover:underline transition">
@@ -1590,7 +1607,6 @@ export default function Home() {
         </footer>
       </main>
 
-      {/* MODAL AJUSTES Y TEMAS DE DISEÑO */}
       {isSettingsOpen && (
         <div className="no-print fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-5 max-h-[85vh] flex flex-col">
@@ -1664,7 +1680,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* MODAL GESTOR DE CUENTAS BANCARIAS */}
       {isBanksModalOpen && (
         <div className="no-print fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-6 space-y-4 max-h-[85vh] flex flex-col">
@@ -1738,7 +1753,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* MODAL GESTOR DE CONCEPTOS FRECUENTES */}
       {isConceptsModalOpen && (
         <div className="no-print fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-6 space-y-4 max-h-[85vh] flex flex-col">
@@ -1802,7 +1816,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* MODAL DIRECTORIO DE CLIENTES */}
       {isClientsOpen && (
         <div className="no-print fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 space-y-4 max-h-[85vh] flex flex-col">
@@ -1856,7 +1869,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* MODAL HISTORIAL DE UN CLIENTE ESPECÍFICO */}
       {isClientHistoryOpen && selectedClientForHistory && (
         <div className="no-print fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 space-y-4 max-h-[85vh] flex flex-col">
@@ -1905,7 +1917,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* MODAL MIS EMPRESAS */}
       {isCompaniesOpen && (
         <div className="no-print fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 z-50">
           <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-4 sm:p-6 space-y-4 max-h-[95vh] flex flex-col overflow-y-auto">
@@ -2021,7 +2032,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* MODAL HISTORIAL GENERAL DE COTIZACIONES */}
       {isHistoryOpen && (
         <div className="no-print fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full p-6 space-y-4 max-h-[85vh] flex flex-col">
