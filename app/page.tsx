@@ -328,7 +328,13 @@ export default function Home() {
     }
   };
 
-  // CONTROL UNIFICADO DE LÍMITE MENSUAL (3 COTIZACIONES MÁXIMO EN PLAN FREE)
+  const logUsage = async () => {
+    if (subscriptionStatus === 'active') return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase.from('quotes').insert([{ user_id: user.id, client_name: "Consumo PDF/WA", total_amount: 0, folio: "AUTO-" + Date.now() }]);
+  };
+
   const checkFreePlanUsageLimit = async (): Promise<boolean> => {
     if (subscriptionStatus === 'active') return true;
 
@@ -355,7 +361,6 @@ export default function Home() {
     } catch (err) {
       console.error("Error al verificar límite de uso mensual:", err);
     }
-
     return true;
   };
 
@@ -395,7 +400,7 @@ export default function Home() {
   const handlePrintPdf = async () => {
     const canProceed = await checkFreePlanUsageLimit();
     if (!canProceed) return;
-
+    await logUsage();
     window.print();
   };
 
@@ -759,6 +764,7 @@ export default function Home() {
   const sendPdfWhatsApp = async () => {
     const canProceed = await checkFreePlanUsageLimit();
     if (!canProceed) return;
+    await logUsage();
 
     setIsGeneratingPdf(true);
 
