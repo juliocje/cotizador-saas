@@ -336,8 +336,6 @@ export default function Home() {
   };
 
   const checkFreePlanUsageLimit = async (): Promise<boolean> => {
-    if (subscriptionStatus === 'active') return true;
-
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -345,6 +343,19 @@ export default function Home() {
         return false;
       }
 
+      // CONSULTA DIRECTA A SUPABASE: Evitamos depender del estado de React que pueda estar desactualizado
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('subscription_status')
+        .eq('id', user.id)
+        .single();
+
+      // Si el estatus en la base de datos ya es 'active', permitimos la cotización de inmediato
+      if (!profileError && profile?.subscription_status === 'active') {
+        return true;
+      }
+
+      // Si no está activo, evaluamos el límite mensual de 3 cotizaciones del plan gratuito
       const now = new Date();
       const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
@@ -422,6 +433,7 @@ export default function Home() {
           title: 'Suscripción Plan Premium - Cotizador Express Pro',
           price: 99,
           quantity: 1,
+          userId: user?.id,
           userEmail: user?.email || 'cliente@cotizador.com'
         })
       });
@@ -1073,21 +1085,30 @@ export default function Home() {
                 </span>
               </label>
 
-              <button 
-                onClick={handleCheckoutPro} 
-                disabled={isProcessingPayment || !legalAccepted} 
-                className={`w-full font-extrabold px-4 py-3 rounded-xl text-sm transition-all duration-200 text-center shadow-lg border text-slate-900 ${
-                  legalAccepted && !isProcessingPayment
-                    ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 border-amber-300 active:scale-[0.98] animate-pulse'
-                    : 'bg-slate-700 border-slate-600 text-slate-400 cursor-not-allowed opacity-60'
-                }`}
-              >
-                {isProcessingPayment ? "Conectando..." : t.btnSubscribePro}
-              </button>
-            </div>
-          )}
+<div className="text-xs text-amber-400 mb-2">
+  Estatus actual: {subscriptionStatus}
+</div>
+              {subscriptionStatus?.trim().toLowerCase() !== 'active' ? (
+  <button 
+    onClick={handleCheckoutPro} 
+    disabled={isProcessingPayment || !legalAccepted} 
+    className={`w-full font-extrabold px-4 py-3 rounded-xl text-sm transition-all duration-200 text-center shadow-lg border text-slate-900 ${
+      legalAccepted && !isProcessingPayment
+        ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 border-amber-300 active:scale-[0.98] animate-pulse'
+        : 'bg-slate-700 border-slate-600 text-slate-400 cursor-not-allowed opacity-60'
+    }`}
+  >
+    {isProcessingPayment ? "Conectando..." : t.btnSubscribePro}
+  </button>
+) : (
+  <div className="p-3 bg-emerald-950/60 border border-emerald-500/50 rounded-xl text-emerald-300 text-center font-semibold text-sm shadow-md">
+    ✨ ¡Plan Premium Activo! Cotizaciones ilimitadas.
+  </div>
+)}
+</div>
+)}
 
-          <nav className="flex flex-col gap-2.5">
+<nav className="flex flex-col gap-2.5">
             <button 
               onClick={() => { setIsClientsOpen(true); setIsMobileMenuOpen(false); }} 
               className={menuBtnClass}

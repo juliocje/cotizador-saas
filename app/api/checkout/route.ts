@@ -4,11 +4,11 @@ import { MercadoPagoConfig, Preference } from 'mercadopago';
 export async function POST(request: Request) {
   try {
     const bodyData = await request.json().catch(() => ({}));
-    const { title, price, quantity } = bodyData;
+    const { title, price, quantity, userId, userEmail } = bodyData;
 
-    const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
+    const token = process.env.MP_ACCESS_TOKEN || process.env.MERCADOPAGO_ACCESS_TOKEN;
     if (!token) {
-      throw new Error("Falta MERCADOPAGO_ACCESS_TOKEN");
+      throw new Error("Falta el token de acceso de Mercado Pago");
     }
 
     const client = new MercadoPagoConfig({ accessToken: token });
@@ -18,7 +18,6 @@ export async function POST(request: Request) {
     const protocol = host.includes('localhost') ? 'http' : 'https';
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`;
 
-    // Estructura limpia y probada que no genera conflicto de formato JSON
     const result = await preference.create({
       body: {
         items: [
@@ -30,6 +29,11 @@ export async function POST(request: Request) {
             currency_id: 'MXN'
           }
         ],
+        // AQUÍ ESTÁ LA CLAVE: Guardamos el ID de Supabase en la referencia externa del pago
+        external_reference: userId || '',
+        metadata: {
+          user_email: userEmail
+        },
         back_urls: {
           success: `${baseUrl}/`,
           failure: `${baseUrl}/`,
