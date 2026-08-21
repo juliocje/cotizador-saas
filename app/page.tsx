@@ -384,7 +384,7 @@ export default function Home() {
 
   const handleDeleteAccount = async () => {
     const confirmation = window.confirm(
-      "⚠️ ¿Estás completamente seguro de eliminar tu cuenta?\n\nEsta acción borrará todas tus cotizaciones, clientes, empresas registradas y no se podrá deshacer."
+      "⚠️ ¿Estás completamente seguro de eliminar tu cuenta?\n\nEsta acción borrará permanentemente tu usuario, cotizaciones, clientes, empresas registradas y no se podrá deshacer."
     );
 
     if (!confirmation) return;
@@ -393,13 +393,19 @@ export default function Home() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return alert("No hay sesión activa.");
 
-      await supabase.from('quotes').delete().eq('user_id', user.id);
-      await supabase.from('clients').delete().eq('user_id', user.id);
-      await supabase.from('companies').delete().eq('user_id', user.id);
-      await supabase.from('profiles').delete().eq('id', user.id);
+      const response = await fetch('/api/delete-account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al eliminar la cuenta en el servidor.');
+      }
 
       await supabase.auth.signOut();
-      alert("Tu cuenta y datos asociados han sido eliminados correctamente.");
+      alert("Tu cuenta y todos tus datos han sido eliminados permanentemente.");
       router.push('/login');
     } catch (err: any) {
       alert("Ocurrió un error al intentar eliminar la cuenta: " + err.message);
@@ -443,7 +449,8 @@ export default function Home() {
       const data = await response.json();
 
       if (data.init_point) {
-        window.location.href = data.init_point;
+        // Se abre el checkout en una ventana/pestaña nueva para no perder el estado actual
+        window.open(data.init_point, '_blank');
       } else {
         alert("Error al iniciar el pago: " + (data.error || "Intenta más tarde"));
       }
