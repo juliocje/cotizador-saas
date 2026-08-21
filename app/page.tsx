@@ -1325,8 +1325,10 @@ export default function Home() {
 
             <div className="relative z-10">
               <div className={`flex flex-col md:flex-row justify-between items-start border-b border-slate-200 gap-4 ${templateStyle === 'compact' ? 'pb-1' : 'pb-3'}`}>
+                
+                {/* LOGOTIPO MÁS GRANDE */}
                 <div className="w-full md:w-1/2 flex justify-start">
-                  <div className={`relative bg-transparent rounded-lg flex items-center justify-center cursor-pointer overflow-hidden ${templateStyle === 'compact' ? 'h-14 w-32' : 'h-20 w-44'}`}>
+                  <div className={`relative bg-transparent rounded-lg flex items-center justify-center cursor-pointer overflow-hidden ${templateStyle === 'compact' ? 'h-16 w-36' : 'h-28 w-60'}`}>
                     {logo ? (
                       <img src={logo} alt="Logo" className="h-full object-contain" />
                     ) : (
@@ -1548,7 +1550,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* SECCIÓN DE DATOS BANCARIOS (CONDICIONAL SEGÚN EL TOGGLE) */}
               {showBankDetails && (
                 <div className={`bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-2 print:bg-transparent print:border-slate-300 ${
                   templateStyle === 'compact' ? 'mt-2 p-2 space-y-1' : 'mt-4 p-3.5 space-y-2'
