@@ -37,11 +37,18 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const isLoginPage = request.nextUrl.pathname.startsWith('/login')
-  const isAuthRoute = request.nextUrl.pathname.startsWith('/auth')
+  const pathname = request.nextUrl.pathname
+  const isLoginPage = pathname.startsWith('/login')
+  const isAuthRoute = pathname.startsWith('/auth')
 
-  // Si no hay usuario y no está en la página de login ni auth, lo mandamos a /login
-  if (!user && !isLoginPage && !isAuthRoute) {
+  // Definir páginas públicas que no requieren sesión (Términos, Privacidad y Registro)
+  const isPublicPage = 
+    pathname === '/terminos' || 
+    pathname === '/privacidad' || 
+    pathname.startsWith('/signup')
+
+  // Si no hay usuario y NO está en una página permitida (login, auth o públicas), lo mandamos a /login
+  if (!user && !isLoginPage && !isAuthRoute && !isPublicPage) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)

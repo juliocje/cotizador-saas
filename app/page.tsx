@@ -19,7 +19,7 @@ const translations: Record<string, any> = {
     btnHistory: "Mis Cotizaciones",
     btnManageClients: "Clientes",
     btnManageCompanies: "Mis Empresas",
-    btnSettings: "⚙️ Ajustes",
+    btnSettings: "Ajustes",
     btnSubscribePro: "Plan Premium ($99/mes)",
     planProActive: "✅ Plan Premium Activo",
     lblSelectBank: "Cuenta Bancaria",
@@ -37,7 +37,7 @@ const translations: Record<string, any> = {
     date: "Fecha:",
     validity: "Vigencia:",
     delivery: "Entrega:",
-    thConcept: "Concepto / Descripción",
+    thConcept: "Concepto",
     thUnit: "Unidad",
     thQty: "Cant.",
     thPrice: "P. Unitario",
@@ -66,6 +66,7 @@ const translations: Record<string, any> = {
     clientModalTitle: "Directorio de Clientes Frecuentes",
     companyModalTitle: "Administrar Mis Empresas",
     settingsModalTitle: "Ajustes y Personalización del Documento",
+    showBankToggle: "Mostrar datos bancarios en la cotización y PDF",
     noHistory: "Aún no tienes cotizaciones guardadas en la nube.",
     noClientHistory: "Este cliente aún no tiene cotizaciones guardadas.",
     noClients: "No tienes clientes frecuentes registrados.",
@@ -91,7 +92,7 @@ const translations: Record<string, any> = {
     btnHistory: "Saved Quotes",
     btnManageClients: "Clients",
     btnManageCompanies: "My Companies",
-    btnSettings: "⚙️ Settings",
+    btnSettings: "Settings",
     btnSubscribePro: "Premium Plan ($99/mo)",
     planProActive: "✅ Premium Plan Active",
     lblSelectBank: "Bank Account",
@@ -109,7 +110,7 @@ const translations: Record<string, any> = {
     date: "Date:",
     validity: "Validity:",
     delivery: "Delivery:",
-    thConcept: "Item / Description",
+    thConcept: "Concept",
     thUnit: "Unit",
     thQty: "Qty",
     thPrice: "Unit Price",
@@ -138,6 +139,7 @@ const translations: Record<string, any> = {
     clientModalTitle: "Frequent Clients Directory",
     companyModalTitle: "Manage My Companies",
     settingsModalTitle: "Settings & Document Customization",
+    showBankToggle: "Show banking details on quotation & PDF",
     noHistory: "You don't have any saved quotes in the cloud yet.",
     noClientHistory: "No quotes found for this client.",
     noClients: "No saved clients found.",
@@ -214,13 +216,14 @@ export default function Home() {
   const [currency] = useState<string>('MXN');
 
   const [legalAccepted, setLegalAccepted] = useState<boolean>(false);
+  const [showBankDetails, setShowBankDetails] = useState<boolean>(true);
 
   const [advanceRate, setAdvanceRate] = useState<number | string>(50);
   const [advanceCustomNote, setAdvanceCustomNote] = useState<string>(
     "Nota: Al aceptar la cotización se requiere el pago de un anticipo para iniciar los trabajos."
   );
 
-  const [templateStyle, setTemplateStyle] = useState<'classic' | 'modern' | 'compact'>('classic');
+  const [templateStyle, setTemplateStyle] = useState<'classic' | 'compact'>('classic');
   const [subscriptionStatus, setSubscriptionStatus] = useState<string>('free');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
@@ -306,25 +309,23 @@ export default function Home() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      if (user.user_metadata?.full_name) {
-        setUserName(user.user_metadata.full_name);
-        return;
-      }
-
       const { data, error } = await supabase
         .from('profiles')
-        .select('subscription_status, full_name, name')
+        .select('subscription_status, full_name')
         .eq('id', user.id)
         .single();
 
       if (!error && data) {
         setSubscriptionStatus(data.subscription_status || 'free');
         if (data.full_name) setUserName(data.full_name);
-        else if (data.name) setUserName(data.name);
+        else if (user.user_metadata?.full_name) setUserName(user.user_metadata.full_name);
+        else if (user.email) setUserName(user.email.split('@')[0]);
+      } else {
+        if (user.user_metadata?.full_name) setUserName(user.user_metadata.full_name);
         else if (user.email) setUserName(user.email.split('@')[0]);
       }
     } catch (err) {
-      console.error("Error al obtener perfil del usuario:", err);
+      console.error("Excepción en fetchUserProfile:", err);
     }
   };
 
@@ -343,19 +344,16 @@ export default function Home() {
         return false;
       }
 
-      // CONSULTA DIRECTA A SUPABASE: Evitamos depender del estado de React que pueda estar desactualizado
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('subscription_status')
         .eq('id', user.id)
         .single();
 
-      // Si el estatus en la base de datos ya es 'active', permitimos la cotización de inmediato
       if (!profileError && profile?.subscription_status === 'active') {
         return true;
       }
 
-      // Si no está activo, evaluamos el límite mensual de 3 cotizaciones del plan gratuito
       const now = new Date();
       const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
@@ -787,12 +785,12 @@ export default function Home() {
       const { default: jsPDF } = await import('jspdf');
       const { default: html2canvas } = await import('html2canvas-pro');
 
-      const inputs = element.querySelectorAll('input, select');
+      const inputs = element.querySelectorAll('input, select, textarea');
       const replacements: { element: HTMLElement; span: HTMLDivElement }[] = [];
 
       inputs.forEach((el) => {
-        const inputEl = el as HTMLInputElement | HTMLSelectElement;
-        if (inputEl.type === 'file') return;
+        const inputEl = el as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+        if ((inputEl as HTMLInputElement).type === 'file') return;
         
         const span = document.createElement('div');
         span.innerText = inputEl.value;
@@ -831,7 +829,7 @@ export default function Home() {
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
 
-      const margin = 15;
+      const margin = 5;
       const printableWidth = pdfWidth - (margin * 2);
       const printableHeight = pdfHeight - (margin * 2);
 
@@ -989,19 +987,13 @@ export default function Home() {
   const menuBtnClass = "w-full bg-slate-700 hover:bg-slate-600 text-white font-semibold px-4 py-3 rounded-xl text-sm transition-all duration-200 text-center shadow-md border border-slate-500/50 active:scale-[0.98]";
 
   const getContainerStyle = () => {
-    if (templateStyle === 'modern') {
-      return "quote-container pdf-theme-modern relative bg-white rounded-2xl shadow-xl border-t-[10px] border-t-slate-900 border-x border-b border-slate-200 overflow-hidden p-6 md:p-12";
-    }
     if (templateStyle === 'compact') {
-      return "quote-container pdf-theme-compact relative bg-white p-3 md:p-6 rounded-xl shadow-lg border border-slate-300 overflow-hidden text-xs";
+      return "quote-container pdf-theme-compact relative bg-white p-2 md:p-3 rounded-xl shadow-lg border border-slate-300 overflow-hidden text-xs";
     }
-    return "quote-container pdf-theme-classic relative bg-white p-4 md:p-12 rounded-2xl shadow-xl border border-slate-200 overflow-hidden";
+    return "quote-container pdf-theme-classic relative bg-white p-3 md:p-5 rounded-2xl shadow-xl border border-slate-200 overflow-hidden";
   };
 
   const getHeaderTableStyle = () => {
-    if (templateStyle === 'modern') {
-      return "hidden sm:grid grid-cols-12 text-white text-xs font-bold uppercase py-2.5 px-3 rounded-lg shadow-sm";
-    }
     if (templateStyle === 'compact') {
       return "hidden sm:grid grid-cols-12 border-b-2 border-slate-800 text-[11px] font-black text-slate-800 uppercase pb-1 mb-1";
     }
@@ -1016,17 +1008,9 @@ export default function Home() {
           .no-print { display: none !important; }
           @page { margin: 0; size: auto; }
           body { background-color: white !important; padding: 0 !important; margin: 0 !important; }
-          .quote-container { box-shadow: none !important; border: none !important; padding: 1.5cm !important; margin: 0 !important; width: 100% !important; max-width: 100% !important; }
+          .quote-container { box-shadow: none !important; border: none !important; padding: 0.2cm !important; margin: 0 !important; width: 100% !important; max-width: 100% !important; }
         }
 
-        .pdf-theme-modern .header-table-modern {
-          background-color: #0f172a !important;
-          color: #ffffff !important;
-        }
-        .pdf-theme-modern .client-box-modern {
-          background-color: #f1f5f9 !important;
-          border-left: 6px solid #0f172a !important;
-        }
         .pdf-theme-compact .client-box-compact {
           background-color: #f8fafc !important;
           border: 1px solid #cbd5e1 !important;
@@ -1085,30 +1069,21 @@ export default function Home() {
                 </span>
               </label>
 
-<div className="text-xs text-amber-400 mb-2">
-  Estatus actual: {subscriptionStatus}
-</div>
-              {subscriptionStatus?.trim().toLowerCase() !== 'active' ? (
-  <button 
-    onClick={handleCheckoutPro} 
-    disabled={isProcessingPayment || !legalAccepted} 
-    className={`w-full font-extrabold px-4 py-3 rounded-xl text-sm transition-all duration-200 text-center shadow-lg border text-slate-900 ${
-      legalAccepted && !isProcessingPayment
-        ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 border-amber-300 active:scale-[0.98] animate-pulse'
-        : 'bg-slate-700 border-slate-600 text-slate-400 cursor-not-allowed opacity-60'
-    }`}
-  >
-    {isProcessingPayment ? "Conectando..." : t.btnSubscribePro}
-  </button>
-) : (
-  <div className="p-3 bg-emerald-950/60 border border-emerald-500/50 rounded-xl text-emerald-300 text-center font-semibold text-sm shadow-md">
-    ✨ ¡Plan Premium Activo! Cotizaciones ilimitadas.
-  </div>
-)}
-</div>
-)}
+              <button 
+                onClick={handleCheckoutPro} 
+                disabled={isProcessingPayment || !legalAccepted} 
+                className={`w-full font-extrabold px-4 py-3 rounded-xl text-sm transition-all duration-200 text-center shadow-lg border text-slate-900 ${
+                  legalAccepted && !isProcessingPayment
+                    ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 border-amber-300 active:scale-[0.98] animate-pulse'
+                    : 'bg-slate-700 border-slate-600 text-slate-400 cursor-not-allowed opacity-60'
+                }`}
+              >
+                {isProcessingPayment ? "Conectando..." : t.btnSubscribePro}
+              </button>
+            </div>
+          )}
 
-<nav className="flex flex-col gap-2.5">
+          <nav className="flex flex-col gap-2.5">
             <button 
               onClick={() => { setIsClientsOpen(true); setIsMobileMenuOpen(false); }} 
               className={menuBtnClass}
@@ -1349,9 +1324,9 @@ export default function Home() {
             )}
 
             <div className="relative z-10">
-              <div className={`flex flex-col md:flex-row justify-between items-start border-b border-slate-200 gap-6 ${templateStyle === 'compact' ? 'pb-2' : 'pb-5'}`}>
+              <div className={`flex flex-col md:flex-row justify-between items-start border-b border-slate-200 gap-4 ${templateStyle === 'compact' ? 'pb-1' : 'pb-3'}`}>
                 <div className="w-full md:w-1/2 flex justify-start">
-                  <div className={`relative bg-transparent rounded-lg flex items-center justify-center cursor-pointer overflow-hidden ${templateStyle === 'compact' ? 'h-16 w-36' : 'h-24 w-52'}`}>
+                  <div className={`relative bg-transparent rounded-lg flex items-center justify-center cursor-pointer overflow-hidden ${templateStyle === 'compact' ? 'h-14 w-32' : 'h-20 w-44'}`}>
                     {logo ? (
                       <img src={logo} alt="Logo" className="h-full object-contain" />
                     ) : (
@@ -1362,10 +1337,10 @@ export default function Home() {
                 </div>
 
                 <div className="w-full md:w-1/2 text-left md:text-right flex flex-col items-start md:items-end space-y-0.5">
-                  <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className={`font-extrabold text-slate-900 w-full text-left md:text-right bg-transparent outline-none leading-none tracking-tight mb-0.5 ${templateStyle === 'compact' ? 'text-lg' : 'text-2xl'}`} />
+                  <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className={`font-extrabold text-slate-900 w-full text-left md:text-right bg-transparent outline-none leading-none tracking-tight mb-0.5 ${templateStyle === 'compact' ? 'text-base' : 'text-xl'}`} />
                   
                   {companyTagline && (
-                    <input value={companyTagline} onChange={(e) => setCompanyTagline(e.target.value)} className="text-xs text-slate-500 w-full text-left md:text-right bg-transparent outline-none leading-none mb-1" />
+                    <input value={companyTagline} onChange={(e) => setCompanyTagline(e.target.value)} className="text-xs text-slate-500 w-full text-left md:text-right bg-transparent outline-none leading-none mb-0.5" />
                   )}
 
                   <div className={`text-slate-600 flex flex-col items-start md:items-end leading-tight space-y-0.5 w-full ${templateStyle === 'compact' ? 'text-[10px]' : 'text-xs'}`}>
@@ -1379,12 +1354,11 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 rounded-xl print:bg-transparent print:p-0 print:border-none ${
-                templateStyle === 'modern' ? 'client-box-modern bg-slate-100 p-4 my-4 md:my-6' : 
-                templateStyle === 'compact' ? 'client-box-compact bg-slate-50 p-2 my-2' : 'client-box-classic bg-slate-50 p-4 my-6 md:my-8'
+              <div className={`grid grid-cols-1 md:grid-cols-2 gap-3 rounded-xl print:bg-transparent print:p-0 print:border-none ${
+                templateStyle === 'compact' ? 'client-box-compact bg-slate-50 p-2 my-2' : 'client-box-classic bg-slate-50 p-3 my-3 md:my-4'
               }`}>
                 <div>
-                  <span className={`font-bold uppercase block mb-0.5 ${templateStyle === 'modern' ? 'text-slate-900 text-xs tracking-wide' : 'text-slate-700 text-xs'}`}>{t.quotedTo}</span>
+                  <span className="font-bold text-slate-700 text-xs uppercase block mb-0.5">{t.quotedTo}</span>
                   <input value={clientName} onChange={(e) => setClientName(e.target.value)} className={`font-semibold text-slate-800 w-full bg-transparent outline-none ${templateStyle === 'compact' ? 'text-xs' : 'text-sm md:text-base'}`} />
                 </div>
                 <div className="md:text-right space-y-1 text-xs text-slate-600">
@@ -1395,19 +1369,16 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className={templateStyle === 'compact' ? 'mt-2' : 'mt-4'}>
-                <div 
-                  className={getHeaderTableStyle()} 
-                  style={{ backgroundColor: templateStyle === 'modern' ? '#0f172a' : undefined }}
-                >
-                  <div className="col-span-4 px-2">{t.thConcept}</div>
-                  <div className="col-span-2 text-center px-1">{t.thUnit}</div>
+              <div className={templateStyle === 'compact' ? 'mt-1' : 'mt-2'}>
+                <div className={getHeaderTableStyle()}>
                   <div className="col-span-2 text-center px-1">{t.thQty}</div>
+                  <div className="col-span-2 text-center px-1">{t.thUnit}</div>
+                  <div className="col-span-4 px-2">{t.thConcept}</div>
                   <div className="col-span-2 text-right px-2">{t.thPrice}</div>
                   <div className="col-span-2 text-right px-2">{t.thAmount}</div>
                 </div>
 
-                <div className="divide-y divide-slate-100 sm:divide-y-0 space-y-3 sm:space-y-0">
+                <div className="divide-y divide-slate-100 sm:divide-y-0 space-y-2 sm:space-y-0">
                   {items.map((item, idx) => {
                     const q = typeof item.qty === 'number' ? item.qty : parseFloat(item.qty) || 0;
                     const p = typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0;
@@ -1415,75 +1386,74 @@ export default function Home() {
                     return (
                       <div 
                         key={idx} 
-                        className={`bg-slate-50 sm:bg-transparent p-3 sm:p-0 rounded-xl sm:rounded-none border sm:border-none border-slate-200 grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-0 items-center hover:bg-slate-50/80 transition ${
-                          templateStyle === 'compact' ? 'py-0.5' : 'py-1.5'
+                        className={`bg-slate-50 sm:bg-transparent p-2.5 sm:p-0 rounded-xl sm:rounded-none border sm:border-none border-slate-200 grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-0 items-center hover:bg-slate-50/80 transition ${
+                          templateStyle === 'compact' ? 'py-1' : 'py-1.5'
                         }`}
                       >
+                        <div className="sm:col-span-2 sm:px-1 sm:text-center">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thQty}</label>
+                          <input 
+                            type="number" 
+                            value={item.qty} 
+                            onFocus={() => updateItem(idx, 'qty', '')}
+                            onBlur={() => {
+                              if (item.qty === '') updateItem(idx, 'qty', 0);
+                            }}
+                            onChange={(e) => updateItem(idx, 'qty', e.target.value)} 
+                            className={`w-full sm:w-16 text-center bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 font-semibold outline-none focus:bg-indigo-50/50 mx-auto ${
+                              templateStyle === 'compact' ? 'text-xs' : 'text-sm'
+                            }`} 
+                          />
+                        </div>
+
+                        <div className="sm:col-span-2 sm:px-1 sm:text-center">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thUnit}</label>
+                          <select 
+                            value={item.unit || 'pieza'} 
+                            onChange={(e) => updateItem(idx, 'unit', e.target.value)}
+                            className="w-full bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 text-xs font-semibold text-slate-700 cursor-pointer outline-none focus:bg-indigo-50/50"
+                          >
+                            {unitOptions.map((u, uIdx) => (
+                              <option key={uIdx} value={u.value}>{u.label}</option>
+                            ))}
+                          </select>
+                        </div>
+
                         <div className="sm:col-span-4 sm:px-2 py-1">
                           <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thConcept}</label>
-                          <input 
+                          <textarea 
                             value={lang === 'es' ? item.description_es : item.description_en} 
                             onChange={(e) => updateItem(idx, 'description', e.target.value)}
                             placeholder="Escribe un concepto..."
-                            className={`w-full bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 font-medium outline-none focus:border-indigo-500 ${
+                            rows={2}
+                            className={`w-full bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 font-medium outline-none focus:border-indigo-500 resize-none ${
                               templateStyle === 'compact' ? 'text-xs' : 'text-sm'
                             }`}
                           />
                         </div>
 
-                        <div className="grid grid-cols-4 sm:contents gap-2 mt-1 sm:mt-0">
-                          <div className="sm:col-span-2 sm:px-1 sm:text-center">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thUnit}</label>
-                            <select 
-                              value={item.unit || 'pieza'} 
-                              onChange={(e) => updateItem(idx, 'unit', e.target.value)}
-                              className="w-full bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 text-xs font-semibold text-slate-700 cursor-pointer outline-none focus:bg-indigo-50/50"
-                            >
-                              {unitOptions.map((u, uIdx) => (
-                                <option key={uIdx} value={u.value}>{u.label}</option>
-                              ))}
-                            </select>
-                          </div>
+                        <div className="sm:col-span-2 sm:px-2 sm:text-right">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thPrice}</label>
+                          <input 
+                            type="number" 
+                            value={item.price} 
+                            onFocus={() => updateItem(idx, 'price', '')}
+                            onBlur={() => {
+                              if (item.price === '') updateItem(idx, 'price', 0);
+                            }}
+                            onChange={(e) => updateItem(idx, 'price', e.target.value)} 
+                            className={`w-full sm:w-20 text-right bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 font-semibold outline-none focus:bg-indigo-50/50 ml-auto ${
+                              templateStyle === 'compact' ? 'text-xs' : 'text-sm'
+                            }`} 
+                            placeholder="0.00" 
+                          />
+                        </div>
 
-                          <div className="sm:col-span-2 sm:px-1 sm:text-center">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thQty}</label>
-                            <input 
-                              type="number" 
-                              value={item.qty} 
-                              onFocus={() => updateItem(idx, 'qty', '')}
-                              onBlur={() => {
-                                if (item.qty === '') updateItem(idx, 'qty', 0);
-                              }}
-                              onChange={(e) => updateItem(idx, 'qty', e.target.value)} 
-                              className={`w-full sm:w-16 text-center bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 font-semibold outline-none focus:bg-indigo-50/50 mx-auto ${
-                                templateStyle === 'compact' ? 'text-xs' : 'text-sm'
-                              }`} 
-                            />
-                          </div>
-
-                          <div className="sm:col-span-2 sm:px-2 sm:text-right">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thPrice}</label>
-                            <input 
-                              type="number" 
-                              value={item.price} 
-                              onFocus={() => updateItem(idx, 'price', '')}
-                              onBlur={() => {
-                                if (item.price === '') updateItem(idx, 'price', 0);
-                              }}
-                              onChange={(e) => updateItem(idx, 'price', e.target.value)} 
-                              className={`w-full sm:w-20 text-right bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 font-semibold outline-none focus:bg-indigo-50/50 ml-auto ${
-                                templateStyle === 'compact' ? 'text-xs' : 'text-sm'
-                              }`} 
-                              placeholder="0.00" 
-                            />
-                          </div>
-
-                          <div className="sm:col-span-2 sm:px-2 text-right">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thAmount}</label>
-                            <span className={`font-bold text-slate-800 block pt-1.5 sm:pt-0 ${templateStyle === 'compact' ? 'text-xs' : 'text-sm'}`}>
-                              ${(q * p).toFixed(2)}
-                            </span>
-                          </div>
+                        <div className="sm:col-span-2 sm:px-2 text-right">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thAmount}</label>
+                          <span className={`font-bold text-slate-800 block pt-1 sm:pt-0 ${templateStyle === 'compact' ? 'text-xs' : 'text-sm'}`}>
+                            ${(q * p).toFixed(2)}
+                          </span>
                         </div>
 
                         <div className="sm:col-span-12 text-right mt-1 no-print flex justify-end">
@@ -1497,8 +1467,8 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className={`flex justify-end border-t border-slate-200 ${templateStyle === 'compact' ? 'mt-3 pt-2' : 'mt-8 pt-6'}`}>
-                <div className="w-full md:w-96 space-y-2.5 text-sm">
+              <div className={`flex justify-end border-t border-slate-200 ${templateStyle === 'compact' ? 'mt-2 pt-1' : 'mt-4 pt-3'}`}>
+                <div className="w-full md:w-96 space-y-2 text-sm">
                   
                   <div className="flex justify-between items-center text-slate-600">
                     <span>{t.subtotal}</span>
@@ -1533,14 +1503,14 @@ export default function Home() {
                     <span className="font-semibold">${taxAmount.toFixed(2)} {currency}</span>
                   </div>
 
-                  <div className="flex justify-between items-center text-base font-bold text-slate-900 border-t border-slate-200 pt-2">
+                  <div className="flex justify-between items-center text-base font-bold text-slate-900 border-t border-slate-200 pt-1.5">
                     <span>{t.total}</span>
-                    <span className={templateStyle === 'modern' ? 'text-slate-900 font-extrabold text-lg' : 'text-indigo-600'}>
+                    <span className="text-indigo-600">
                       ${total.toFixed(2)} {currency}
                     </span>
                   </div>
 
-                  <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-3 space-y-2 mt-3 print:bg-transparent print:border-slate-300">
+                  <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-2.5 space-y-1.5 mt-2 print:bg-transparent print:border-slate-300">
                     <div className="flex justify-between items-center">
                       <span className="flex items-center gap-1 font-bold text-amber-900 text-xs">
                         {t.advancePercent} ({numAdvance}%):
@@ -1578,35 +1548,38 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className={`bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-3 print:bg-transparent print:border-slate-300 ${
-                templateStyle === 'compact' ? 'mt-3 p-3 space-y-1' : 'mt-8 p-5 space-y-3'
-              }`}>
-                <p className="font-bold text-slate-800 text-sm">{t.bankHeader}</p>
-                <div className="flex flex-col space-y-2 text-slate-700 max-w-md">
-                  <div className="grid grid-cols-[120px_1fr] sm:grid-cols-[140px_1fr] items-center">
-                    <strong className="text-slate-900">{t.beneficiary}</strong>
-                    <span className="font-medium text-slate-800">{bankData.nombre || '—'}</span>
-                  </div>
-                  <div className="grid grid-cols-[120px_1fr] sm:grid-cols-[140px_1fr] items-center">
-                    <strong className="text-slate-900">{t.account}</strong>
-                    <span className="font-medium text-slate-800">{bankData.cuenta || '—'}</span>
-                  </div>
-                  <div className="grid grid-cols-[120px_1fr] sm:grid-cols-[140px_1fr] items-center">
-                    <strong className="text-slate-900">{t.rfc}</strong>
-                    <span className="font-medium text-slate-800">{bankData.rfc || '—'}</span>
-                  </div>
-                  <div className="grid grid-cols-[120px_1fr] sm:grid-cols-[140px_1fr] items-center">
-                    <strong className="text-slate-900">{t.bank}</strong>
-                    <span className="font-medium text-slate-800">{bankData.banco || '—'}</span>
-                  </div>
-                  <div className="grid grid-cols-[120px_1fr] sm:grid-cols-[140px_1fr] items-center">
-                    <strong className="text-slate-900">{t.clabe}</strong>
-                    <span className="font-medium text-slate-800">{bankData.clabe || '—'}</span>
+              {/* SECCIÓN DE DATOS BANCARIOS (CONDICIONAL SEGÚN EL TOGGLE) */}
+              {showBankDetails && (
+                <div className={`bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-2 print:bg-transparent print:border-slate-300 ${
+                  templateStyle === 'compact' ? 'mt-2 p-2 space-y-1' : 'mt-4 p-3.5 space-y-2'
+                }`}>
+                  <p className="font-bold text-slate-800 text-sm">{t.bankHeader}</p>
+                  <div className="flex flex-col space-y-1.5 text-slate-700 max-w-md">
+                    <div className="grid grid-cols-[120px_1fr] sm:grid-cols-[140px_1fr] items-center">
+                      <strong className="text-slate-900">{t.beneficiary}</strong>
+                      <span className="font-medium text-slate-800">{bankData.nombre || '—'}</span>
+                    </div>
+                    <div className="grid grid-cols-[120px_1fr] sm:grid-cols-[140px_1fr] items-center">
+                      <strong className="text-slate-900">{t.account}</strong>
+                      <span className="font-medium text-slate-800">{bankData.cuenta || '—'}</span>
+                    </div>
+                    <div className="grid grid-cols-[120px_1fr] sm:grid-cols-[140px_1fr] items-center">
+                      <strong className="text-slate-900">{t.rfc}</strong>
+                      <span className="font-medium text-slate-800">{bankData.rfc || '—'}</span>
+                    </div>
+                    <div className="grid grid-cols-[120px_1fr] sm:grid-cols-[140px_1fr] items-center">
+                      <strong className="text-slate-900">{t.bank}</strong>
+                      <span className="font-medium text-slate-800">{bankData.banco || '—'}</span>
+                    </div>
+                    <div className="grid grid-cols-[120px_1fr] sm:grid-cols-[140px_1fr] items-center">
+                      <strong className="text-slate-900">{t.clabe}</strong>
+                      <span className="font-medium text-slate-800">{bankData.clabe || '—'}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
-              <div className="hidden print:block mt-4 text-[10px] text-slate-500 text-right font-medium">
+              <div className="hidden print:block mt-2 text-[10px] text-slate-500 text-right font-medium">
                 {t?.generatedAt || 'Generado el:'} {currentDateTime || ''}
               </div>
 
@@ -1665,21 +1638,6 @@ export default function Home() {
                   </div>
 
                   <div 
-                    onClick={() => setTemplateStyle('modern')} 
-                    className={`p-4 rounded-xl border-2 cursor-pointer transition flex items-center justify-between ${
-                      templateStyle === 'modern' 
-                        ? 'border-indigo-600 bg-indigo-50/50 ring-2 ring-indigo-500/20' 
-                        : 'border-slate-200 hover:border-slate-300 bg-white'
-                    }`}
-                  >
-                    <div>
-                      <strong className="text-sm font-bold text-slate-800 block">Moderno / Minimalista</strong>
-                      <span className="text-xs text-slate-500 block">Encabezado oscuro (#0f172a), bordes superiores elegantes y marco estilizado.</span>
-                    </div>
-                    {templateStyle === 'modern' && <span className="text-indigo-600 font-bold text-lg">✓</span>}
-                  </div>
-
-                  <div 
                     onClick={() => setTemplateStyle('compact')} 
                     className={`p-4 rounded-xl border-2 cursor-pointer transition flex items-center justify-between ${
                       templateStyle === 'compact' 
@@ -1696,6 +1654,19 @@ export default function Home() {
 
                 </div>
               </div>
+
+              <div className="pt-3 border-t border-slate-200">
+                <label className="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-200 hover:bg-slate-100 transition">
+                  <input 
+                    type="checkbox" 
+                    checked={showBankDetails} 
+                    onChange={(e) => setShowBankDetails(e.target.checked)}
+                    className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                  />
+                  <span>{t.showBankToggle}</span>
+                </label>
+              </div>
+
             </div>
 
             <div className="flex justify-end border-t pt-3">
