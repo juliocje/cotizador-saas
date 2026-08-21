@@ -20,10 +20,10 @@ export async function GET(request: Request) {
       const userId = paymentInfo.external_reference;
 
       if (userId) {
-        // Actualizamos automáticamente en Supabase a 'pro'
+        // Actualizamos automáticamente en Supabase a 'active'
         const { error } = await supabaseServer
           .from('profiles')
-          .update({ subscription_status: 'pro' })
+          .update({ subscription_status: 'active' })
           .eq('id', userId);
 
         if (error) {
