@@ -44,38 +44,49 @@ export async function POST(request: Request) {
 
         console.log("🔍 Buscando en Supabase -> ID:", userId, "| Email:", userEmail);
 
+        // Calcular la fecha de corte sumando exactamente 30 días desde hoy
+        const nextCutoffDate = new Date();
+        nextCutoffDate.setDate(nextCutoffDate.getDate() + 30);
+        const cutoffISO = nextCutoffDate.toISOString();
+
         let updated = false;
 
         // 1. Intentar actualizar directamente por el UUID del usuario (external_reference)
         if (userId) {
           const { data, error } = await supabaseAdmin
             .from('profiles')
-            .update({ subscription_status: 'active' })
+            .update({ 
+              subscription_status: 'active',
+              subscription_end_date: cutoffISO 
+            })
             .eq('id', userId)
-            .select(); // Trae el registro afectado para verificar
+            .select();
 
           if (error) {
             console.error("❌ Error de Supabase al actualizar por ID:", error);
           } else if (data && data.length > 0) {
-            console.log("✅ ¡Perfil actualizado a 'active' exitosamente por ID!", data);
+            console.log("✅ ¡Perfil actualizado a 'active' y fecha de corte guardada por ID!", data);
             updated = true;
           } else {
             console.warn("⚠️ No se encontró ningún registro en 'profiles' con el ID:", userId);
           }
         }
 
-        // 2. Respaldo: Si no se actualizó por ID, intentar buscar por correo (si no es de prueba de MP)
+        // 2. Respaldo: Si no se actualizó por ID, intentar buscar por correo
         if (!updated && userEmail && !userEmail.includes('@testuser.com')) {
           const { data, error } = await supabaseAdmin
             .from('profiles')
-            .update({ subscription_status: 'active' })
+            .update({ 
+              subscription_status: 'active',
+              subscription_end_date: cutoffISO 
+            })
             .eq('email', userEmail)
             .select();
 
           if (error) {
             console.error("❌ Error de Supabase al actualizar por Email:", error);
           } else if (data && data.length > 0) {
-            console.log("✅ ¡Perfil actualizado a 'active' exitosamente por Email!", data);
+            console.log("✅ ¡Perfil actualizado a 'active' y fecha de corte guardada por Email!", data);
             updated = true;
           }
         }

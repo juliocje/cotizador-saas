@@ -22,6 +22,8 @@ const translations: Record<string, any> = {
     btnSettings: "Ajustes",
     btnSubscribePro: "Plan Premium ($99/mes)",
     planProActive: "✅ Plan Premium Activo",
+    expiresOn: "Vence el:",
+    paymentTrustNote: "Pago único por 30 días. Sin cargos automáticos ni renovaciones forzosas.",
     lblSelectBank: "Cuenta Bancaria",
     lblSelectClient: "Cliente Frecuente",
     lblSelectCompany: "Emitir con",
@@ -95,6 +97,8 @@ const translations: Record<string, any> = {
     btnSettings: "Settings",
     btnSubscribePro: "Premium Plan ($99/mo)",
     planProActive: "✅ Premium Plan Active",
+    expiresOn: "Expires on:",
+    paymentTrustNote: "One-time payment for 30 days. No automatic charges or forced renewals.",
     lblSelectBank: "Bank Account",
     lblSelectClient: "Saved Client",
     lblSelectCompany: "Issue As",
@@ -225,6 +229,7 @@ export default function Home() {
 
   const [templateStyle, setTemplateStyle] = useState<'classic' | 'compact'>('classic');
   const [subscriptionStatus, setSubscriptionStatus] = useState<string>('free');
+  const [subscriptionEndDate, setSubscriptionEndDate] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
   const [companyName, setCompanyName] = useState<string>("Mi Empresa S.A. de C.V.");
@@ -311,12 +316,31 @@ export default function Home() {
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('subscription_status, full_name')
+        .select('subscription_status, full_name, subscription_end_date')
         .eq('id', user.id)
         .single();
 
       if (!error && data) {
-        setSubscriptionStatus(data.subscription_status || 'free');
+        let status = data.subscription_status || 'free';
+        if (data.subscription_end_date) {
+          setSubscriptionEndDate(data.subscription_end_date);
+        }
+
+        if (status === 'active' && data.subscription_end_date) {
+          const cutoffDate = new Date(data.subscription_end_date);
+          const now = new Date();
+
+          if (now > cutoffDate) {
+            await supabase
+              .from('profiles')
+              .update({ subscription_status: 'free' })
+              .eq('id', user.id);
+            
+            status = 'free';
+          }
+        }
+
+        setSubscriptionStatus(status);
         if (data.full_name) setUserName(data.full_name);
         else if (user.user_metadata?.full_name) setUserName(user.user_metadata.full_name);
         else if (user.email) setUserName(user.email.split('@')[0]);
@@ -449,7 +473,6 @@ export default function Home() {
       const data = await response.json();
 
       if (data.init_point) {
-        // Se abre el checkout en una ventana/pestaña nueva para no perder el estado actual
         window.open(data.init_point, '_blank');
       } else {
         alert("Error al iniciar el pago: " + (data.error || "Intenta más tarde"));
@@ -1052,8 +1075,13 @@ export default function Home() {
           </div>
 
           {subscriptionStatus === 'active' ? (
-            <div className="w-full bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 font-bold px-4 py-3 rounded-xl text-sm text-center shadow-md">
-              {t.planProActive}
+            <div className="w-full bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 font-bold px-4 py-3 rounded-xl text-sm text-center shadow-md space-y-1">
+              <div>{t.planProActive}</div>
+              {subscriptionEndDate && (
+                <div className="text-[11px] font-normal text-emerald-200/90">
+                  {t.expiresOn} {new Date(subscriptionEndDate).toLocaleDateString(lang === 'es' ? 'es-MX' : 'en-US', { dateStyle: 'medium' })}
+                </div>
+              )}
             </div>
           ) : (
             <div className="space-y-2.5 bg-slate-800/80 p-3 rounded-2xl border border-slate-700/80">
@@ -1087,6 +1115,10 @@ export default function Home() {
               >
                 {isProcessingPayment ? "Conectando..." : t.btnSubscribePro}
               </button>
+
+              <p className="text-[10px] text-slate-400 text-center leading-tight px-1 pt-0.5">
+                {t.paymentTrustNote}
+              </p>
             </div>
           )}
 

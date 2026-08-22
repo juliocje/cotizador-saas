@@ -40,7 +40,7 @@ export default function TerminosPage() {
           </div>
 
           <div>
-            <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide mb-1">3. Uso Aceptable y Prohibición de Actividades Ilícitas</h2>
+            <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide mb-1">3. Uso Aceptable, Eliminación de Cuenta y Suspensión</h2>
             <p>
               El Usuario se compromete a hacer un uso lícito y ético de la Plataforma. Queda estrictamente prohibido utilizar el servicio para:
             </p>
@@ -49,6 +49,9 @@ export default function TerminosPage() {
               <li>Cotizar productos o servicios ilegales, regulados o cuya comercialización infrinja leyes vigentes.</li>
               <li>Suplantar la identidad de personas físicas, morales o marcas registradas sin la debida autorización.</li>
             </ul>
+            <p className="mt-2">
+              <strong>Eliminación Definitiva de Cuenta:</strong> El Usuario cuenta con una herramienta automatizada para eliminar su cuenta en cualquier momento. Al hacer uso de esta opción, el Usuario reconoce y acepta que el proceso es <strong>permanente e irreversible</strong>, eliminando por completo su perfil, cotizaciones guardadas, directorio de clientes y empresas registradas de las bases de datos sin derecho a recuperación.
+            </p>
             <p className="mt-2">
               Nos reservamos el derecho indiscutible de suspender, bloquear o eliminar definitivamente de manera inmediata y sin previo aviso la cuenta de cualquier Usuario que infrinja esta disposición, sin derecho a reembolso o indemnización.
             </p>
@@ -65,12 +68,14 @@ export default function TerminosPage() {
           </div>
 
           <div>
-            <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide mb-1">5. Suscripciones, Planes de Pago y Reembolsos</h2>
+            <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide mb-1">5. Suscripciones, Planes de Pago, Vigencia y Reembolsos</h2>
             <p>
               El acceso a funcionalidades avanzadas (Plan Premium) requiere el pago de la tarifa correspondiente. Los pagos se procesan a través de pasarelas de pago de terceros cifradas y seguras (Mercado Pago).
             </p>
             <ul className="list-disc pl-5 space-y-1 mt-2">
-              <li>El Usuario puede cancelar la suscripción en cualquier momento.</li>
+              <li><strong>Vigencia del Plan:</strong> Las suscripciones al Plan Premium tienen una vigencia estándar de 30 días naturales a partir de la confirmación electrónica del pago.</li>
+              <li><strong>Caducidad y Restricción Automática:</strong> Si el periodo de vigencia fenece sin que se registre una renovación de pago confirmada por los sistemas automatizados (Webhooks), la cuenta se degradará de manera automática al Plan Gratuito (Free), aplicando de inmediato los límites de uso vigentes.</li>
+              <li>El Usuario puede cancelar o suspender su suscripción en cualquier momento.</li>
               <li>No se otorgarán reembolsos ni devoluciones proporcionales por periodos de cobro ya procesados o transcurridos.</li>
               <li>Las variaciones de tarifa serán notificadas oportunamente a través de la plataforma o correo electrónico.</li>
             </ul>

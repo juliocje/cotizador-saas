@@ -35,6 +35,7 @@ export default function PrivacidadPage() {
             <ul className="list-disc pl-5 space-y-1 mt-2">
               <li><strong>Datos del Usuario Administrador:</strong> Nombre, dirección de correo electrónico, teléfono de contacto, razón social o marca comercial, logotipos e identificación fiscal (RFC / Tax ID).</li>
               <li><strong>Datos de Clientes Frecuentes del Usuario:</strong> Nombre de clientes, teléfono, correo electrónico, RFC y domicilio ingresados en el directorio privado por el propio Usuario.</li>
+              <li><strong>Datos Transaccionales:</strong> Metadatos de pago, estatus de suscripción y fechas de vigencia generados a través de la pasarela de pagos.</li>
             </ul>
           </div>
 
@@ -53,12 +54,13 @@ export default function PrivacidadPage() {
           </div>
 
           <div>
-            <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide mb-1">4. Finalidad del Tratamiento</h2>
+            <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide mb-1">4. Finalidad del Tratamiento y Ciclo de Suscripción</h2>
             <p>Los datos recabados se utilizan exclusivamente para las siguientes finalidades primarias y necesarias:</p>
             <ul className="list-disc pl-5 space-y-1 mt-2">
               <li>Autenticación de seguridad y gestión de la cuenta del Usuario.</li>
               <li>Generación, maquetación y descarga de documentos de cotización en formato PDF.</li>
-              <li>Procesamiento de pagos y cobranza recurrente del Plan Premium mediante la API segura de Mercado Pago.</li>
+              <li>Procesamiento de pagos, control de fechas de corte y gestión de vigencia del Plan Premium (con verificación mediante notificaciones automatizadas o Webhooks).</li>
+              <li>Actualización automática del estatus de la cuenta a Plan Gratuito (Free) al cumplirse el vencimiento del periodo contratado sin renovación.</li>
               <li>Brindar soporte técnico y enviar notificaciones operativas referentes al servicio.</li>
             </ul>
           </div>
@@ -70,14 +72,17 @@ export default function PrivacidadPage() {
             </p>
             <ul className="list-disc pl-5 space-y-1 mt-2">
               <li><strong>Almacenamiento Cifrado:</strong> Las bases de datos operan bajo arquitectura Supabase PostgreSQL con autenticación cifrada.</li>
-              <li><strong>Procesamiento Financiero:</strong> Los datos bancarios y de tarjetas de crédito/débito son procesados directamente por la pasarela de pagos cifrada de Mercado Pago. La Plataforma no almacena ni recopila números completos de tarjetas ni claves bancarias.</li>
+              <li><strong>Procesamiento Financiero:</strong> Los datos bancarios y de tarjetas de crédito/débito son procesados directamente por la pasarela de pagos cifrada de <strong>Mercado Pago</strong>. La Plataforma no almacena ni recopila números completos de tarjetas ni claves bancarias.</li>
             </ul>
           </div>
 
           <div>
-            <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide mb-1">6. Ejercicio de Derechos ARCO y Cancelación</h2>
+            <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide mb-1">6. Derechos ARCO y Eliminación Definitiva de Cuenta</h2>
             <p>
-              El Usuario tiene derecho a conocer qué datos personales tenemos registrados, rectificarlos en caso de ser inexactos, solicitar la cancelación definitiva de su cuenta y eliminación completa de sus datos de nuestros servidores, o bien oponerse al tratamiento de los mismos (Derechos ARCO). Para ejercer estos derechos, el Usuario puede enviar su solicitud a la dirección de soporte habilitada en la Plataforma.
+              El Usuario tiene derecho a conocer qué datos personales tenemos registrados, rectificarlos en caso de ser inexactos o oponerse al tratamiento de los mismos (Derechos ARCO).
+            </p>
+            <p className="mt-2">
+              Asimismo, la Plataforma incluye una función automatizada de <strong>Eliminación de Cuenta</strong>. Al hacer uso de esta opción, el Usuario comprende y acepta que la supresión de sus datos de autenticación, cotizaciones guardadas, directorio de clientes y empresas registradas será <strong>definitiva, permanente e irreversible</strong>, eliminándose por completo de los servidores activos y bases de datos sin posibilidad de recuperación.
             </p>
           </div>
 
