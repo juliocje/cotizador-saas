@@ -231,7 +231,7 @@ export default function Home() {
   const [subscriptionStatus, setSubscriptionStatus] = useState<string>('free');
   const [subscriptionEndDate, setSubscriptionEndDate] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
-  const [isSharedView, setIsSharedView] = useState<boolean>(false); // Detecta si es vista pública del cliente
+  const [isSharedView, setIsSharedView] = useState<boolean>(false);
 
   const [companyName, setCompanyName] = useState<string>("Mi Empresa S.A. de C.V.");
   const [companyTagline, setCompanyTagline] = useState<string>("Servicios Profesionales");
@@ -311,7 +311,6 @@ export default function Home() {
     fetchClients();
     fetchCompanies();
 
-    // Función segura para leer el parámetro ?quote=ID en Next.js con un micro-retardo de hidratación
     const checkSharedQuote = () => {
       const params = new URLSearchParams(window.location.search);
       const quoteId = params.get('quote');
@@ -877,9 +876,15 @@ export default function Home() {
           discount: numDiscount,
           folio: folio
         }
-      ]).select().single();
+      ]).select('id').single();
 
-      if (error) throw error;
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (!savedData || !savedData.id) {
+        throw new Error("No se pudo generar el identificador único de la cotización.");
+      }
 
       const quoteId = savedData.id;
       const shareableLink = `${window.location.origin}/?quote=${quoteId}`;
