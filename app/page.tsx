@@ -30,7 +30,6 @@ const translations: Record<string, any> = {
     btnBlank: "Blanco",
     btnPrint: "Guardar / PDF",
     btnSaveCloud: "Guardar en Nube",
-    btnWhatsApp: "Enviar por WhatsApp",
     btnLogout: "Cerrar Sesión",
     btnDeleteAccount: "🗑️ Eliminar mi cuenta",
     logoPrompt: "Haz clic para subir tu Logo o cárgalo desde 'Mis Empresas'",
@@ -105,7 +104,6 @@ const translations: Record<string, any> = {
     btnBlank: "Blank Item",
     btnPrint: "Save / PDF",
     btnSaveCloud: "Save to Cloud",
-    btnWhatsApp: "Send via WhatsApp",
     btnLogout: "Log Out",
     btnDeleteAccount: "🗑️ Delete my account",
     logoPrompt: "Click to upload Logo or load it from 'My Companies'",
@@ -274,7 +272,6 @@ export default function Home() {
   const [clientQuotesList, setClientQuotesList] = useState<any[]>([]);
 
   const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState<boolean>(false);
 
   const [savedQuotes, setSavedQuotes] = useState<any[]>([]);
@@ -395,7 +392,7 @@ export default function Home() {
     if (subscriptionStatus === 'active') return;
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    await supabase.from('quotes').insert([{ user_id: user.id, client_name: "Consumo PDF/WA", total_amount: 0, folio: "AUTO-" + Date.now() }]);
+    await supabase.from('quotes').insert([{ user_id: user.id, client_name: "Consumo PDF", total_amount: 0, folio: "AUTO-" + Date.now() }]);
   };
 
   const checkFreePlanUsageLimit = async (): Promise<boolean> => {
@@ -852,72 +849,6 @@ export default function Home() {
   const total = subtotalWithDiscount + taxAmount;
   const advanceAmount = total * (numAdvance / 100);
 
-  const sendPdfWhatsApp = async () => {
-    const canProceed = await checkFreePlanUsageLimit();
-    if (!canProceed) return;
-    await logUsage();
-
-    setIsGeneratingPdf(true);
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setIsGeneratingPdf(false);
-        return alert("Debes iniciar sesión para enviar cotizaciones.");
-      }
-
-      const { data: savedData, error } = await supabase.from('quotes').insert([
-        {
-          user_id: user.id,
-          client_name: clientName,
-          total_amount: total,
-          items: items,
-          tax_rate: taxRate,
-          discount: numDiscount,
-          folio: folio
-        }
-      ]).select('id').single();
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      if (!savedData || !savedData.id) {
-        throw new Error("No se pudo generar el identificador único de la cotización.");
-      }
-
-      const quoteId = savedData.id;
-      const shareableLink = `${window.location.origin}/?quote=${quoteId}`;
-
-      // Alerta de depuración para confirmar el enlace generado en dispositivos móviles
-      alert("Enlace generado con éxito:\n" + shareableLink);
-
-      const cleanPhone = clientPhone.replace(/\D/g, '');
-      let text = `COTIZACIÓN DE SERVICIOS\n`;
-      text += `Empresa: ${companyName}\n`;
-      text += `Cliente: ${clientName}\n`;
-      text += `Folio: ${folio}\n`;
-      text += `Total Neto: $${total.toFixed(2)} ${currency}\n`;
-      if (numAdvance > 0) {
-        text += `Anticipo (${numAdvance}%): $${advanceAmount.toFixed(2)} ${currency}\n`;
-      }
-      text += `\n`;
-      text += `Puedes ver y descargar la cotización en formato oficial aquí:\n${shareableLink}\n\n`;
-      text += `¡Quedamos a tus órdenes!`;
-
-      const encodedText = encodeURIComponent(text);
-      const waUrl = cleanPhone 
-        ? `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodedText}`
-        : `https://api.whatsapp.com/send?text=${encodedText}`;
-
-      window.open(waUrl, '_blank');
-    } catch (err: any) {
-      alert("Error al preparar el envío por WhatsApp: " + err.message);
-    } finally {
-      setIsGeneratingPdf(false);
-    }
-  };
-
   const saveQuoteToCloud = async () => {
     const canProceed = await checkFreePlanUsageLimit();
     if (!canProceed) return;
@@ -1122,7 +1053,6 @@ export default function Home() {
               <button onClick={() => { setIsSettingsOpen(true); setIsMobileMenuOpen(false); }} className={menuBtnClass}>{t.btnSettings}</button>
               <button onClick={() => { setIsMobileMenuOpen(false); handlePrintPdf(); }} className={menuBtnClass}>{t.btnPrint}</button>
               <button onClick={() => { setIsMobileMenuOpen(false); saveQuoteToCloud(); }} disabled={isSaving} className={menuBtnClass}>{isSaving ? "Guardando..." : t.btnSaveCloud}</button>
-              <button onClick={() => { setIsMobileMenuOpen(false); sendPdfWhatsApp(); }} disabled={isGeneratingPdf} className={menuBtnClass}>{isGeneratingPdf ? "Generando Enlace..." : t.btnWhatsApp}</button>
             </nav>
           </div>
 
