@@ -30,7 +30,7 @@ const translations: Record<string, any> = {
     btnBlank: "Blanco",
     btnPrint: "Guardar / PDF",
     btnSaveCloud: "Guardar en Nube",
-    btnWhatsApp: "Enviar PDF por WhatsApp",
+    btnWhatsApp: "Enviar por WhatsApp",
     btnLogout: "Cerrar Sesión",
     btnDeleteAccount: "🗑️ Eliminar mi cuenta",
     logoPrompt: "Haz clic para subir tu Logo o cárgalo desde 'Mis Empresas'",
@@ -105,7 +105,7 @@ const translations: Record<string, any> = {
     btnBlank: "Blank Item",
     btnPrint: "Save / PDF",
     btnSaveCloud: "Save to Cloud",
-    btnWhatsApp: "Send PDF via WhatsApp",
+    btnWhatsApp: "Send via WhatsApp",
     btnLogout: "Log Out",
     btnDeleteAccount: "🗑️ Delete my account",
     logoPrompt: "Click to upload Logo or load it from 'My Companies'",
@@ -231,7 +231,6 @@ export default function Home() {
   const [subscriptionStatus, setSubscriptionStatus] = useState<string>('free');
   const [subscriptionEndDate, setSubscriptionEndDate] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
-  const [isPdfMode, setIsPdfMode] = useState<boolean>(false);
 
   const [companyName, setCompanyName] = useState<string>("Mi Empresa S.A. de C.V.");
   const [companyTagline, setCompanyTagline] = useState<string>("Servicios Profesionales");
@@ -310,7 +309,35 @@ export default function Home() {
     fetchUserProfile();
     fetchClients();
     fetchCompanies();
+
+    // Comprobar si se abrió la app mediante un enlace compartido de cotización (?quote=ID)
+    const params = new URLSearchParams(window.location.search);
+    const quoteId = params.get('quote');
+    if (quoteId) {
+      fetchQuoteById(quoteId);
+    }
   }, []);
+
+  const fetchQuoteById = async (id: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('quotes')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      if (data) {
+        if (data.client_name) setClientName(data.client_name);
+        if (data.items && Array.isArray(data.items)) setItems(data.items);
+        if (data.tax_rate !== undefined) setTaxRate(data.tax_rate);
+        if (data.discount !== undefined) setDiscount(data.discount);
+        if (data.folio) setFolio(data.folio);
+      }
+    } catch (err: any) {
+      console.error("Error al cargar la cotización compartida:", err.message);
+    }
+  };
 
   const fetchUserProfile = async () => {
     try {
@@ -821,118 +848,43 @@ export default function Home() {
     await logUsage();
 
     setIsGeneratingPdf(true);
-    setIsPdfMode(true); // Activa la vista limpia para PDF
-
-    // Esperar a que React renderice los campos como texto plano
-    await new Promise((resolve) => setTimeout(resolve, 150));
 
     try {
-      const element = document.getElementById('quote-document');
-      if (!element) {
-        setIsPdfMode(false);
-        return alert("Error al ubicar el documento.");
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setIsGeneratingPdf(false);
+        return alert("Debes iniciar sesión para enviar cotizaciones.");
       }
 
-      const { default: jsPDF } = await import('jspdf');
-      const { default: html2canvas } = await import('html2canvas-pro');
-
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff'
-      });
-
-      setIsPdfMode(false); // Restaura la vista de edición inmediatamente
-
-      const imgData = canvas.toDataURL('image/jpeg', 0.98);
-      
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'pt',
-        format: 'letter'
-      });
-
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-
-      const margin = 5;
-      const printableWidth = pdfWidth - (margin * 2);
-      const printableHeight = pdfHeight - (margin * 2);
-
-      const widthRatio = printableWidth / canvas.width;
-      const heightRatio = printableHeight / canvas.height;
-      const ratio = Math.min(widthRatio, heightRatio);
-
-      const finalWidth = canvas.width * ratio;
-      const finalHeight = canvas.height * ratio;
-
-      const xOffset = (pdfWidth - finalWidth) / 2;
-      const yOffset = margin;
-
-      pdf.addImage(imgData, 'JPEG', xOffset, yOffset, finalWidth, finalHeight);
-
-      const pdfBlob = pdf.output('blob');
-      const fileName = `cotizacion_${Date.now()}_${folio.replace(/#/g, '')}.pdf`;
-      const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
-
-      // Intento de compartir el archivo PDF real de forma nativa (ideal para celulares con WhatsApp)
-      if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-        try {
-          await navigator.share({
-            title: `Cotización ${folio}`,
-            text: `Hola, te comparto la cotización ${folio} de ${companyName}. Total: $${total.toFixed(2)} ${currency}`,
-            files: [pdfFile],
-          });
-          setIsGeneratingPdf(false);
-          return;
-        } catch (shareErr: any) {
-          setIsPdfMode(false);
-          if (shareErr.name === 'AbortError') {
-            setIsGeneratingPdf(false);
-            return;
-          }
+      // Guardar automáticamente la cotización en la nube para obtener un ID único y un enlace web nítido
+      const { data: savedData, error } = await supabase.from('quotes').insert([
+        {
+          user_id: user.id,
+          client_name: clientName,
+          total_amount: total,
+          items: items,
+          tax_rate: taxRate,
+          discount: numDiscount,
+          folio: folio
         }
-      }
+      ]).select().single();
 
-      // Respaldo por enlace web en caso de que el navegador no soporte archivos compartidos directos
-      let pdfUrl = "";
+      if (error) throw error;
 
-      try {
-        const { error } = await supabase.storage
-          .from('quotations')
-          .upload(fileName, pdfBlob, {
-            contentType: 'application/pdf',
-            upsert: true
-          });
-
-        if (!error) {
-          const { data: publicUrlData } = supabase.storage
-            .from('quotations')
-            .getPublicUrl(fileName);
-          pdfUrl = publicUrlData.publicUrl;
-        }
-      } catch (storageErr) {
-        console.warn("Error en Storage, continuando...", storageErr);
-      }
+      const quoteId = savedData.id;
+      const shareableLink = `${window.location.origin}/?quote=${quoteId}`;
 
       const cleanPhone = clientPhone.replace(/\D/g, '');
       let text = `COTIZACIÓN DE SERVICIOS\n`;
-      text += `${companyName}\n`;
-      text += `${clientName}\n`;
+      text += `Empresa: ${companyName}\n`;
+      text += `Cliente: ${clientName}\n`;
       text += `Folio: ${folio}\n`;
       text += `Total Neto: $${total.toFixed(2)} ${currency}\n`;
       if (numAdvance > 0) {
         text += `Anticipo (${numAdvance}%): $${advanceAmount.toFixed(2)} ${currency}\n`;
       }
       text += `\n`;
-      
-      if (pdfUrl) {
-        text += `Puedes descargar/ver el PDF completo aquí:\n${pdfUrl}\n\n`;
-      } else {
-        text += `Cotización adjunta.\n\n`;
-      }
-      
+      text += `Puedes ver y descargar la cotización en formato oficial aquí:\n${shareableLink}\n\n`;
       text += `¡Quedamos a tus órdenes!`;
 
       const encodedText = encodeURIComponent(text);
@@ -942,10 +894,8 @@ export default function Home() {
 
       window.open(waUrl, '_blank');
     } catch (err: any) {
-      setIsPdfMode(false);
-      alert("Error al generar/enviar PDF: " + err.message);
+      alert("Error al preparar el envío por WhatsApp: " + err.message);
     } finally {
-      setIsPdfMode(false);
       setIsGeneratingPdf(false);
     }
   };
@@ -1206,7 +1156,7 @@ export default function Home() {
               disabled={isGeneratingPdf} 
               className={menuBtnClass}
             >
-              {isGeneratingPdf ? "Generando PDF..." : t.btnWhatsApp}
+              {isGeneratingPdf ? "Generando Enlace..." : t.btnWhatsApp}
             </button>
           </nav>
         </div>
@@ -1393,27 +1343,15 @@ export default function Home() {
                     ) : (
                       <span className="text-[11px] font-semibold text-slate-500 text-center px-2 no-print">{t.logoPrompt}</span>
                     )}
-                    {!isPdfMode && (
-                      <input type="file" accept="image/*" onChange={handleLogoUpload} className="absolute inset-0 opacity-0 cursor-pointer no-print" />
-                    )}
+                    <input type="file" accept="image/*" onChange={handleLogoUpload} className="absolute inset-0 opacity-0 cursor-pointer no-print" />
                   </div>
                 </div>
 
                 <div className="w-full md:w-1/2 text-left md:text-right flex flex-col items-start md:items-end space-y-0.5">
-                  {isPdfMode ? (
-                    <div className={`font-extrabold text-slate-900 w-full text-left md:text-right leading-none tracking-tight mb-0.5 ${templateStyle === 'compact' ? 'text-base' : 'text-xl'}`}>
-                      {companyName}
-                    </div>
-                  ) : (
-                    <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className={`font-extrabold text-slate-900 w-full text-left md:text-right bg-transparent outline-none leading-none tracking-tight mb-0.5 ${templateStyle === 'compact' ? 'text-base' : 'text-xl'}`} />
-                  )}
+                  <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className={`font-extrabold text-slate-900 w-full text-left md:text-right bg-transparent outline-none leading-none tracking-tight mb-0.5 ${templateStyle === 'compact' ? 'text-base' : 'text-xl'}`} />
                   
                   {companyTagline && (
-                    isPdfMode ? (
-                      <div className="text-xs text-slate-500 w-full text-left md:text-right leading-none mb-0.5">{companyTagline}</div>
-                    ) : (
-                      <input value={companyTagline} onChange={(e) => setCompanyTagline(e.target.value)} className="text-xs text-slate-500 w-full text-left md:text-right bg-transparent outline-none leading-none mb-0.5" />
-                    )
+                    <input value={companyTagline} onChange={(e) => setCompanyTagline(e.target.value)} className="text-xs text-slate-500 w-full text-left md:text-right bg-transparent outline-none leading-none mb-0.5" />
                   )}
 
                   <div className={`text-slate-600 flex flex-col items-start md:items-end leading-tight space-y-0.5 w-full ${templateStyle === 'compact' ? 'text-[10px]' : 'text-xs'}`}>
@@ -1422,11 +1360,7 @@ export default function Home() {
                     {cityStateText && <p>{cityStateText}</p>}
                     {companyPostalCode && <p>C.P. {companyPostalCode}</p>}
                     {companyPhone && <p><strong>Tel:</strong> {companyPhone}</p>}
-                    {isPdfMode ? (
-                      <div className="text-xs text-slate-500 w-full text-left md:text-right leading-tight">{companyEmail}</div>
-                    ) : (
-                      <input value={companyEmail} onChange={(e) => setCompanyEmail(e.target.value)} className="text-xs text-slate-500 w-full text-left md:text-right bg-transparent outline-none leading-tight" />
-                    )}
+                    <input value={companyEmail} onChange={(e) => setCompanyEmail(e.target.value)} className="text-xs text-slate-500 w-full text-left md:text-right bg-transparent outline-none leading-tight" />
                   </div>
                 </div>
               </div>
@@ -1436,20 +1370,12 @@ export default function Home() {
               }`}>
                 <div>
                   <span className="font-bold text-slate-700 text-xs uppercase block mb-0.5">{t.quotedTo}</span>
-                  {isPdfMode ? (
-                    <div className={`font-semibold text-slate-800 w-full ${templateStyle === 'compact' ? 'text-xs' : 'text-sm md:text-base'}`}>{clientName}</div>
-                  ) : (
-                    <input value={clientName} onChange={(e) => setClientName(e.target.value)} className={`font-semibold text-slate-800 w-full bg-transparent outline-none ${templateStyle === 'compact' ? 'text-xs' : 'text-sm md:text-base'}`} />
-                  )}
+                  <input value={clientName} onChange={(e) => setClientName(e.target.value)} className={`font-semibold text-slate-800 w-full bg-transparent outline-none ${templateStyle === 'compact' ? 'text-xs' : 'text-sm md:text-base'}`} />
                 </div>
                 <div className="md:text-right space-y-1 text-xs text-slate-600">
                   <p className="flex items-center justify-start md:justify-end gap-1">
                     <strong>{t.folio}</strong> 
-                    {isPdfMode ? (
-                      <span className="font-semibold text-slate-800 ml-1">{folio}</span>
-                    ) : (
-                      <input value={folio} onChange={(e) => setFolio(e.target.value)} className="w-32 text-left md:text-right bg-transparent outline-none font-semibold text-slate-800" />
-                    )}
+                    <input value={folio} onChange={(e) => setFolio(e.target.value)} className="w-32 text-left md:text-right bg-transparent outline-none font-semibold text-slate-800" />
                   </p>
                 </div>
               </div>
@@ -1477,79 +1403,61 @@ export default function Home() {
                       >
                         <div className="sm:col-span-2 sm:px-1 sm:text-center">
                           <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thQty}</label>
-                          {isPdfMode ? (
-                            <span className={`font-semibold text-slate-800 block sm:text-center ${templateStyle === 'compact' ? 'text-xs' : 'text-sm'}`}>{item.qty}</span>
-                          ) : (
-                            <input 
-                              type="number" 
-                              value={item.qty} 
-                              onFocus={() => updateItem(idx, 'qty', '')}
-                              onBlur={() => {
-                                if (item.qty === '') updateItem(idx, 'qty', 0);
-                              }}
-                              onChange={(e) => updateItem(idx, 'qty', e.target.value)} 
-                              className={`w-full sm:w-16 text-center bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 font-semibold outline-none focus:bg-indigo-50/50 mx-auto ${
-                                templateStyle === 'compact' ? 'text-xs' : 'text-sm'
-                              }`} 
-                            />
-                          )}
+                          <input 
+                            type="number" 
+                            value={item.qty} 
+                            onFocus={() => updateItem(idx, 'qty', '')}
+                            onBlur={() => {
+                              if (item.qty === '') updateItem(idx, 'qty', 0);
+                            }}
+                            onChange={(e) => updateItem(idx, 'qty', e.target.value)} 
+                            className={`w-full sm:w-16 text-center bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 font-semibold outline-none focus:bg-indigo-50/50 mx-auto ${
+                              templateStyle === 'compact' ? 'text-xs' : 'text-sm'
+                            }`} 
+                          />
                         </div>
 
                         <div className="sm:col-span-2 sm:px-1 sm:text-center">
                           <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thUnit}</label>
-                          {isPdfMode ? (
-                            <span className="text-xs font-semibold text-slate-700 block sm:text-center">{item.unit || 'pieza'}</span>
-                          ) : (
-                            <select 
-                              value={item.unit || 'pieza'} 
-                              onChange={(e) => updateItem(idx, 'unit', e.target.value)}
-                              className="w-full bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 text-xs font-semibold text-slate-700 cursor-pointer outline-none focus:bg-indigo-50/50"
-                            >
-                              {unitOptions.map((u, uIdx) => (
-                                <option key={uIdx} value={u.value}>{u.label}</option>
-                              ))}
-                            </select>
-                          )}
+                          <select 
+                            value={item.unit || 'pieza'} 
+                            onChange={(e) => updateItem(idx, 'unit', e.target.value)}
+                            className="w-full bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 text-xs font-semibold text-slate-700 cursor-pointer outline-none focus:bg-indigo-50/50"
+                          >
+                            {unitOptions.map((u, uIdx) => (
+                              <option key={uIdx} value={u.value}>{u.label}</option>
+                            ))}
+                          </select>
                         </div>
 
                         <div className="sm:col-span-4 sm:px-2 py-1">
                           <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thConcept}</label>
-                          {isPdfMode ? (
-                            <div className={`font-medium text-slate-800 whitespace-pre-wrap ${templateStyle === 'compact' ? 'text-xs' : 'text-sm'}`}>
-                              {lang === 'es' ? item.description_es : item.description_en}
-                            </div>
-                          ) : (
-                            <textarea 
-                              value={lang === 'es' ? item.description_es : item.description_en} 
-                              onChange={(e) => updateItem(idx, 'description', e.target.value)}
-                              placeholder="Escribe un concepto..."
-                              rows={2}
-                              className={`w-full bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 font-medium outline-none focus:border-indigo-500 resize-none ${
-                                templateStyle === 'compact' ? 'text-xs' : 'text-sm'
-                              }`}
-                            />
-                          )}
+                          <textarea 
+                            value={lang === 'es' ? item.description_es : item.description_en} 
+                            onChange={(e) => updateItem(idx, 'description', e.target.value)}
+                            placeholder="Escribe un concepto..."
+                            rows={2}
+                            className={`w-full bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 font-medium outline-none focus:border-indigo-500 resize-none ${
+                              templateStyle === 'compact' ? 'text-xs' : 'text-sm'
+                            }`}
+                          />
                         </div>
 
                         <div className="sm:col-span-2 sm:px-2 sm:text-right">
                           <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thPrice}</label>
-                          {isPdfMode ? (
-                            <span className={`font-semibold text-slate-800 block sm:text-right ${templateStyle === 'compact' ? 'text-xs' : 'text-sm'}`}>{item.price}</span>
-                          ) : (
-                            <input 
-                              type="number" 
-                              value={item.price} 
-                              onFocus={() => updateItem(idx, 'price', '')}
-                              onBlur={() => {
-                                if (item.price === '') updateItem(idx, 'price', 0);
-                              }}
-                              onChange={(e) => updateItem(idx, 'price', e.target.value)} 
-                              className={`w-full sm:w-20 text-right bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 font-semibold outline-none focus:bg-indigo-50/50 ml-auto ${
-                                templateStyle === 'compact' ? 'text-xs' : 'text-sm'
-                              }`} 
-                              placeholder="0.00" 
-                            />
-                          )}
+                          <input 
+                            type="number" 
+                            value={item.price} 
+                            onFocus={() => updateItem(idx, 'price', '')}
+                            onBlur={() => {
+                              if (item.price === '') updateItem(idx, 'price', 0);
+                            }}
+                            onChange={(e) => updateItem(idx, 'price', e.target.value)} 
+                            className={`w-full sm:w-20 text-right bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 font-semibold outline-none focus:bg-indigo-50/50 ml-auto ${
+                              templateStyle === 'compact' ? 'text-xs' : 'text-sm'
+                            }`} 
+                            placeholder="0.00" 
+                          />
                         </div>
 
                         <div className="sm:col-span-2 sm:px-2 text-right">
@@ -1559,13 +1467,11 @@ export default function Home() {
                           </span>
                         </div>
 
-                        {!isPdfMode && (
-                          <div className="sm:col-span-12 text-right mt-1 no-print flex justify-end">
-                            <button onClick={() => removeItem(idx)} className="text-rose-500 hover:text-rose-700 font-bold text-xs bg-rose-50 sm:bg-transparent px-2 py-0.5 rounded">
-                              Eliminar ✕
-                            </button>
-                          </div>
-                        )}
+                        <div className="sm:col-span-12 text-right mt-1 no-print flex justify-end">
+                          <button onClick={() => removeItem(idx)} className="text-rose-500 hover:text-rose-700 font-bold text-xs bg-rose-50 sm:bg-transparent px-2 py-0.5 rounded">
+                            Eliminar ✕
+                          </button>
+                        </div>
                       </div>
                     );
                   })}
@@ -1583,24 +1489,20 @@ export default function Home() {
                   <div className="flex justify-between items-center text-slate-600">
                     <span className="flex items-center gap-1">
                       {t.discount}
-                      {isPdfMode ? (
-                        <span className="font-bold text-slate-800 text-xs ml-1">{discount}%</span>
-                      ) : (
-                        <div className="flex items-center border border-slate-300 rounded bg-white px-1 py-0.5 no-print">
-                          <input 
-                            type="number" 
-                            min="0" 
-                            max="100"
-                            step="1"
-                            value={discount} 
-                            onFocus={() => { if (discount === 0 || discount === '0') setDiscount(''); }}
-                            onBlur={() => { if (discount === '') setDiscount(0); }}
-                            onChange={(e) => setDiscount(e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))}
-                            className="w-10 text-center font-bold text-xs text-slate-800 outline-none"
-                          />
-                          <span className="text-[10px] font-bold text-slate-400">%</span>
-                        </div>
-                      )}
+                      <div className="flex items-center border border-slate-300 rounded bg-white px-1 py-0.5 no-print">
+                        <input 
+                          type="number" 
+                          min="0" 
+                          max="100"
+                          step="1"
+                          value={discount} 
+                          onFocus={() => { if (discount === 0 || discount === '0') setDiscount(''); }}
+                          onBlur={() => { if (discount === '') setDiscount(0); }}
+                          onChange={(e) => setDiscount(e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))}
+                          className="w-10 text-center font-bold text-xs text-slate-800 outline-none"
+                        />
+                        <span className="text-[10px] font-bold text-slate-400">%</span>
+                      </div>
                     </span>
                     <span className="font-semibold text-rose-600">
                       -{discountAmount > 0 ? `$${discountAmount.toFixed(2)}` : '$0.00'} {currency}
@@ -1623,24 +1525,20 @@ export default function Home() {
                     <div className="flex justify-between items-center">
                       <span className="flex items-center gap-1 font-bold text-amber-900 text-xs">
                         {t.advancePercent} ({numAdvance}%):
-                        {isPdfMode ? (
-                          <span className="font-bold text-amber-900 text-xs ml-1">{numAdvance}%</span>
-                        ) : (
-                          <div className="flex items-center border border-amber-300 rounded bg-white px-1 py-0.5 no-print">
-                            <input 
-                              type="number" 
-                              min="0" 
-                              max="100"
-                              step="1"
-                              value={advanceRate} 
-                              onFocus={() => { if (advanceRate === 0 || advanceRate === '0') setAdvanceRate(''); }}
-                              onBlur={() => { if (advanceRate === '') setAdvanceRate(0); }}
-                              onChange={(e) => setAdvanceRate(e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))}
-                              className="w-12 text-center font-bold text-xs text-amber-900 outline-none"
-                            />
-                            <span className="text-[10px] font-bold text-amber-600">%</span>
-                          </div>
-                        )}
+                        <div className="flex items-center border border-amber-300 rounded bg-white px-1 py-0.5 no-print">
+                          <input 
+                            type="number" 
+                            min="0" 
+                            max="100"
+                            step="1"
+                            value={advanceRate} 
+                            onFocus={() => { if (advanceRate === 0 || advanceRate === '0') setAdvanceRate(''); }}
+                            onBlur={() => { if (advanceRate === '') setAdvanceRate(0); }}
+                            onChange={(e) => setAdvanceRate(e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))}
+                            className="w-12 text-center font-bold text-xs text-amber-900 outline-none"
+                          />
+                          <span className="text-[10px] font-bold text-amber-600">%</span>
+                        </div>
                       </span>
                       <span className="font-extrabold text-amber-900 text-sm">
                         ${advanceAmount.toFixed(2)} {currency}
@@ -1648,17 +1546,13 @@ export default function Home() {
                     </div>
 
                     <div className="pt-1 border-t border-amber-200/60">
-                      {isPdfMode ? (
-                        <div className="text-[11px] text-amber-950 italic font-medium leading-tight">{advanceCustomNote}</div>
-                      ) : (
-                        <textarea
-                          value={advanceCustomNote}
-                          onChange={(e) => setAdvanceCustomNote(e.target.value)}
-                          rows={2}
-                          className="w-full bg-transparent text-[11px] text-amber-950 italic outline-none resize-none leading-tight font-medium"
-                          placeholder="Escribe la leyenda o condición de anticipo..."
-                        />
-                      )}
+                      <textarea
+                        value={advanceCustomNote}
+                        onChange={(e) => setAdvanceCustomNote(e.target.value)}
+                        rows={2}
+                        className="w-full bg-transparent text-[11px] text-amber-950 italic outline-none resize-none leading-tight font-medium"
+                        placeholder="Escribe la leyenda o condición de anticipo..."
+                      />
                     </div>
                   </div>
 
