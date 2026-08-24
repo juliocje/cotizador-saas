@@ -828,26 +828,9 @@ export default function Home() {
       const { default: jsPDF } = await import('jspdf');
       const { default: html2canvas } = await import('html2canvas-pro');
 
-      const inputs = element.querySelectorAll('input, select, textarea');
-      const replacements: { element: HTMLElement; span: HTMLDivElement }[] = [];
-
-      inputs.forEach((el) => {
-        const inputEl = el as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
-        if ((inputEl as HTMLInputElement).type === 'file') return;
-        
-        const span = document.createElement('div');
-        span.innerText = inputEl.value;
-        span.className = inputEl.className + ' pdf-text-render';
-        span.style.display = 'inline-block';
-        span.style.whiteSpace = 'pre-wrap';
-        span.style.width = '100%';
-
-        if (inputEl.parentNode) {
-          inputEl.parentNode.insertBefore(span, inputEl);
-          inputEl.style.display = 'none';
-          replacements.push({ element: inputEl, span });
-        }
-      });
+      // Activamos el modo PDF para limpiar bordes, botones y selects antes de capturar la imagen
+      document.body.classList.add('is-generating-pdf');
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       const canvas = await html2canvas(element, {
         scale: 2,
@@ -856,10 +839,7 @@ export default function Home() {
         backgroundColor: '#ffffff'
       });
 
-      replacements.forEach(({ element: el, span }) => {
-        el.style.display = '';
-        if (span.parentNode) span.parentNode.removeChild(span);
-      });
+      document.body.classList.remove('is-generating-pdf');
 
       const imgData = canvas.toDataURL('image/jpeg', 0.98);
       
@@ -903,9 +883,10 @@ export default function Home() {
           setIsGeneratingPdf(false);
           return;
         } catch (shareErr: any) {
+          document.body.classList.remove('is-generating-pdf');
           if (shareErr.name === 'AbortError') {
             setIsGeneratingPdf(false);
-            return; // El usuario canceló la acción de compartir
+            return;
           }
         }
       }
@@ -957,8 +938,10 @@ export default function Home() {
 
       window.open(waUrl, '_blank');
     } catch (err: any) {
+      document.body.classList.remove('is-generating-pdf');
       alert("Error al generar/enviar PDF: " + err.message);
     } finally {
+      document.body.classList.remove('is-generating-pdf');
       setIsGeneratingPdf(false);
     }
   };
@@ -1072,6 +1055,25 @@ export default function Home() {
           @page { margin: 0; size: auto; }
           body { background-color: white !important; padding: 0 !important; margin: 0 !important; }
           .quote-container { box-shadow: none !important; border: none !important; padding: 0.2cm !important; margin: 0 !important; width: 100% !important; max-width: 100% !important; }
+        }
+
+        .is-generating-pdf .no-print,
+        .is-generating-pdf button,
+        .is-generating-pdf input[type="file"] {
+          display: none !important;
+        }
+
+        .is-generating-pdf input,
+        .is-generating-pdf select,
+        .is-generating-pdf textarea {
+          border: none !important;
+          background: transparent !important;
+          box-shadow: none !important;
+          outline: none !important;
+          resize: none !important;
+          appearance: none !important;
+          -webkit-appearance: none !important;
+          padding: 0 !important;
         }
 
         .pdf-theme-compact .client-box-compact {
