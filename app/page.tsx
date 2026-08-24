@@ -282,6 +282,8 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [newClient, setNewClient] = useState({ name: '', email: '', phone: '', tax_id: '', address: '' });
+  const [clientCountryCode, setClientCountryCode] = useState<string>('+52');
+  const [clientLocalPhone, setClientLocalPhone] = useState<string>('');
 
   const [editingCompanyId, setEditingCompanyId] = useState<string | null>(null);
   const [newCompany, setNewCompany] = useState({ 
@@ -576,11 +578,22 @@ export default function Home() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return alert("Debes iniciar sesión para guardar clientes.");
 
-      const { error } = await supabase.from('clients').insert([{ ...newClient, user_id: user.id }]);
+      const fullPhone = clientLocalPhone.trim() ? `${clientCountryCode}${clientLocalPhone.trim()}` : '';
+
+      const { error } = await supabase.from('clients').insert([{ 
+        name: newClient.name,
+        email: newClient.email,
+        tax_id: newClient.tax_id,
+        address: newClient.address,
+        phone: fullPhone,
+        user_id: user.id 
+      }]);
       if (error) throw error;
       
       alert("Cliente guardado con éxito.");
       setNewClient({ name: '', email: '', phone: '', tax_id: '', address: '' });
+      setClientCountryCode('+52');
+      setClientLocalPhone('');
       fetchClients();
     } catch (err: any) {
       alert("Error al guardar cliente: " + err.message);
@@ -1866,7 +1879,24 @@ export default function Home() {
               <input placeholder="Nombre / Razón Social *" value={newClient.name} onChange={(e) => setNewClient({ ...newClient, name: e.target.value })} className="border p-2 rounded bg-white" />
               <input placeholder="RFC / Tax ID" value={newClient.tax_id} onChange={(e) => setNewClient({ ...newClient, tax_id: e.target.value })} className="border p-2 rounded bg-white" />
               <input placeholder="Correo Electrónico" value={newClient.email} onChange={(e) => setNewClient({ ...newClient, email: e.target.value })} className="border p-2 rounded bg-white" />
-              <input placeholder="Teléfono WhatsApp (ej: 521662...)" value={newClient.phone} onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })} className="border p-2 rounded bg-white" />
+              
+              <div className="flex gap-1">
+                <select 
+                  value={clientCountryCode} 
+                  onChange={(e) => setClientCountryCode(e.target.value)}
+                  className="border p-2 rounded bg-white text-xs font-semibold outline-none cursor-pointer"
+                >
+                  <option value="+52">🇲🇽 +52 (MX)</option>
+                  <option value="+1">🇺🇸 +1 (USA)</option>
+                </select>
+                <input 
+                  placeholder="Teléfono (ej: 6621234567)" 
+                  value={clientLocalPhone} 
+                  onChange={(e) => setClientLocalPhone(e.target.value)} 
+                  className="border p-2 rounded bg-white flex-1" 
+                />
+              </div>
+
               <button onClick={handleSaveClient} className="col-span-1 sm:col-span-2 bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2 rounded text-xs transition">
                 + Guardar Cliente
               </button>
