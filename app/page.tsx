@@ -1080,7 +1080,7 @@ export default function Home() {
       <aside className={`no-print w-full md:w-64 bg-slate-900 text-slate-100 p-4 shrink-0 flex-col justify-between border-r border-slate-800 shadow-xl z-40 
         ${isMobileMenuOpen ? 'fixed inset-x-0 top-14 bottom-0 flex overflow-y-auto' : 'hidden md:flex'}`}>
         <div className="space-y-4">
-          <div className="pb-3 border-b border-slate-800/80 hidden md:block text-center space-y-1">
+          <div className="pb-3 border-b border-slate-800/80 block text-center space-y-1">
             <h1 className="text-xl font-bold text-white tracking-tight">{t.appTitle}</h1>
             <p className="text-xs text-amber-400 font-semibold">
               {t.welcomeUser} <span className="text-white underline">{userName}</span>
