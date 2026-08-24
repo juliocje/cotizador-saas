@@ -231,6 +231,7 @@ export default function Home() {
   const [subscriptionStatus, setSubscriptionStatus] = useState<string>('free');
   const [subscriptionEndDate, setSubscriptionEndDate] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
+  const [isSharedView, setIsSharedView] = useState<boolean>(false); // Detecta si es vista pública del cliente
 
   const [companyName, setCompanyName] = useState<string>("Mi Empresa S.A. de C.V.");
   const [companyTagline, setCompanyTagline] = useState<string>("Servicios Profesionales");
@@ -310,10 +311,11 @@ export default function Home() {
     fetchClients();
     fetchCompanies();
 
-    // Comprobar si se abrió la app mediante un enlace compartido de cotización (?quote=ID)
+    // Comprobar si se abrió la app mediante un enlace compartido de cotización (?quote=ID)[cite: 2]
     const params = new URLSearchParams(window.location.search);
     const quoteId = params.get('quote');
     if (quoteId) {
+      setIsSharedView(true); // Oculta paneles de edición y menús para el cliente[cite: 2]
       fetchQuoteById(quoteId);
     }
   }, []);
@@ -336,6 +338,7 @@ export default function Home() {
       }
     } catch (err: any) {
       console.error("Error al cargar la cotización compartida:", err.message);
+      alert("No se pudo cargar la cotización o el enlace ha expirado.");
     }
   };
 
@@ -467,9 +470,11 @@ export default function Home() {
   };
 
   const handlePrintPdf = async () => {
-    const canProceed = await checkFreePlanUsageLimit();
-    if (!canProceed) return;
-    await logUsage();
+    if (!isSharedView) {
+      const canProceed = await checkFreePlanUsageLimit();
+      if (!canProceed) return;
+      await logUsage();
+    }
     window.print();
   };
 
@@ -856,7 +861,6 @@ export default function Home() {
         return alert("Debes iniciar sesión para enviar cotizaciones.");
       }
 
-      // Guardar automáticamente la cotización en la nube para obtener un ID único y un enlace web nítido
       const { data: savedData, error } = await supabase.from('quotes').insert([
         {
           user_id: user.id,
@@ -988,16 +992,16 @@ export default function Home() {
 
   const getContainerStyle = () => {
     if (templateStyle === 'compact') {
-      return "quote-container pdf-theme-compact relative bg-white p-2 md:p-3 rounded-xl shadow-lg border border-slate-300 overflow-hidden text-xs";
+      return "quote-container pdf-theme-compact relative bg-white p-3 md:p-6 rounded-xl shadow-lg border border-slate-300 overflow-hidden text-xs w-full max-w-3xl mx-auto my-6";
     }
-    return "quote-container pdf-theme-classic relative bg-white p-3 md:p-5 rounded-2xl shadow-xl border border-slate-200 overflow-hidden";
+    return "quote-container pdf-theme-classic relative bg-white p-4 md:p-8 rounded-2xl shadow-xl border border-slate-200 overflow-hidden w-full max-w-3xl mx-auto my-6";
   };
 
   const getHeaderTableStyle = () => {
     if (templateStyle === 'compact') {
-      return "hidden sm:grid grid-cols-12 border-b-2 border-slate-800 text-[11px] font-black text-slate-800 uppercase pb-1 mb-1";
+      return "grid grid-cols-12 border-b-2 border-slate-800 text-[11px] font-black text-slate-800 uppercase pb-1 mb-1";
     }
-    return "hidden sm:grid grid-cols-12 border-b-2 border-slate-300 text-xs font-bold text-slate-600 uppercase pb-2";
+    return "grid grid-cols-12 border-b-2 border-slate-300 text-xs font-bold text-slate-600 uppercase pb-2";
   };
 
   return (
@@ -1021,312 +1025,160 @@ export default function Home() {
         }
       `}</style>
 
-      {/* BARRA SUPERIOR FIJA MÓVIL */}
-      <div className="no-print md:hidden fixed top-0 left-0 right-0 bg-slate-900 text-white px-4 py-3 flex justify-between items-center shadow-lg z-50 h-14">
-        <h1 className="font-bold text-base tracking-tight">{t.appTitle}</h1>
-        <button 
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
-          className="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg text-sm font-semibold flex items-center gap-1.5 active:bg-slate-700"
-        >
-          <span>{isMobileMenuOpen ? "✕" : "☰"}</span>
-          <span>{isMobileMenuOpen ? "Cerrar" : "Menú"}</span>
-        </button>
-      </div>
+      {/* BARRA SUPERIOR FIJA MÓVIL (Oculta si es vista de cliente compartido) */}
+      {!isSharedView && (
+        <div className="no-print md:hidden fixed top-0 left-0 right-0 bg-slate-900 text-white px-4 py-3 flex justify-between items-center shadow-lg z-50 h-14">
+          <h1 className="font-bold text-base tracking-tight">{t.appTitle}</h1>
+          <button 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+            className="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg text-sm font-semibold flex items-center gap-1.5 active:bg-slate-700"
+          >
+            <span>{isMobileMenuOpen ? "✕" : "☰"}</span>
+            <span>{isMobileMenuOpen ? "Cerrar" : "Menú"}</span>
+          </button>
+        </div>
+      )}
 
-      {/* MENÚ LATERAL */}
-      <aside className={`no-print w-full md:w-64 bg-slate-900 text-slate-100 p-4 shrink-0 flex-col justify-between border-r border-slate-800 shadow-xl z-40 
-        ${isMobileMenuOpen ? 'fixed inset-x-0 top-14 bottom-0 flex overflow-y-auto' : 'hidden md:flex'}`}>
-        <div className="space-y-4">
-          <div className="pb-3 border-b border-slate-800/80 block text-center space-y-1">
-            <h1 className="text-xl font-bold text-white tracking-tight">{t.appTitle}</h1>
-            <p className="text-xs text-amber-400 font-semibold">
-              {t.welcomeUser} <span className="text-white underline">{userName}</span>
-            </p>
-          </div>
-
-          {subscriptionStatus === 'active' ? (
-            <div className="w-full bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 font-bold px-4 py-3 rounded-xl text-sm text-center shadow-md space-y-1">
-              <div>{t.planProActive}</div>
-              {subscriptionEndDate && (
-                <div className="text-[11px] font-normal text-emerald-200/90">
-                  {t.expiresOn} {new Date(subscriptionEndDate).toLocaleDateString(lang === 'es' ? 'es-MX' : 'en-US', { dateStyle: 'medium' })}
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-2.5 bg-slate-800/80 p-3 rounded-2xl border border-slate-700/80">
-              <label className="flex items-start gap-2 cursor-pointer text-[11px] text-slate-300 px-1 select-none">
-                <input 
-                  type="checkbox" 
-                  checked={legalAccepted} 
-                  onChange={(e) => setLegalAccepted(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 rounded border-slate-600 bg-slate-900 text-amber-500 focus:ring-amber-500 cursor-pointer shrink-0" 
-                />
-                <span className="leading-tight">
-                  Acepto los{' '}
-                  <Link href="/terminos" target="_blank" className="underline hover:text-white font-semibold text-amber-400">
-                    Términos
-                  </Link>{' '}
-                  y el{' '}
-                  <Link href="/privacidad" target="_blank" className="underline hover:text-white font-semibold text-amber-400">
-                    Aviso de Privacidad
-                  </Link>.
-                </span>
-              </label>
-
-              <button 
-                onClick={handleCheckoutPro} 
-                disabled={isProcessingPayment || !legalAccepted} 
-                className={`w-full font-extrabold px-4 py-3 rounded-xl text-sm transition-all duration-200 text-center shadow-lg border text-slate-900 ${
-                  legalAccepted && !isProcessingPayment
-                    ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 border-amber-300 active:scale-[0.98] animate-pulse'
-                    : 'bg-slate-700 border-slate-600 text-slate-400 cursor-not-allowed opacity-60'
-                }`}
-              >
-                {isProcessingPayment ? "Conectando..." : t.btnSubscribePro}
-              </button>
-
-              <p className="text-[10px] text-slate-400 text-center leading-tight px-1 pt-0.5">
-                {t.paymentTrustNote}
+      {/* MENÚ LATERAL (Oculto si es vista de cliente compartido) */}
+      {!isSharedView && (
+        <aside className={`no-print w-full md:w-64 bg-slate-900 text-slate-100 p-4 shrink-0 flex-col justify-between border-r border-slate-800 shadow-xl z-40 
+          ${isMobileMenuOpen ? 'fixed inset-x-0 top-14 bottom-0 flex overflow-y-auto' : 'hidden md:flex'}`}>
+          <div className="space-y-4">
+            <div className="pb-3 border-b border-slate-800/80 block text-center space-y-1">
+              <h1 className="text-xl font-bold text-white tracking-tight">{t.appTitle}</h1>
+              <p className="text-xs text-amber-400 font-semibold">
+                {t.welcomeUser} <span className="text-white underline">{userName}</span>
               </p>
             </div>
-          )}
 
-          <nav className="flex flex-col gap-2.5">
-            <button 
-              onClick={() => { setIsClientsOpen(true); setIsMobileMenuOpen(false); }} 
-              className={menuBtnClass}
-            >
-              {t.btnManageClients}
-            </button>
+            {subscriptionStatus === 'active' ? (
+              <div className="w-full bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 font-bold px-4 py-3 rounded-xl text-sm text-center shadow-md space-y-1">
+                <div>{t.planProActive}</div>
+                {subscriptionEndDate && (
+                  <div className="text-[11px] font-normal text-emerald-200/90">
+                    {t.expiresOn} {new Date(subscriptionEndDate).toLocaleDateString(lang === 'es' ? 'es-MX' : 'en-US', { dateStyle: 'medium' })}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-2.5 bg-slate-800/80 p-3 rounded-2xl border border-slate-700/80">
+                <label className="flex items-start gap-2 cursor-pointer text-[11px] text-slate-300 px-1 select-none">
+                  <input 
+                    type="checkbox" 
+                    checked={legalAccepted} 
+                    onChange={(e) => setLegalAccepted(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-slate-600 bg-slate-900 text-amber-500 focus:ring-amber-500 cursor-pointer shrink-0" 
+                  />
+                  <span className="leading-tight">
+                    Acepto los{' '}
+                    <Link href="/terminos" target="_blank" className="underline hover:text-white font-semibold text-amber-400">
+                      Términos
+                    </Link>{' '}
+                    y el{' '}
+                    <Link href="/privacidad" target="_blank" className="underline hover:text-white font-semibold text-amber-400">
+                      Aviso de Privacidad
+                    </Link>.
+                  </span>
+                </label>
 
-            <button 
-              onClick={() => { setIsConceptsModalOpen(true); setIsMobileMenuOpen(false); }} 
-              className={menuBtnClass}
-            >
-              {t.btnManageCatalog}
-            </button>
+                <button 
+                  onClick={handleCheckoutPro} 
+                  disabled={isProcessingPayment || !legalAccepted} 
+                  className={`w-full font-extrabold px-4 py-3 rounded-xl text-sm transition-all duration-200 text-center shadow-lg border text-slate-900 ${
+                    legalAccepted && !isProcessingPayment
+                      ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 border-amber-300 active:scale-[0.98] animate-pulse'
+                      : 'bg-slate-700 border-slate-600 text-slate-400 cursor-not-allowed opacity-60'
+                  }`}
+                >
+                  {isProcessingPayment ? "Conectando..." : t.btnSubscribePro}
+                </button>
 
-            <button 
-              onClick={() => { setIsCompaniesOpen(true); setIsMobileMenuOpen(false); }} 
-              className={menuBtnClass}
-            >
-              {t.btnManageCompanies}
-            </button>
+                <p className="text-[10px] text-slate-400 text-center leading-tight px-1 pt-0.5">
+                  {t.paymentTrustNote}
+                </p>
+              </div>
+            )}
 
-            <button 
-              onClick={() => { setIsBanksModalOpen(true); setIsMobileMenuOpen(false); }} 
-              className={menuBtnClass}
-            >
-              {t.btnManageBanks}
-            </button>
+            <nav className="flex flex-col gap-2.5">
+              <button onClick={() => { setIsClientsOpen(true); setIsMobileMenuOpen(false); }} className={menuBtnClass}>{t.btnManageClients}</button>
+              <button onClick={() => { setIsConceptsModalOpen(true); setIsMobileMenuOpen(false); }} className={menuBtnClass}>{t.btnManageCatalog}</button>
+              <button onClick={() => { setIsCompaniesOpen(true); setIsMobileMenuOpen(false); }} className={menuBtnClass}>{t.btnManageCompanies}</button>
+              <button onClick={() => { setIsBanksModalOpen(true); setIsMobileMenuOpen(false); }} className={menuBtnClass}>{t.btnManageBanks}</button>
+              <button onClick={() => { fetchQuotesHistory(); setIsMobileMenuOpen(false); }} disabled={isLoading} className={menuBtnClass}>{t.btnHistory}</button>
+              <button onClick={() => { setIsSettingsOpen(true); setIsMobileMenuOpen(false); }} className={menuBtnClass}>{t.btnSettings}</button>
+              <button onClick={() => { setIsMobileMenuOpen(false); handlePrintPdf(); }} className={menuBtnClass}>{t.btnPrint}</button>
+              <button onClick={() => { setIsMobileMenuOpen(false); saveQuoteToCloud(); }} disabled={isSaving} className={menuBtnClass}>{isSaving ? "Guardando..." : t.btnSaveCloud}</button>
+              <button onClick={() => { setIsMobileMenuOpen(false); sendPdfWhatsApp(); }} disabled={isGeneratingPdf} className={menuBtnClass}>{isGeneratingPdf ? "Generando Enlace..." : t.btnWhatsApp}</button>
+            </nav>
+          </div>
 
-            <button 
-              onClick={() => { fetchQuotesHistory(); setIsMobileMenuOpen(false); }} 
-              disabled={isLoading} 
-              className={menuBtnClass}
-            >
-              {t.btnHistory}
-            </button>
-
-            <button 
-              onClick={() => { setIsSettingsOpen(true); setIsMobileMenuOpen(false); }} 
-              className={menuBtnClass}
-            >
-              {t.btnSettings}
-            </button>
-
-            <button 
-              onClick={() => { setIsMobileMenuOpen(false); handlePrintPdf(); }} 
-              className={menuBtnClass}
-            >
-              {t.btnPrint}
-            </button>
-
-            <button 
-              onClick={() => { setIsMobileMenuOpen(false); saveQuoteToCloud(); }} 
-              disabled={isSaving} 
-              className={menuBtnClass}
-            >
-              {isSaving ? "Guardando..." : t.btnSaveCloud}
-            </button>
-
-            <button 
-              onClick={() => { setIsMobileMenuOpen(false); sendPdfWhatsApp(); }} 
-              disabled={isGeneratingPdf} 
-              className={menuBtnClass}
-            >
-              {isGeneratingPdf ? "Generando Enlace..." : t.btnWhatsApp}
-            </button>
-          </nav>
-        </div>
-
-        <div className="pt-4 border-t border-slate-800/80 mt-4 pb-6 md:pb-0 space-y-2">
-          <button 
-            onClick={handleLogout} 
-            className="w-full flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold px-4 py-2.5 rounded-xl text-xs transition-all duration-200 shadow-md text-center border border-slate-700"
-          >
-            {t.btnLogout}
-          </button>
-          <button 
-            onClick={handleDeleteAccount} 
-            className="w-full flex items-center justify-center bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 font-semibold px-4 py-2.5 rounded-xl text-xs transition-all duration-200 shadow-md text-center border border-rose-900/50"
-          >
-            {t.btnDeleteAccount}
-          </button>
-        </div>
-      </aside>
+          <div className="pt-4 border-t border-slate-800/80 mt-4 pb-6 md:pb-0 space-y-2">
+            <button onClick={handleLogout} className="w-full flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold px-4 py-2.5 rounded-xl text-xs transition-all duration-200 shadow-md text-center border border-slate-700">{t.btnLogout}</button>
+            <button onClick={handleDeleteAccount} className="w-full flex items-center justify-center bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 font-semibold px-4 py-2.5 rounded-xl text-xs transition-all duration-200 shadow-md text-center border border-rose-900/50">{t.btnDeleteAccount}</button>
+          </div>
+        </aside>
+      )}
 
       {/* ÁREA PRINCIPAL */}
       <main className="flex-1 p-3 md:p-8 overflow-x-hidden flex flex-col justify-between min-h-screen">
         <div className="max-w-5xl mx-auto print:max-w-none print:w-full space-y-6 w-full">
           
-          {/* BARRA SUPERIOR DE SELECTORES */}
-          <div className="no-print bg-white p-4 md:p-5 rounded-xl shadow-md border border-slate-200 space-y-4">
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
-              
-              <div className="flex flex-col justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{t.lblLang}</label>
-                <select 
-                  value={lang} 
-                  onChange={(e) => setLang(e.target.value as 'es' | 'en')}
-                  className="w-full bg-white text-slate-800 font-semibold text-xs rounded border border-slate-300 p-2 cursor-pointer outline-none focus:border-indigo-500 transition"
-                >
-                  <option value="es">Español</option>
-                  <option value="en">English</option>
-                </select>
-              </div>
-
-              <div className="flex flex-col justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{t.lblTax}</label>
-                <div className="flex gap-1.5 items-center">
-                  <select 
-                    onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
-                    className="w-full bg-white text-slate-800 font-semibold text-xs rounded border border-slate-300 p-2 cursor-pointer outline-none focus:border-indigo-500 transition"
-                  >
-                    <option value="">-- Seleccionar --</option>
-                    {taxPresets.map((preset, idx) => (
-                      <option key={idx} value={preset.value}>{preset.label}</option>
-                    ))}
+          {/* BARRA SUPERIOR DE SELECTORES (Oculta si es vista compartida del cliente) */}
+          {!isSharedView && (
+            <div className="no-print bg-white p-4 md:p-5 rounded-xl shadow-md border border-slate-200 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+                <div className="flex flex-col justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{t.lblLang}</label>
+                  <select value={lang} onChange={(e) => setLang(e.target.value as 'es' | 'en')} className="w-full bg-white text-slate-800 font-semibold text-xs rounded border border-slate-300 p-2 cursor-pointer outline-none">
+                    <option value="es">Español</option>
+                    <option value="en">English</option>
                   </select>
-                  <div className="flex items-center bg-white border border-slate-300 rounded px-1.5 py-1">
-                    <input 
-                      type="number" step="0.01" value={taxRate} 
-                      onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
-                      className="w-10 text-center font-bold text-xs text-indigo-700 outline-none"
-                    />
-                    <span className="text-xs font-bold text-slate-400">%</span>
+                </div>
+                <div className="flex flex-col justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{t.lblTax}</label>
+                  <div className="flex gap-1.5 items-center">
+                    <select onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)} className="w-full bg-white text-slate-800 font-semibold text-xs rounded border border-slate-300 p-2 cursor-pointer outline-none">
+                      <option value="">-- Seleccionar --</option>
+                      {taxPresets.map((preset, idx) => (
+                        <option key={idx} value={preset.value}>{preset.label}</option>
+                      ))}
+                    </select>
+                    <div className="flex items-center bg-white border border-slate-300 rounded px-1.5 py-1">
+                      <input type="number" step="0.01" value={taxRate} onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)} className="w-10 text-center font-bold text-xs text-indigo-700 outline-none" />
+                      <span className="text-xs font-bold text-slate-400">%</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              <div className="flex flex-col justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{t.lblSelectCompany}</label>
-                <select 
-                  onChange={(e) => {
-                    const comp = companiesList[Number(e.target.value)];
-                    if (comp) applyCompany(comp);
-                  }}
-                  disabled={companiesList.length === 0}
-                  className="w-full bg-white text-slate-800 font-semibold text-xs rounded border border-slate-300 p-2 outline-none cursor-pointer focus:border-indigo-500 transition disabled:opacity-50"
-                >
-                  {companiesList.length === 0 ? (
-                    <option value="">Sin empresas</option>
-                  ) : (
-                    companiesList.map((c, idx) => (
-                      <option key={c.id} value={idx}>{c.company_name}</option>
-                    ))
-                  )}
-                </select>
-              </div>
-
-              <div className="flex flex-col justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{t.lblSelectClient}</label>
-                <select 
-                  onChange={(e) => {
-                    const cli = clientsList[Number(e.target.value)];
-                    if (cli) handleSelectClient(cli);
-                  }}
-                  disabled={clientsList.length === 0}
-                  className="w-full bg-white text-slate-800 font-semibold text-xs rounded border border-slate-300 p-2 outline-none cursor-pointer focus:border-indigo-500 transition disabled:opacity-50"
-                >
-                  {clientsList.length === 0 ? (
-                    <option value="">Sin clientes</option>
-                  ) : (
-                    <>
-                      <option value="">-- Seleccionar --</option>
-                      {clientsList.map((c, idx) => (
-                        <option key={c.id} value={idx}>{c.name}</option>
-                      ))}
-                    </>
-                  )}
-                </select>
-              </div>
-
-              <div className="flex flex-col justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{t.lblSelectBank}</label>
-                <select 
-                  onChange={(e) => {
-                    const account = bankAccountsList[Number(e.target.value)];
-                    if (account) setBankData(account);
-                  }}
-                  className="w-full bg-white text-slate-800 font-semibold text-xs rounded border border-slate-300 p-2 outline-none cursor-pointer focus:border-indigo-500 transition"
-                >
-                  {bankAccountsList.map((b, idx) => (
-                    <option key={idx} value={idx}>{b.alias || b.banco}</option>
-                  ))}
-                </select>
-              </div>
-
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-slate-100">
-              <div className="flex items-center gap-2 flex-1">
-                <span className="text-xs font-bold text-slate-500 shrink-0">{t.catalogLabel}</span>
-                <select 
-                  value={selectedCatalogIdx}
-                  onChange={(e) => setSelectedCatalogIdx(Number(e.target.value))}
-                  className="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg p-2 outline-none font-medium focus:border-indigo-500 transition"
-                >
-                  {fullCatalog.map((item, idx) => (
-                    <option key={idx} value={idx}>
-                      {(lang === 'es' ? item.es : item.en)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex gap-2 shrink-0">
-                <button 
-                  onClick={addItemFromCatalog} 
-                  className="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-900 text-white font-semibold px-4 py-2 rounded-lg text-xs transition text-center shadow-sm"
-                >
-                  {t.btnCatalog}
-                </button>
-                <button 
-                  onClick={addBlankItem} 
-                  className="flex-1 sm:flex-none bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-4 py-2 rounded-lg text-xs border border-slate-300 transition text-center"
-                >
-                  {t.btnBlank}
-                </button>
+                <div className="flex flex-col justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{t.lblSelectCompany}</label>
+                  <select onChange={(e) => { const comp = companiesList[Number(e.target.value)]; if (comp) applyCompany(comp); }} disabled={companiesList.length === 0} className="w-full bg-white text-slate-800 font-semibold text-xs rounded border border-slate-300 p-2 outline-none cursor-pointer">
+                    {companiesList.length === 0 ? <option value="">Sin empresas</option> : companiesList.map((c, idx) => <option key={c.id} value={idx}>{c.company_name}</option>)}
+                  </select>
+                </div>
+                <div className="flex flex-col justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{t.lblSelectClient}</label>
+                  <select onChange={(e) => { const cli = clientsList[Number(e.target.value)]; if (cli) handleSelectClient(cli); }} disabled={clientsList.length === 0} className="w-full bg-white text-slate-800 font-semibold text-xs rounded border border-slate-300 p-2 outline-none cursor-pointer">
+                    {clientsList.length === 0 ? <option value="">Sin clientes</option> : <><option value="">-- Seleccionar --</option>{clientsList.map((c, idx) => <option key={c.id} value={idx}>{c.name}</option>)}</>}
+                  </select>
+                </div>
+                <div className="flex flex-col justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{t.lblSelectBank}</label>
+                  <select onChange={(e) => { const account = bankAccountsList[Number(e.target.value)]; if (account) setBankData(account); }} className="w-full bg-white text-slate-800 font-semibold text-xs rounded border border-slate-300 p-2 outline-none cursor-pointer">
+                    {bankAccountsList.map((b, idx) => <option key={idx} value={idx}>{b.alias || b.banco}</option>)}
+                  </select>
+                </div>
               </div>
             </div>
+          )}
 
-          </div>
-
-          {/* DOCUMENTO COTIZACIÓN */}
+          {/* DOCUMENTO COTIZACIÓN (Modo Limpio / Lectura si es compartido con cliente) */}
           <div id="quote-document" className={getContainerStyle()}>
             
-            {subscriptionStatus === 'free' && (
+            {subscriptionStatus === 'free' && !isSharedView && (
               <div className="absolute inset-0 pointer-events-none select-none z-0 no-print overflow-hidden opacity-15">
-                <div 
-                  className="w-[220%] h-[220%] -translate-x-1/4 -translate-y-1/4 -rotate-12 flex flex-wrap gap-x-4 gap-y-2 items-center justify-center p-2"
-                >
+                <div className="w-[220%] h-[220%] -translate-x-1/4 -translate-y-1/4 -rotate-12 flex flex-wrap gap-x-4 gap-y-2 items-center justify-center p-2">
                   {Array.from({ length: 160 }).map((_, i) => (
-                    <span key={i} className="text-slate-900 font-black text-[10px] sm:text-xs tracking-tight uppercase leading-none">
-                      VERSIÓN FREE
-                    </span>
+                    <span key={i} className="text-slate-900 font-black text-[10px] sm:text-xs tracking-tight uppercase leading-none">VERSIÓN FREE</span>
                   ))}
                 </div>
               </div>
@@ -1335,22 +1187,27 @@ export default function Home() {
             <div className="relative z-10">
               <div className={`flex flex-col md:flex-row justify-between items-start border-b border-slate-200 gap-4 ${templateStyle === 'compact' ? 'pb-1' : 'pb-3'}`}>
                 
-                {/* LOGOTIPO MÁS GRANDE */}
+                {/* LOGOTIPO */}
                 <div className="w-full md:w-1/2 flex justify-start">
-                  <div className={`relative bg-transparent rounded-lg flex items-center justify-center cursor-pointer overflow-hidden ${templateStyle === 'compact' ? 'h-16 w-36' : 'h-28 w-60'}`}>
+                  <div className={`relative bg-transparent rounded-lg flex items-center justify-center overflow-hidden ${templateStyle === 'compact' ? 'h-16 w-36' : 'h-28 w-60'}`}>
                     {logo ? (
                       <img src={logo} alt="Logo" className="h-full object-contain" />
                     ) : (
                       <span className="text-[11px] font-semibold text-slate-500 text-center px-2 no-print">{t.logoPrompt}</span>
                     )}
-                    <input type="file" accept="image/*" onChange={handleLogoUpload} className="absolute inset-0 opacity-0 cursor-pointer no-print" />
+                    {!isSharedView && <input type="file" accept="image/*" onChange={handleLogoUpload} className="absolute inset-0 opacity-0 cursor-pointer no-print" />}
                   </div>
                 </div>
 
                 <div className="w-full md:w-1/2 text-left md:text-right flex flex-col items-start md:items-end space-y-0.5">
-                  <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className={`font-extrabold text-slate-900 w-full text-left md:text-right bg-transparent outline-none leading-none tracking-tight mb-0.5 ${templateStyle === 'compact' ? 'text-base' : 'text-xl'}`} />
+                  {isSharedView ? (
+                    <div className={`font-extrabold text-slate-900 w-full text-left md:text-right leading-none tracking-tight mb-0.5 ${templateStyle === 'compact' ? 'text-base' : 'text-xl'}`}>{companyName}</div>
+                  ) : (
+                    <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className={`font-extrabold text-slate-900 w-full text-left md:text-right bg-transparent outline-none leading-none tracking-tight mb-0.5 ${templateStyle === 'compact' ? 'text-base' : 'text-xl'}`} />
+                  )}
                   
                   {companyTagline && (
+                    isSharedView ? <div className="text-xs text-slate-500 w-full text-left md:text-right leading-none mb-0.5">{companyTagline}</div> :
                     <input value={companyTagline} onChange={(e) => setCompanyTagline(e.target.value)} className="text-xs text-slate-500 w-full text-left md:text-right bg-transparent outline-none leading-none mb-0.5" />
                   )}
 
@@ -1360,7 +1217,8 @@ export default function Home() {
                     {cityStateText && <p>{cityStateText}</p>}
                     {companyPostalCode && <p>C.P. {companyPostalCode}</p>}
                     {companyPhone && <p><strong>Tel:</strong> {companyPhone}</p>}
-                    <input value={companyEmail} onChange={(e) => setCompanyEmail(e.target.value)} className="text-xs text-slate-500 w-full text-left md:text-right bg-transparent outline-none leading-tight" />
+                    {isSharedView ? <div className="text-xs text-slate-500 w-full text-left md:text-right leading-tight">{companyEmail}</div> :
+                    <input value={companyEmail} onChange={(e) => setCompanyEmail(e.target.value)} className="text-xs text-slate-500 w-full text-left md:text-right bg-transparent outline-none leading-tight" />}
                   </div>
                 </div>
               </div>
@@ -1370,12 +1228,14 @@ export default function Home() {
               }`}>
                 <div>
                   <span className="font-bold text-slate-700 text-xs uppercase block mb-0.5">{t.quotedTo}</span>
-                  <input value={clientName} onChange={(e) => setClientName(e.target.value)} className={`font-semibold text-slate-800 w-full bg-transparent outline-none ${templateStyle === 'compact' ? 'text-xs' : 'text-sm md:text-base'}`} />
+                  {isSharedView ? <div className={`font-semibold text-slate-800 w-full ${templateStyle === 'compact' ? 'text-xs' : 'text-sm md:text-base'}`}>{clientName}</div> :
+                  <input value={clientName} onChange={(e) => setClientName(e.target.value)} className={`font-semibold text-slate-800 w-full bg-transparent outline-none ${templateStyle === 'compact' ? 'text-xs' : 'text-sm md:text-base'}`} />}
                 </div>
                 <div className="md:text-right space-y-1 text-xs text-slate-600">
                   <p className="flex items-center justify-start md:justify-end gap-1">
                     <strong>{t.folio}</strong> 
-                    <input value={folio} onChange={(e) => setFolio(e.target.value)} className="w-32 text-left md:text-right bg-transparent outline-none font-semibold text-slate-800" />
+                    {isSharedView ? <span className="font-semibold text-slate-800 ml-1">{folio}</span> :
+                    <input value={folio} onChange={(e) => setFolio(e.target.value)} className="w-32 text-left md:text-right bg-transparent outline-none font-semibold text-slate-800" />}
                   </p>
                 </div>
               </div>
@@ -1395,83 +1255,43 @@ export default function Home() {
                     const p = typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0;
 
                     return (
-                      <div 
-                        key={idx} 
-                        className={`bg-slate-50 sm:bg-transparent p-2.5 sm:p-0 rounded-xl sm:rounded-none border sm:border-none border-slate-200 grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-0 items-center hover:bg-slate-50/80 transition ${
-                          templateStyle === 'compact' ? 'py-1' : 'py-1.5'
-                        }`}
-                      >
+                      <div key={idx} className={`bg-slate-50 sm:bg-transparent p-2.5 sm:p-0 rounded-xl sm:rounded-none border sm:border-none border-slate-200 grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-0 items-center hover:bg-slate-50/80 transition ${templateStyle === 'compact' ? 'py-1' : 'py-1.5'}`}>
                         <div className="sm:col-span-2 sm:px-1 sm:text-center">
                           <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thQty}</label>
-                          <input 
-                            type="number" 
-                            value={item.qty} 
-                            onFocus={() => updateItem(idx, 'qty', '')}
-                            onBlur={() => {
-                              if (item.qty === '') updateItem(idx, 'qty', 0);
-                            }}
-                            onChange={(e) => updateItem(idx, 'qty', e.target.value)} 
-                            className={`w-full sm:w-16 text-center bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 font-semibold outline-none focus:bg-indigo-50/50 mx-auto ${
-                              templateStyle === 'compact' ? 'text-xs' : 'text-sm'
-                            }`} 
-                          />
+                          {isSharedView ? <span className={`font-semibold text-slate-800 block sm:text-center ${templateStyle === 'compact' ? 'text-xs' : 'text-sm'}`}>{item.qty}</span> :
+                          <input type="number" value={item.qty} onFocus={() => updateItem(idx, 'qty', '')} onBlur={() => { if (item.qty === '') updateItem(idx, 'qty', 0); }} onChange={(e) => updateItem(idx, 'qty', e.target.value)} className={`w-full sm:w-16 text-center bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 font-semibold outline-none mx-auto ${templateStyle === 'compact' ? 'text-xs' : 'text-sm'}`} />}
                         </div>
 
                         <div className="sm:col-span-2 sm:px-1 sm:text-center">
                           <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thUnit}</label>
-                          <select 
-                            value={item.unit || 'pieza'} 
-                            onChange={(e) => updateItem(idx, 'unit', e.target.value)}
-                            className="w-full bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 text-xs font-semibold text-slate-700 cursor-pointer outline-none focus:bg-indigo-50/50"
-                          >
-                            {unitOptions.map((u, uIdx) => (
-                              <option key={uIdx} value={u.value}>{u.label}</option>
-                            ))}
-                          </select>
+                          {isSharedView ? <span className="text-xs font-semibold text-slate-700 block sm:text-center">{item.unit || 'pieza'}</span> :
+                          <select value={item.unit || 'pieza'} onChange={(e) => updateItem(idx, 'unit', e.target.value)} className="w-full bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 text-xs font-semibold text-slate-700 cursor-pointer outline-none">
+                            {unitOptions.map((u, uIdx) => <option key={uIdx} value={u.value}>{u.label}</option>)}
+                          </select>}
                         </div>
 
                         <div className="sm:col-span-4 sm:px-2 py-1">
                           <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thConcept}</label>
-                          <textarea 
-                            value={lang === 'es' ? item.description_es : item.description_en} 
-                            onChange={(e) => updateItem(idx, 'description', e.target.value)}
-                            placeholder="Escribe un concepto..."
-                            rows={2}
-                            className={`w-full bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 font-medium outline-none focus:border-indigo-500 resize-none ${
-                              templateStyle === 'compact' ? 'text-xs' : 'text-sm'
-                            }`}
-                          />
+                          {isSharedView ? <div className={`font-medium text-slate-800 whitespace-pre-wrap ${templateStyle === 'compact' ? 'text-xs' : 'text-sm'}`}>{lang === 'es' ? item.description_es : item.description_en}</div> :
+                          <textarea value={lang === 'es' ? item.description_es : item.description_en} onChange={(e) => updateItem(idx, 'description', e.target.value)} placeholder="Escribe un concepto..." rows={2} className={`w-full bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 font-medium outline-none resize-none ${templateStyle === 'compact' ? 'text-xs' : 'text-sm'}`} />}
                         </div>
 
                         <div className="sm:col-span-2 sm:px-2 sm:text-right">
                           <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thPrice}</label>
-                          <input 
-                            type="number" 
-                            value={item.price} 
-                            onFocus={() => updateItem(idx, 'price', '')}
-                            onBlur={() => {
-                              if (item.price === '') updateItem(idx, 'price', 0);
-                            }}
-                            onChange={(e) => updateItem(idx, 'price', e.target.value)} 
-                            className={`w-full sm:w-20 text-right bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 font-semibold outline-none focus:bg-indigo-50/50 ml-auto ${
-                              templateStyle === 'compact' ? 'text-xs' : 'text-sm'
-                            }`} 
-                            placeholder="0.00" 
-                          />
+                          {isSharedView ? <span className={`font-semibold text-slate-800 block sm:text-right ${templateStyle === 'compact' ? 'text-xs' : 'text-sm'}`}>${Number(item.price || 0).toFixed(2)}</span> :
+                          <input type="number" value={item.price} onFocus={() => updateItem(idx, 'price', '')} onBlur={() => { if (item.price === '') updateItem(idx, 'price', 0); }} onChange={(e) => updateItem(idx, 'price', e.target.value)} className={`w-full sm:w-20 text-right bg-white sm:bg-transparent border sm:border-none border-slate-200 rounded p-1.5 sm:p-0 font-semibold outline-none ml-auto ${templateStyle === 'compact' ? 'text-xs' : 'text-sm'}`} placeholder="0.00" />}
                         </div>
 
                         <div className="sm:col-span-2 sm:px-2 text-right">
                           <label className="text-[10px] font-bold text-slate-400 uppercase sm:hidden block mb-0.5">{t.thAmount}</label>
-                          <span className={`font-bold text-slate-800 block pt-1 sm:pt-0 ${templateStyle === 'compact' ? 'text-xs' : 'text-sm'}`}>
-                            ${(q * p).toFixed(2)}
-                          </span>
+                          <span className={`font-bold text-slate-800 block pt-1 sm:pt-0 ${templateStyle === 'compact' ? 'text-xs' : 'text-sm'}`}>${(q * p).toFixed(2)}</span>
                         </div>
 
-                        <div className="sm:col-span-12 text-right mt-1 no-print flex justify-end">
-                          <button onClick={() => removeItem(idx)} className="text-rose-500 hover:text-rose-700 font-bold text-xs bg-rose-50 sm:bg-transparent px-2 py-0.5 rounded">
-                            Eliminar ✕
-                          </button>
-                        </div>
+                        {!isSharedView && (
+                          <div className="sm:col-span-12 text-right mt-1 no-print flex justify-end">
+                            <button onClick={() => removeItem(idx)} className="text-rose-500 hover:text-rose-700 font-bold text-xs bg-rose-50 sm:bg-transparent px-2 py-0.5 rounded">Eliminar ✕</button>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -1480,7 +1300,6 @@ export default function Home() {
 
               <div className={`flex justify-end border-t border-slate-200 ${templateStyle === 'compact' ? 'mt-2 pt-1' : 'mt-4 pt-3'}`}>
                 <div className="w-full md:w-96 space-y-2 text-sm">
-                  
                   <div className="flex justify-between items-center text-slate-600">
                     <span>{t.subtotal}</span>
                     <span className="font-semibold">${subtotal.toFixed(2)} {currency}</span>
@@ -1489,24 +1308,13 @@ export default function Home() {
                   <div className="flex justify-between items-center text-slate-600">
                     <span className="flex items-center gap-1">
                       {t.discount}
+                      {isSharedView ? <span className="font-bold text-slate-800 text-xs ml-1">{discount}%</span> :
                       <div className="flex items-center border border-slate-300 rounded bg-white px-1 py-0.5 no-print">
-                        <input 
-                          type="number" 
-                          min="0" 
-                          max="100"
-                          step="1"
-                          value={discount} 
-                          onFocus={() => { if (discount === 0 || discount === '0') setDiscount(''); }}
-                          onBlur={() => { if (discount === '') setDiscount(0); }}
-                          onChange={(e) => setDiscount(e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))}
-                          className="w-10 text-center font-bold text-xs text-slate-800 outline-none"
-                        />
+                        <input type="number" min="0" max="100" step="1" value={discount} onFocus={() => { if (discount === 0 || discount === '0') setDiscount(''); }} onBlur={() => { if (discount === '') setDiscount(0); }} onChange={(e) => setDiscount(e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))} className="w-10 text-center font-bold text-xs text-slate-800 outline-none" />
                         <span className="text-[10px] font-bold text-slate-400">%</span>
-                      </div>
+                      </div>}
                     </span>
-                    <span className="font-semibold text-rose-600">
-                      -{discountAmount > 0 ? `$${discountAmount.toFixed(2)}` : '$0.00'} {currency}
-                    </span>
+                    <span className="font-semibold text-rose-600">-{discountAmount > 0 ? `$${discountAmount.toFixed(2)}` : '$0.00'} {currency}</span>
                   </div>
 
                   <div className="flex justify-between items-center text-slate-600">
@@ -1516,53 +1324,32 @@ export default function Home() {
 
                   <div className="flex justify-between items-center text-base font-bold text-slate-900 border-t border-slate-200 pt-1.5">
                     <span>{t.total}</span>
-                    <span className="text-indigo-600">
-                      ${total.toFixed(2)} {currency}
-                    </span>
+                    <span className="text-indigo-600">${total.toFixed(2)} {currency}</span>
                   </div>
 
                   <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-2.5 space-y-1.5 mt-2 print:bg-transparent print:border-slate-300">
                     <div className="flex justify-between items-center">
                       <span className="flex items-center gap-1 font-bold text-amber-900 text-xs">
                         {t.advancePercent} ({numAdvance}%):
+                        {isSharedView ? <span className="font-bold text-amber-900 text-xs ml-1">{numAdvance}%</span> :
                         <div className="flex items-center border border-amber-300 rounded bg-white px-1 py-0.5 no-print">
-                          <input 
-                            type="number" 
-                            min="0" 
-                            max="100"
-                            step="1"
-                            value={advanceRate} 
-                            onFocus={() => { if (advanceRate === 0 || advanceRate === '0') setAdvanceRate(''); }}
-                            onBlur={() => { if (advanceRate === '') setAdvanceRate(0); }}
-                            onChange={(e) => setAdvanceRate(e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))}
-                            className="w-12 text-center font-bold text-xs text-amber-900 outline-none"
-                          />
+                          <input type="number" min="0" max="100" step="1" value={advanceRate} onFocus={() => { if (advanceRate === 0 || advanceRate === '0') setAdvanceRate(''); }} onBlur={() => { if (advanceRate === '') setAdvanceRate(0); }} onChange={(e) => setAdvanceRate(e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))} className="w-12 text-center font-bold text-xs text-amber-900 outline-none" />
                           <span className="text-[10px] font-bold text-amber-600">%</span>
-                        </div>
+                        </div>}
                       </span>
-                      <span className="font-extrabold text-amber-900 text-sm">
-                        ${advanceAmount.toFixed(2)} {currency}
-                      </span>
+                      <span className="font-extrabold text-amber-900 text-sm">${advanceAmount.toFixed(2)} {currency}</span>
                     </div>
 
                     <div className="pt-1 border-t border-amber-200/60">
-                      <textarea
-                        value={advanceCustomNote}
-                        onChange={(e) => setAdvanceCustomNote(e.target.value)}
-                        rows={2}
-                        className="w-full bg-transparent text-[11px] text-amber-950 italic outline-none resize-none leading-tight font-medium"
-                        placeholder="Escribe la leyenda o condición de anticipo..."
-                      />
+                      {isSharedView ? <div className="text-[11px] text-amber-950 italic font-medium leading-tight">{advanceCustomNote}</div> :
+                      <textarea value={advanceCustomNote} onChange={(e) => setAdvanceCustomNote(e.target.value)} rows={2} className="w-full bg-transparent text-[11px] text-amber-950 italic outline-none resize-none leading-tight font-medium" placeholder="Escribe la leyenda o condición de anticipo..." />}
                     </div>
                   </div>
-
                 </div>
               </div>
 
               {showBankDetails && (
-                <div className={`bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-2 print:bg-transparent print:border-slate-300 ${
-                  templateStyle === 'compact' ? 'mt-2 p-2 space-y-1' : 'mt-4 p-3.5 space-y-2'
-                }`}>
+                <div className={`bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-2 print:bg-transparent print:border-slate-300 ${templateStyle === 'compact' ? 'mt-2 p-2 space-y-1' : 'mt-4 p-3.5 space-y-2'}`}>
                   <p className="font-bold text-slate-800 text-sm">{t.bankHeader}</p>
                   <div className="flex flex-col space-y-1.5 text-slate-700 max-w-md">
                     <div className="grid grid-cols-[120px_1fr] sm:grid-cols-[140px_1fr] items-center">
@@ -1596,511 +1383,27 @@ export default function Home() {
             </div>
           </div>
 
+          {/* Botón flotante para imprimir o descargar PDF cuando el cliente abre el enlace */}
+          {isSharedView && (
+            <div className="no-print flex justify-center pb-8">
+              <button onClick={handlePrintPdf} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-3 rounded-xl shadow-lg text-sm transition">
+                🖨️ Imprimir / Guardar como PDF
+              </button>
+            </div>
+          )}
+
         </div>
 
         <footer className="no-print mt-12 pt-6 border-t border-slate-300/80 text-center text-xs text-slate-500 space-y-2 w-full max-w-5xl mx-auto">
           <div className="flex justify-center items-center gap-4 font-semibold text-slate-600">
-            <Link href="/terminos" className="hover:text-slate-900 hover:underline transition">
-              {t.footerTerms}
-            </Link>
+            <Link href="/terminos" className="hover:text-slate-900 hover:underline transition">{t.footerTerms}</Link>
             <span>•</span>
-            <Link href="/privacidad" className="hover:text-slate-900 hover:underline transition">
-              {t.footerPrivacy}
-            </Link>
+            <Link href="/privacidad" className="hover:text-slate-900 hover:underline transition">{t.footerPrivacy}</Link>
           </div>
-          <p className="text-[11px] text-slate-400 max-w-2xl mx-auto leading-relaxed">
-            {t.footerLegalNotice}
-          </p>
-          <p className="text-[11px] text-slate-400">
-            © {new Date().getFullYear()} {t.appTitle}. Todos los derechos reservados.
-          </p>
+          <p className="text-[11px] text-slate-400 max-w-2xl mx-auto leading-relaxed">{t.footerLegalNotice}</p>
+          <p className="text-[11px] text-slate-400">© {new Date().getFullYear()} {t.appTitle}. Todos los derechos reservados.</p>
         </footer>
       </main>
-
-      {isSettingsOpen && (
-        <div className="no-print fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-5 max-h-[85vh] flex flex-col">
-            <div className="flex justify-between items-center border-b pb-3">
-              <h3 className="font-bold text-slate-800 text-lg">{t.settingsModalTitle}</h3>
-              <button onClick={() => setIsSettingsOpen(false)} className="text-slate-400 font-bold text-xl">✕</button>
-            </div>
-
-            <div className="space-y-4 overflow-y-auto flex-1 pr-1">
-              <div>
-                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block mb-2">
-                  Plantillas / Temas de Diseño para el Documento y PDF:
-                </label>
-                <div className="grid grid-cols-1 gap-3">
-                  
-                  <div 
-                    onClick={() => setTemplateStyle('classic')} 
-                    className={`p-4 rounded-xl border-2 cursor-pointer transition flex items-center justify-between ${
-                      templateStyle === 'classic' 
-                        ? 'border-indigo-600 bg-indigo-50/50 ring-2 ring-indigo-500/20' 
-                        : 'border-slate-200 hover:border-slate-300 bg-white'
-                    }`}
-                  >
-                    <div>
-                      <strong className="text-sm font-bold text-slate-800 block">Corporativo / Clásico</strong>
-                      <span className="text-xs text-slate-500 block">Diseño tradicional con formato amplio y detalles neutros ejecutivos.</span>
-                    </div>
-                    {templateStyle === 'classic' && <span className="text-indigo-600 font-bold text-lg">✓</span>}
-                  </div>
-
-                  <div 
-                    onClick={() => setTemplateStyle('compact')} 
-                    className={`p-4 rounded-xl border-2 cursor-pointer transition flex items-center justify-between ${
-                      templateStyle === 'compact' 
-                        ? 'border-indigo-600 bg-indigo-50/50 ring-2 ring-indigo-500/20' 
-                        : 'border-slate-200 hover:border-slate-300 bg-white'
-                    }`}
-                  >
-                    <div>
-                      <strong className="text-sm font-bold text-slate-800 block">Compacto</strong>
-                      <span className="text-xs text-slate-500 block">Fuentes densas y márgenes mínimos ideales para cotizaciones cortas de una sola página.</span>
-                    </div>
-                    {templateStyle === 'compact' && <span className="text-indigo-600 font-bold text-lg">✓</span>}
-                  </div>
-
-                </div>
-              </div>
-
-              <div className="pt-3 border-t border-slate-200">
-                <label className="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-200 hover:bg-slate-100 transition">
-                  <input 
-                    type="checkbox" 
-                    checked={showBankDetails} 
-                    onChange={(e) => setShowBankDetails(e.target.checked)}
-                    className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                  />
-                  <span>{t.showBankToggle}</span>
-                </label>
-              </div>
-
-            </div>
-
-            <div className="flex justify-end border-t pt-3">
-              <button onClick={() => setIsSettingsOpen(false)} className="bg-slate-800 text-white hover:bg-slate-900 font-semibold text-xs px-5 py-2.5 rounded-lg transition">
-                {t.btnCloseModal}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isBanksModalOpen && (
-        <div className="no-print fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-6 space-y-4 max-h-[85vh] flex flex-col">
-            <div className="flex justify-between items-center border-b pb-3">
-              <h3 className="font-bold text-slate-800 text-lg">{t.bankModalTitle}</h3>
-              <button onClick={() => setIsBanksModalOpen(false)} className="text-slate-400 font-bold text-xl">✕</button>
-            </div>
-
-            <div className="bg-slate-100 p-3 rounded-xl border border-slate-300 space-y-2 text-xs">
-              <div className="flex justify-between items-center">
-                <span className="font-bold text-slate-900 block">
-                  {editingBankIndex !== null ? "Editar Cuenta Bancaria:" : "Registrar Nueva Cuenta Bancaria:"}
-                </span>
-                {editingBankIndex !== null && (
-                  <button onClick={resetBankForm} className="text-xs text-slate-600 hover:underline font-semibold">
-                    Cancelar edición
-                  </button>
-                )}
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <input placeholder="Alias (Ej: BBVA Empresa) *" value={bankForm.alias} onChange={(e) => setBankForm({ ...bankForm, alias: e.target.value })} className="border p-2 rounded bg-white" />
-                <input placeholder="Banco (Ej: BBVA México) *" value={bankForm.banco} onChange={(e) => setBankForm({ ...bankForm, banco: e.target.value })} className="border p-2 rounded bg-white" />
-                <input placeholder="Nombre / Beneficiario" value={bankForm.nombre} onChange={(e) => setBankForm({ ...bankForm, nombre: e.target.value })} className="border p-2 rounded bg-white" />
-                <input placeholder="RFC / Tax ID" value={bankForm.rfc} onChange={(e) => setBankForm({ ...bankForm, rfc: e.target.value })} className="border p-2 rounded bg-white" />
-                <input placeholder="Número de Cuenta *" value={bankForm.cuenta} onChange={(e) => setBankForm({ ...bankForm, cuenta: e.target.value })} className="border p-2 rounded bg-white" />
-                <input placeholder="CLABE / IBAN" value={bankForm.clabe} onChange={(e) => setBankForm({ ...bankForm, clabe: e.target.value })} className="border p-2 rounded bg-white" />
-              </div>
-              <button 
-                onClick={handleSaveBankAccount} 
-                className="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded text-xs transition"
-              >
-                {editingBankIndex !== null ? "Guardar Cambios" : "Guardar Cuenta Bancaria"}
-              </button>
-            </div>
-
-            <div className="overflow-y-auto flex-1 space-y-2 pr-1">
-              <h4 className="text-xs font-bold text-slate-500 uppercase border-b pb-1">Mis Cuentas Registradas:</h4>
-              {bankAccountsList.map((acc, idx) => (
-                <div key={idx} className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border text-xs">
-                  <div>
-                    <strong className="text-slate-800 block text-sm">{acc.alias || acc.banco}</strong>
-                    <span className="text-slate-500">{acc.banco} • Cuenta: {acc.cuenta} {acc.clabe ? `• CLABE: ${acc.clabe}` : ''}</span>
-                  </div>
-                  <div className="flex gap-1">
-                    <button 
-                      onClick={() => handleEditBankClick(idx)} 
-                      className="bg-amber-500 hover:bg-amber-600 text-white font-semibold px-2 py-1 rounded text-xs"
-                    >
-                      Editar
-                    </button>
-                    <button 
-                      onClick={() => { setBankData(acc); setIsBanksModalOpen(false); }} 
-                      className="bg-slate-700 hover:bg-slate-800 text-white font-semibold px-2.5 py-1 rounded text-xs"
-                    >
-                      Usar
-                    </button>
-                    <button onClick={() => handleRemoveBankAccount(idx)} className="text-rose-500 hover:text-rose-700 p-1 font-bold">
-                      ✕
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex justify-end border-t pt-3">
-              <button onClick={() => setIsBanksModalOpen(false)} className="bg-slate-200 text-slate-700 font-semibold text-xs px-4 py-2 rounded-lg">
-                {t.btnCloseModal}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isConceptsModalOpen && (
-        <div className="no-print fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-6 space-y-4 max-h-[85vh] flex flex-col">
-            <div className="flex justify-between items-center border-b pb-3">
-              <div>
-                <h3 className="font-bold text-slate-800 text-lg">{t.modalTitle}</h3>
-                <p className="text-xs text-slate-600 font-semibold">
-                  Personalizados: {customCatalog.length} / 10
-                </p>
-              </div>
-              <button onClick={() => setIsConceptsModalOpen(false)} className="text-slate-400 font-bold text-xl">✕</button>
-            </div>
-
-            <div className="bg-slate-100 p-3 rounded-xl border border-slate-300 space-y-2 text-xs">
-              <span className="font-bold text-slate-900 block">{t.modalAddNew}</span>
-              <input 
-                placeholder="Descripción en Español *" 
-                value={newCustomConcept.es} 
-                onChange={(e) => setNewCustomConcept({ ...newCustomConcept, es: e.target.value })} 
-                className="w-full border p-2 rounded bg-white" 
-              />
-              <input 
-                placeholder="Descripción en Inglés (Opcional)" 
-                value={newCustomConcept.en} 
-                onChange={(e) => setNewCustomConcept({ ...newCustomConcept, en: e.target.value })} 
-                className="w-full border p-2 rounded bg-white" 
-              />
-              <button 
-                onClick={handleAddCustomConcept} 
-                className="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded text-xs transition"
-              >
-                {t.btnSaveCatItem}
-              </button>
-            </div>
-
-            <div className="overflow-y-auto flex-1 space-y-2 pr-1">
-              <h4 className="text-xs font-bold text-slate-500 uppercase border-b pb-1">Tus Conceptos Personalizados:</h4>
-              {customCatalog.length === 0 ? (
-                <p className="text-center text-slate-400 py-4 text-xs">No has agregado conceptos propios. Tendrás los 15 por defecto en el menú desplegable.</p>
-              ) : (
-                customCatalog.map((cat, idx) => (
-                  <div key={idx} className="flex justify-between items-center bg-slate-50 p-2.5 rounded-lg border text-xs">
-                    <div>
-                      <strong className="text-slate-800 block">{cat.es}</strong>
-                      {cat.en !== cat.es && <span className="text-slate-400 italic">{cat.en}</span>}
-                    </div>
-                    <button onClick={() => handleRemoveCustomConcept(idx)} className="text-rose-500 hover:text-rose-700 p-1 font-bold">
-                      ✕
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
-
-            <div className="flex justify-end border-t pt-3">
-              <button onClick={() => setIsConceptsModalOpen(false)} className="bg-slate-200 text-slate-700 font-semibold text-xs px-4 py-2 rounded-lg">
-                {t.btnCloseModal}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isClientsOpen && (
-        <div className="no-print fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 space-y-4 max-h-[85vh] flex flex-col">
-            <div className="flex justify-between items-center border-b pb-3">
-              <h3 className="font-bold text-slate-800 text-lg">{t.clientModalTitle}</h3>
-              <button onClick={() => setIsClientsOpen(false)} className="text-slate-400 font-bold text-xl">✕</button>
-            </div>
-
-            <div className="bg-slate-100 p-3 rounded-xl border border-slate-300 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-              <input placeholder="Nombre / Razón Social *" value={newClient.name} onChange={(e) => setNewClient({ ...newClient, name: e.target.value })} className="border p-2 rounded bg-white" />
-              <input placeholder="RFC / Tax ID" value={newClient.tax_id} onChange={(e) => setNewClient({ ...newClient, tax_id: e.target.value })} className="border p-2 rounded bg-white" />
-              <input placeholder="Correo Electrónico" value={newClient.email} onChange={(e) => setNewClient({ ...newClient, email: e.target.value })} className="border p-2 rounded bg-white" />
-              
-              <div className="flex gap-1">
-                <select 
-                  value={clientCountryCode} 
-                  onChange={(e) => setClientCountryCode(e.target.value)}
-                  className="border p-2 rounded bg-white text-xs font-semibold outline-none cursor-pointer"
-                >
-                  <option value="+52">🇲🇽 +52 (MX)</option>
-                  <option value="+1">🇺🇸 +1 (USA)</option>
-                </select>
-                <input 
-                  placeholder="Teléfono (ej: 6621234567)" 
-                  value={clientLocalPhone} 
-                  onChange={(e) => setClientLocalPhone(e.target.value)} 
-                  className="border p-2 rounded bg-white flex-1" 
-                />
-              </div>
-
-              <button onClick={handleSaveClient} className="col-span-1 sm:col-span-2 bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2 rounded text-xs transition">
-                + Guardar Cliente
-              </button>
-            </div>
-
-            <div className="overflow-y-auto flex-1 space-y-2 pr-1">
-              {clientsList.length === 0 ? (
-                <p className="text-center text-slate-500 py-6 text-xs">{t.noClients}</p>
-              ) : (
-                clientsList.map((cli) => (
-                  <div key={cli.id} className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border text-xs">
-                    <div>
-                      <strong className="text-slate-800 text-sm block">{cli.name}</strong>
-                      <span className="text-slate-500">{cli.tax_id} {cli.phone ? `• Tel: ${cli.phone}` : ''}</span>
-                    </div>
-                    <div className="flex gap-1">
-                      <button onClick={() => handleViewClientHistory(cli)} className="bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1 rounded text-xs font-semibold">
-                        {t.btnClientHistory}
-                      </button>
-                      <button onClick={() => handleSelectClient(cli)} className="bg-slate-700 hover:bg-slate-800 text-white px-2.5 py-1 rounded text-xs font-semibold">
-                        {t.btnSelectClient}
-                      </button>
-                      <button onClick={() => handleDeleteClient(cli.id)} className="bg-rose-100 hover:bg-rose-200 text-rose-700 px-2 py-1 rounded">
-                        ✕
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            <div className="flex justify-end border-t pt-3">
-              <button onClick={() => setIsClientsOpen(false)} className="bg-slate-200 text-slate-700 font-semibold text-xs px-4 py-2 rounded-lg">
-                {t.btnCloseModal}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isClientHistoryOpen && selectedClientForHistory && (
-        <div className="no-print fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 space-y-4 max-h-[85vh] flex flex-col">
-            <div className="flex justify-between items-center border-b pb-3">
-              <div>
-                <h3 className="font-bold text-slate-800 text-lg">{t.clientHistoryTitle}</h3>
-                <p className="text-xs text-slate-600 font-semibold">{selectedClientForHistory.name} {selectedClientForHistory.tax_id ? `(${selectedClientForHistory.tax_id})` : ''}</p>
-              </div>
-              <button onClick={() => setIsClientHistoryOpen(false)} className="text-slate-400 font-bold text-xl">✕</button>
-            </div>
-
-            <div className="bg-slate-100 p-3 rounded-xl border border-slate-300 flex justify-between items-center text-xs text-slate-800">
-              <span><strong>Cotizaciones Registradas:</strong> {clientQuotesList.length}</span>
-              <span><strong>Monto Total Cotizado:</strong> ${clientQuotesList.reduce((acc, q) => acc + (q.total_amount || 0), 0).toFixed(2)} {currency}</span>
-            </div>
-
-            <div className="overflow-y-auto flex-1 space-y-2 pr-1">
-              {clientQuotesList.length === 0 ? (
-                <p className="text-center text-slate-500 py-8 text-xs">{t.noClientHistory}</p>
-              ) : (
-                clientQuotesList.map((q) => (
-                  <div key={q.id} className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border text-xs">
-                    <div>
-                      <strong className="text-slate-800 text-sm block">Folio: {q.folio || "S/F"}</strong>
-                      <span className="text-slate-500">Monto: ${q.total_amount ? q.total_amount.toFixed(2) : '0.00'} • Fecha: {new Date(q.created_at).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex gap-1">
-                      <button onClick={() => loadQuoteFromHistory(q)} className="bg-slate-800 hover:bg-slate-900 text-white px-2.5 py-1 rounded text-xs font-semibold">
-                        {t.btnLoadQuote}
-                      </button>
-                      <button onClick={() => deleteQuoteFromHistory(q.id)} className="bg-rose-100 hover:bg-rose-200 text-rose-700 px-2 py-1 rounded">
-                        ✕
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            <div className="flex justify-end border-t pt-3">
-              <button onClick={() => setIsClientHistoryOpen(false)} className="bg-slate-200 text-slate-700 font-semibold text-xs px-4 py-2 rounded-lg">
-                {t.btnCloseModal}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isCompaniesOpen && (
-        <div className="no-print fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-4 sm:p-6 space-y-4 max-h-[95vh] flex flex-col overflow-y-auto">
-            
-            <div className="flex justify-between items-center border-b pb-3 shrink-0">
-              <div>
-                <h3 className="font-bold text-slate-800 text-base sm:text-lg">{t.companyModalTitle}</h3>
-                <p className="text-xs text-slate-500">Administra tus marcas, datos fiscales y logotipos</p>
-              </div>
-              <button onClick={() => { setIsCompaniesOpen(false); resetCompanyForm(); }} className="text-slate-400 hover:text-slate-600 font-bold text-xl p-1">✕</button>
-            </div>
-
-            <div className="bg-slate-100 p-3 sm:p-4 rounded-xl border border-slate-300 text-xs shrink-0 space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="font-bold text-slate-900 block text-xs uppercase tracking-wide">
-                  {editingCompanyId ? "✏️ Editar Datos de Empresa:" : "➕ Registrar Nueva Empresa:"}
-                </span>
-                {editingCompanyId && (
-                  <button onClick={resetCompanyForm} className="text-slate-600 hover:underline font-semibold text-xs">
-                    Cancelar edición
-                  </button>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
-                <input placeholder="Nombre de la Empresa *" value={newCompany.company_name} onChange={(e) => setNewCompany({ ...newCompany, company_name: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-slate-500" />
-                <input placeholder="Slogan / Giro" value={newCompany.tagline} onChange={(e) => setNewCompany({ ...newCompany, tagline: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-slate-500" />
-                <input placeholder="RFC / Tax ID" value={newCompany.tax_id} onChange={(e) => setNewCompany({ ...newCompany, tax_id: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-slate-500" />
-                <input placeholder="Teléfono" value={newCompany.phone} onChange={(e) => setNewCompany({ ...newCompany, phone: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-slate-500" />
-                <input placeholder="Correo Electrónico" value={newCompany.email} onChange={(e) => setNewCompany({ ...newCompany, email: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-slate-500" />
-                <input placeholder="Código Postal (C.P.)" value={newCompany.postal_code} onChange={(e) => setNewCompany({ ...newCompany, postal_code: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-slate-500" />
-                <input placeholder="Ciudad" value={newCompany.city} onChange={(e) => setNewCompany({ ...newCompany, city: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-slate-500" />
-                <input placeholder="Estado / Provincia" value={newCompany.state} onChange={(e) => setNewCompany({ ...newCompany, state: e.target.value })} className="border p-2 rounded bg-white outline-none focus:border-slate-500" />
-                
-                <div className="border-2 border-dashed border-slate-300 bg-white px-2 py-1.5 rounded text-center cursor-pointer relative hover:bg-slate-50 transition flex items-center justify-center">
-                  {newCompany.logo_url ? (
-                    <div className="flex items-center gap-2">
-                      <img src={newCompany.logo_url} alt="Preview Logo" className="h-6 object-contain" />
-                      <span className="text-emerald-600 font-bold text-[11px]">Logo Listo</span>
-                    </div>
-                  ) : (
-                    <span className="text-slate-500 font-medium text-[11px]">📷 Subir Logo</span>
-                  )}
-                  <input type="file" accept="image/*" onChange={handleCompanyLogoUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
-                </div>
-
-                <input placeholder="Dirección Fiscal / Calle y Número" value={newCompany.address} onChange={(e) => setNewCompany({ ...newCompany, address: e.target.value })} className="col-span-1 sm:col-span-2 md:col-span-3 border p-2 rounded bg-white outline-none focus:border-slate-500" />
-              </div>
-
-              <button onClick={handleSaveCompany} className="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded text-xs transition shadow-sm">
-                {editingCompanyId ? "Guardar Cambios" : "+ Guardar Mi Empresa"}
-              </button>
-            </div>
-
-            <div className="space-y-2 pr-1">
-              <h4 className="text-xs font-bold text-slate-500 uppercase border-b pb-1">Empresas Registradas ({companiesList.length}):</h4>
-              {companiesList.length === 0 ? (
-                <p className="text-center text-slate-500 py-6 text-xs">{t.noCompanies}</p>
-              ) : (
-                companiesList.map((comp) => {
-                  const compLoc = [comp.city, comp.state].filter(Boolean).join(', ');
-                  return (
-                    <div key={comp.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-50 p-3 rounded-xl border border-slate-200 hover:border-slate-400 transition text-xs gap-3">
-                      <div className="flex items-center gap-3">
-                        {comp.logo_url ? (
-                          <img src={comp.logo_url} alt="Logo" className="w-10 h-10 object-contain bg-white rounded border p-1 shrink-0" />
-                        ) : (
-                          <div className="w-10 h-10 bg-slate-200 text-slate-400 font-bold flex items-center justify-center rounded text-xs shrink-0">
-                            LOG
-                          </div>
-                        )}
-                        <div className="space-y-0.5">
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            <strong className="text-slate-800 text-sm">{comp.company_name}</strong>
-                            {comp.tagline && <span className="text-[10px] text-slate-700 font-medium bg-slate-200 px-1.5 py-0.5 rounded">{comp.tagline}</span>}
-                          </div>
-                          <span className="text-slate-500 block text-[11px]">
-                            {comp.tax_id ? `RFC: ${comp.tax_id} • ` : ''}
-                            {comp.phone ? `Tel: ${comp.phone} • ` : ''}
-                            {comp.email || ''}
-                          </span>
-                          {(comp.address || compLoc || comp.postal_code) && (
-                            <span className="text-slate-400 text-[10px] block">
-                              📍 {[comp.address, compLoc, comp.postal_code ? `C.P. ${comp.postal_code}` : ''].filter(Boolean).join(', ')}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex gap-2 w-full sm:w-auto justify-end border-t sm:border-none pt-2 sm:pt-0">
-                        <button onClick={() => handleEditCompanyClick(comp)} className="flex-1 sm:flex-none bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded text-xs font-semibold shadow-sm transition text-center">
-                          Editar
-                        </button>
-                        <button onClick={() => { applyCompany(comp); setIsCompaniesOpen(false); resetCompanyForm(); }} className="flex-1 sm:flex-none bg-slate-700 hover:bg-slate-800 text-white px-3 py-1.5 rounded text-xs font-semibold shadow-sm transition text-center">
-                          {t.btnSelectCompany}
-                        </button>
-                        <button onClick={() => handleDeleteCompany(comp.id)} className="bg-rose-100 hover:bg-rose-200 text-rose-700 px-2.5 py-1.5 rounded font-bold transition">
-                          ✕
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-
-            <div className="flex justify-end border-t pt-3 shrink-0">
-              <button onClick={() => { setIsCompaniesOpen(false); resetCompanyForm(); }} className="bg-slate-200 text-slate-700 font-semibold text-xs px-4 py-2 rounded-lg">
-                {t.btnCloseModal}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isHistoryOpen && (
-        <div className="no-print fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full p-6 space-y-4 max-h-[85vh] flex flex-col">
-            <div className="flex justify-between items-center border-b pb-3">
-              <h3 className="font-bold text-slate-800 text-lg">{t.historyModalTitle}</h3>
-              <button onClick={() => setIsHistoryOpen(false)} className="text-slate-400 font-bold text-xl">✕</button>
-            </div>
-            
-            <div className="overflow-y-auto flex-1 space-y-3 pr-1">
-              {savedQuotes.length === 0 ? (
-                <p className="text-center text-slate-500 py-8 text-sm">{t.noHistory}</p>
-              ) : (
-                savedQuotes.map((q) => (
-                  <div key={q.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-50 p-4 rounded-xl border border-slate-200 hover:border-slate-400 transition gap-3">
-                    <div>
-                      <h4 className="font-bold text-slate-800 text-sm">{q.client_name || "Cliente sin nombre"}</h4>
-                      <div className="flex gap-4 text-xs text-slate-500 mt-1">
-                        <span><strong>Folio:</strong> {q.folio || "S/F"}</span>
-                        <span><strong>Monto:</strong> ${q.total_amount ? q.total_amount.toFixed(2) : '0.00'}</span>
-                        <span><strong>Fecha:</strong> {new Date(q.created_at).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-2 w-full sm:w-auto justify-end">
-                      <button onClick={() => loadQuoteFromHistory(q)} className="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow transition">
-                        {t.btnLoadQuote}
-                      </button>
-                      <button onClick={() => deleteQuoteFromHistory(q.id)} className="bg-rose-100 hover:bg-rose-200 text-rose-700 text-xs font-semibold px-3 py-1.5 rounded-lg transition">
-                        {t.btnDeleteQuote}
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            <div className="flex justify-end border-t pt-3">
-              <button onClick={() => setIsHistoryOpen(false)} className="bg-slate-200 text-slate-700 font-semibold text-xs px-5 py-2 rounded-lg">
-                {t.btnCloseModal}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
     </div>
   );
