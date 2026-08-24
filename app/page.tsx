@@ -890,7 +890,27 @@ export default function Home() {
 
       const pdfBlob = pdf.output('blob');
       const fileName = `cotizacion_${Date.now()}_${folio.replace(/#/g, '')}.pdf`;
+      const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
 
+      // Intento de compartir el archivo PDF real de forma nativa (ideal para celulares con WhatsApp)
+      if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+        try {
+          await navigator.share({
+            title: `Cotización ${folio}`,
+            text: `Hola, te comparto la cotización ${folio} de ${companyName}. Total: $${total.toFixed(2)} ${currency}`,
+            files: [pdfFile],
+          });
+          setIsGeneratingPdf(false);
+          return;
+        } catch (shareErr: any) {
+          if (shareErr.name === 'AbortError') {
+            setIsGeneratingPdf(false);
+            return; // El usuario canceló la acción de compartir
+          }
+        }
+      }
+
+      // Respaldo por enlace web en caso de que el navegador no soporte archivos compartidos directos
       let pdfUrl = "";
 
       try {
