@@ -889,6 +889,9 @@ export default function Home() {
       const quoteId = savedData.id;
       const shareableLink = `${window.location.origin}/?quote=${quoteId}`;
 
+      // Alerta de depuración para confirmar el enlace generado en dispositivos móviles
+      alert("Enlace generado con éxito:\n" + shareableLink);
+
       const cleanPhone = clientPhone.replace(/\D/g, '');
       let text = `COTIZACIÓN DE SERVICIOS\n`;
       text += `Empresa: ${companyName}\n`;
