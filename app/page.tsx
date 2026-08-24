@@ -311,13 +311,19 @@ export default function Home() {
     fetchClients();
     fetchCompanies();
 
-    // Comprobar si se abrió la app mediante un enlace compartido de cotización (?quote=ID)[cite: 2]
-    const params = new URLSearchParams(window.location.search);
-    const quoteId = params.get('quote');
-    if (quoteId) {
-      setIsSharedView(true); // Oculta paneles de edición y menús para el cliente[cite: 2]
-      fetchQuoteById(quoteId);
-    }
+    // Función segura para leer el parámetro ?quote=ID en Next.js con un micro-retardo de hidratación
+    const checkSharedQuote = () => {
+      const params = new URLSearchParams(window.location.search);
+      const quoteId = params.get('quote');
+      if (quoteId) {
+        setIsSharedView(true);
+        fetchQuoteById(quoteId);
+      }
+    };
+
+    checkSharedQuote();
+    const timer = setTimeout(checkSharedQuote, 300);
+    return () => clearTimeout(timer);
   }, []);
 
   const fetchQuoteById = async (id: string) => {
