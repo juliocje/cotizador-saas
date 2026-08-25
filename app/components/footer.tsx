@@ -8,7 +8,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           
-          {/* Columna de Marca con Logotipo Opción 1A (JT Real) */}
+          {/* Columna de Marca con Logotipo Opción 1A Corregido */}
           <div>
             <div className="flex items-center gap-3 mb-3">
               <svg 
@@ -19,9 +19,9 @@ export default function Footer() {
                 {/* Fondo oscuro con borde sutil */}
                 <rect width="100" height="100" rx="22" fill="#0f172a" stroke="#1e293b" strokeWidth="4" />
                 
-                {/* Letra J estilizada */}
+                {/* Letra J geométrica */}
                 <path 
-                  d="M 32 32 H 50 M 41 32 V 58 C 41 68, 54 68, 54 58" 
+                  d="M 35 28 H 50 V 60 C 50 70, 38 70, 32 62" 
                   fill="none" 
                   stroke="#06b6d4" 
                   strokeWidth="7" 
@@ -29,9 +29,9 @@ export default function Footer() {
                   strokeLinejoin="round" 
                 />
                 
-                {/* Letra T estilizada entrelazada */}
+                {/* Letra T geométrica */}
                 <path 
-                  d="M 52 32 H 80 M 66 32 V 68" 
+                  d="M 52 28 H 78 M 65 28 V 70" 
                   fill="none" 
                   stroke="#06b6d4" 
                   strokeWidth="7" 
