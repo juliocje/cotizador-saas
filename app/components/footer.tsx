@@ -18,23 +18,18 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* Columna de Enlaces */}
+          {/* Columna de Estado del Sistema */}
           <div>
             <h4 className="text-white text-sm font-semibold uppercase tracking-wider mb-3">
-              Navegación
+              Estado del Sistema
             </h4>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <a href="/dashboard" className="hover:text-white transition-colors">
-                  Panel de Cotizaciones
-                </a>
-              </li>
-              <li>
-                <a href="/clients" className="hover:text-white transition-colors">
-                  Registro de Clientes
-                </a>
-              </li>
-            </ul>
+            <div className="flex items-center space-x-2 text-sm text-slate-400 mb-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Todos los sistemas operativos</span>
+            </div>
+            <p className="text-xs text-slate-500">
+              Infraestructura y servicios sincronizados sin interrupciones.
+            </p>
           </div>
 
           {/* Columna de Contacto Oficial */}
