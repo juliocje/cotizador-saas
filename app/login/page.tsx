@@ -74,11 +74,19 @@ export default function LoginPage() {
     <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-screen flex items-center justify-center p-4 font-sans">
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 border border-slate-200 space-y-6">
         
-        <div className="text-center space-y-1">
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Cotizador Express Pro</h1>
-          <p className="text-xs text-slate-500 font-medium">
-            {isSignUp ? 'Crea una cuenta nueva' : 'Inicia sesión en tu cuenta'}
-          </p>
+        {/* ENCABEZADO CON LOGOTIPO OFICIAL */}
+        <div className="text-center space-y-3">
+          <img 
+            src="/cotizador-icon.png" 
+            alt="Cotizador Express Logo" 
+            className="w-20 h-20 rounded-2xl object-cover mx-auto shadow-md border border-slate-100"
+          />
+          <div className="space-y-1">
+            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Cotizador Express</h1>
+            <p className="text-xs text-slate-500 font-medium">
+              {isSignUp ? 'Crea una cuenta nueva' : 'Inicia sesión en tu cuenta'}
+            </p>
+          </div>
         </div>
 
         {errorMessage && (
