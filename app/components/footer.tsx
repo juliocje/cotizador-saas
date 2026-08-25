@@ -8,37 +8,14 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           
-          {/* Columna de Marca con Logotipo Opción 1A Corregido */}
+          {/* Columna de Marca con el Nuevo Logotipo */}
           <div>
             <div className="flex items-center gap-3 mb-3">
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                viewBox="0 0 100 100" 
-                className="w-10 h-10 rounded-xl shadow-md flex-shrink-0"
-              >
-                {/* Fondo oscuro con borde sutil */}
-                <rect width="100" height="100" rx="22" fill="#0f172a" stroke="#1e293b" strokeWidth="4" />
-                
-                {/* Letra J geométrica */}
-                <path 
-                  d="M 35 28 H 50 V 60 C 50 70, 38 70, 32 62" 
-                  fill="none" 
-                  stroke="#06b6d4" 
-                  strokeWidth="7" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                />
-                
-                {/* Letra T geométrica */}
-                <path 
-                  d="M 52 28 H 78 M 65 28 V 70" 
-                  fill="none" 
-                  stroke="#06b6d4" 
-                  strokeWidth="7" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                />
-              </svg>
+              <img 
+                src="/jicks-logo.png" 
+                alt="JiCKS Tech Logo" 
+                className="w-10 h-10 rounded-xl object-cover shadow-md border border-slate-800 flex-shrink-0"
+              />
               <div>
                 <h3 className="text-white text-base font-bold tracking-wider">
                   JiCKS <span className="text-cyan-400 font-light">Tech</span>
