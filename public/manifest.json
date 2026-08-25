@@ -9,16 +9,16 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/cotizador-icon-v2.png",
+      "src": "/cotizador-icon.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any"
     },
     {
-      "src": "/cotizador-icon-v2.png",
+      "src": "/cotizador-icon.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any"
     }
   ]
 }
