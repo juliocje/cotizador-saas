@@ -6,8 +6,13 @@ export async function middleware(request: NextRequest) {
     request,
   })
 
-  // Excluir rutas de API para que nunca sean bloqueadas ni redirigidas por el middleware
-  if (request.nextUrl.pathname.startsWith('/api/')) {
+  // Excluir rutas de API y archivos de PWA (manifest.json y sw.js) para que nunca sean bloqueados ni redirigidos
+  const pathname = request.nextUrl.pathname
+  if (
+    pathname.startsWith('/api/') ||
+    pathname === '/manifest.json' ||
+    pathname === '/sw.js'
+  ) {
     return supabaseResponse
   }
 
@@ -37,7 +42,6 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const pathname = request.nextUrl.pathname
   const isLoginPage = pathname.startsWith('/login')
   const isAuthRoute = pathname.startsWith('/auth')
 
@@ -71,8 +75,9 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - manifest.json & sw.js (PWA files)
      * - api (API routes like checkout and webhooks)
      */
-    '/((?!_next/static|_next/image|favicon.ico|api/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|manifest.json|sw.js|api/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
