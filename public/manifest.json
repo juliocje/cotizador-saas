@@ -1,11 +1,12 @@
 {
   "name": "Cotizador Express",
   "short_name": "Cotizador",
-  "description": "Plataforma de gestión de cotizaciones y clientes en la nube",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#06b6d4",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "/cotizador-icon.png",
