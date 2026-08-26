@@ -9,7 +9,7 @@ import AIEnhancedQuoteInput from '@/app/components/AIEnhancedQuoteInput';
 // DICCIONARIO DE TRADUCCIONES
 const translations: Record<string, any> = {
   es: {
-    appTitle: "Cotizador Express Pro",
+    appTitle: "Cotizador Express", // Quitamos el "Pro"
     welcomeUser: "Bienvenido,",
     lblLang: "Idioma",
     lblTax: "Impuesto",
@@ -80,10 +80,10 @@ const translations: Record<string, any> = {
     btnSelectCompany: "Cargar Empresa",
     footerTerms: "Términos y Condiciones",
     footerPrivacy: "Aviso de Privacidad",
-    footerLegalNotice: "Cotizador Express Pro es un software de elaboración de documentos comerciales. Las cotizaciones generadas no constituyen una factura o comprobante fiscal."
+    footerLegalNotice: "Cotizador Express es un software de elaboración de documentos comerciales. Las cotizaciones generadas no constituyen una factura o comprobante fiscal."
   },
   en: {
-    appTitle: "Express Quote Pro",
+    appTitle: "Express Quote", // Quitamos el "Pro"
     welcomeUser: "Welcome,",
     lblLang: "Language",
     lblTax: "Tax Rate",
@@ -154,7 +154,7 @@ const translations: Record<string, any> = {
     btnSelectCompany: "Load Company",
     footerTerms: "Terms & Conditions",
     footerPrivacy: "Privacy Policy",
-    footerLegalNotice: "Express Quote Pro is commercial document creation software. Generated quotes do not constitute an official tax invoice."
+    footerLegalNotice: "Express Quote is commercial document creation software. Generated quotes do not constitute an official tax invoice."
   }
 };
 
@@ -518,7 +518,7 @@ export default function Home() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: 'Suscripción Plan Premium - Cotizador Express Pro',
+          title: 'Suscripción Plan Premium - Cotizador Express',
           price: 99,
           quantity: 1,
           userId: user?.id,
@@ -995,7 +995,11 @@ export default function Home() {
 
       {/* BARRA SUPERIOR FIJA MÓVIL CON BOTÓN DE INSTALAR ESTILIZADO IGUAL AL MENÚ */}
       <div className="no-print md:hidden fixed top-0 left-0 right-0 bg-slate-900 text-white px-4 py-3 flex justify-between items-center shadow-lg z-50 h-14">
-        <h1 className="font-bold text-base tracking-tight">{t.appTitle}</h1>
+        {/* Aquí agregamos el logotipo a un lado del título en móvil */}
+        <div className="flex items-center gap-2">
+          <h1 className="font-bold text-base tracking-tight">{t.appTitle}</h1>
+          <img src="/cotizador-icon2.png" alt="Logo" className="h-5 object-contain drop-shadow-sm" />
+        </div>
         <div className="flex items-center gap-2">
           <button 
             onClick={handleDirectInstall}
@@ -1018,8 +1022,12 @@ export default function Home() {
         ${isMobileMenuOpen ? 'fixed inset-x-0 top-14 bottom-0 flex overflow-y-auto' : 'hidden md:flex'}`}>
         <div className="space-y-4">
           <div className="pb-3 border-b border-slate-800/80 block text-center space-y-1">
-            <h1 className="text-xl font-bold text-white tracking-tight">{t.appTitle}</h1>
-            <p className="text-xs text-amber-400 font-semibold">
+            {/* Aquí agregamos el logotipo a un lado del título en escritorio */}
+            <div className="flex items-center justify-center gap-2">
+              <h1 className="text-xl font-bold text-white tracking-tight">{t.appTitle}</h1>
+              <img src="/cotizador-icon2.png" alt="Logo" className="h-5 object-contain drop-shadow-md" />
+            </div>
+            <p className="text-xs text-amber-400 font-semibold mt-1">
               {t.welcomeUser} <span className="text-white underline">{userName}</span>
             </p>
           </div>
