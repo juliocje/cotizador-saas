@@ -116,7 +116,6 @@ export default function AIEnhancedQuoteInput({ onDataParsed }: AIEnhancedQuoteIn
                 : 'bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700'
             }`}
           >
-            <span>🎤</span>
             <span>{isListening ? "Escuchando..." : "Dictar con voz"}</span>
           </button>
 
