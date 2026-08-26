@@ -96,44 +96,50 @@ export default function AIEnhancedQuoteInput({ onDataParsed }: AIEnhancedQuoteIn
         Haz clic en el micrófono y dicta tu cotización (ej. <span className="text-slate-300 italic">&quot;Cotiza a Juan Pérez 3 escritorios de 3500 pesos&quot;</span>) o escríbela si lo prefieres.
       </p>
       
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-grow flex items-center">
-          <input 
-            type="text"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder={isListening ? "Escuchando... Habla ahora..." : "Presiona el micrófono o escribe aquí..."}
-            className={`w-full bg-slate-950 border rounded-xl px-4 py-3 text-sm text-slate-100 focus:outline-none transition-all ${
-              isListening ? 'border-rose-500 ring-2 ring-rose-500/20 animate-pulse' : 'border-slate-800 focus:border-cyan-500'
-            }`}
-            onKeyDown={(e) => e.key === 'Enter' && handleGenerate()}
-          />
+      <div className="flex flex-col gap-3">
+        {/* Input de texto limpio sin elementos flotantes estorbando */}
+        <input 
+          type="text"
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+          placeholder={isListening ? "Escuchando... Habla ahora..." : "Escribe tu orden o usa el micrófono..."}
+          className={`w-full bg-slate-950 border rounded-xl px-4 py-3 text-sm text-slate-100 focus:outline-none transition-all ${
+            isListening ? 'border-rose-500 ring-2 ring-rose-500/20 animate-pulse' : 'border-slate-800 focus:border-cyan-500'
+          }`}
+          onKeyDown={(e) => e.key === 'Enter' && handleGenerate()}
+        />
+
+        {/* Botones organizados abajo, junto al de generar */}
+        <div className="flex flex-col sm:flex-row gap-2 justify-end">
           <button
             type="button"
             onClick={handleVoiceDictation}
-            title="Dictar con voz"
-            className={`absolute right-3 p-2 rounded-lg transition-all ${
-              isListening ? 'bg-rose-500 text-white animate-bounce' : 'bg-slate-800 hover:bg-slate-700 text-cyan-400'
+            disabled={isListening || loading}
+            className={`px-4 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 ${
+              isListening 
+                ? 'bg-rose-500 text-white animate-pulse' 
+                : 'bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700'
             }`}
           >
-            🎤
+            <span>🎤</span>
+            <span>{isListening ? "Escuchando..." : "Dictar con voz"}</span>
+          </button>
+
+          <button 
+            onClick={handleGenerate}
+            disabled={loading || isListening}
+            className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold px-6 py-2.5 rounded-xl transition-all text-xs sm:text-sm disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <>
+                <span className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
+                Procesando...
+              </>
+            ) : (
+              'Generar con IA'
+            )}
           </button>
         </div>
-
-        <button 
-          onClick={handleGenerate}
-          disabled={loading || isListening}
-          className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold px-6 py-3 rounded-xl transition-all text-sm disabled:opacity-50 flex-shrink-0 flex items-center justify-center gap-2"
-        >
-          {loading ? (
-            <>
-              <span className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
-              Procesando...
-            </>
-          ) : (
-            'Generar con IA'
-          )}
-        </button>
       </div>
     </div>
   );
