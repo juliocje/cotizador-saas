@@ -87,11 +87,6 @@ export default function AIEnhancedQuoteInput({ onDataParsed }: AIEnhancedQuoteIn
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 mb-8 shadow-xl">
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-cyan-400 text-sm font-bold flex items-center gap-1">
-          🎙️ Dictado Mágico por Voz (IA)
-        </span>
-      </div>
       <p className="text-xs sm:text-sm text-slate-400 mb-4">
         Haz clic en el micrófono y dicta tu cotización (ej. <span className="text-slate-300 italic">&quot;Cotiza a Juan Pérez 3 escritorios de 3500 pesos&quot;</span>) o escríbela si lo prefieres.
       </p>
