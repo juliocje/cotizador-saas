@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Footer from "./components/footer";
+import InstallPrompt from "@/components/InstallPrompt";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -33,6 +34,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col bg-slate-950 text-slate-100">
         {children}
         <Footer />
+        
+        {/* Componente flotante de instalación PWA para Android e iOS */}
+        <InstallPrompt />
         
         {/* Script para registrar el Service Worker de la PWA */}
         <script
