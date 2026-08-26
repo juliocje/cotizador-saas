@@ -992,16 +992,15 @@ export default function Home() {
         }
       `}</style>
 
-      {/* BARRA SUPERIOR FIJA MÓVIL CON BOTÓN DE INSTALAR */}
+      {/* BARRA SUPERIOR FIJA MÓVIL CON BOTÓN DE INSTALAR ESTILIZADO IGUAL AL MENÚ */}
       <div className="no-print md:hidden fixed top-0 left-0 right-0 bg-slate-900 text-white px-4 py-3 flex justify-between items-center shadow-lg z-50 h-14">
         <h1 className="font-bold text-base tracking-tight">{t.appTitle}</h1>
         <div className="flex items-center gap-2">
           <button 
             onClick={handleDirectInstall}
-            className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1 shadow-md"
+            className="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg text-sm font-semibold text-white active:bg-slate-700 shadow-sm"
           >
-            <span>📲</span>
-            <span>Instalar</span>
+            Instalar
           </button>
           <button 
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
@@ -1161,10 +1160,9 @@ export default function Home() {
               <span className="text-xs font-semibold text-slate-500">Panel de Control PWA</span>
               <button 
                 onClick={handleDirectInstall}
-                className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow transition"
+                className="bg-slate-800 hover:bg-slate-700 text-white font-semibold px-4 py-2 rounded-xl text-xs shadow-sm border border-slate-700 transition"
               >
-                <span>📲</span>
-                <span>Instalar Aplicación en este Dispositivo</span>
+                Instalar Aplicación en este Dispositivo
               </button>
             </div>
 
