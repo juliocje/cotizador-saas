@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 
 export async function POST(request: Request) {
   try {
@@ -9,38 +9,39 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Falta configurar la GEMINI_API_KEY en Vercel' }, { status: 500 });
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey.trim());
+    // Inicializamos con la nueva SDK oficial
+    const ai = new GoogleGenAI({ apiKey: apiKey.trim() });
     const { prompt } = await request.json();
 
     if (!prompt) {
       return NextResponse.json({ error: 'Falta el texto de la instrucción' }, { status: 400 });
     }
 
-    // Usamos gemini-pro que es compatible con todas las cuentas y llaves
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-pro',
-      systemInstruction: `Eres un asistente experto para un software de cotizaciones. 
-      Tu tarea es analizar la instrucción en lenguaje natural del usuario y extraer la información en un formato JSON estricto con esta estructura exacta:
-      {
-        "clientName": "Nombre del cliente detectado o string vacío si no hay",
-        "items": [
-          {
-            "description": "Descripción clara del producto o servicio",
-            "quantity": 1,
-            "unitPrice": 0.0
-          }
-        ]
+    // Llamada con la nueva SDK y modelo actualizado
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: {
+        systemInstruction: `Eres un asistente experto para un software de cotizaciones. 
+        Tu tarea es analizar la instrucción en lenguaje natural del usuario y extraer la información en un formato JSON estricto con esta estructura exacta:
+        {
+          "clientName": "Nombre del cliente detectado o string vacío si no hay",
+          "items": [
+            {
+              "description": "Descripción clara del producto o servicio",
+              "quantity": 1,
+              "unitPrice": 0.0
+            }
+          ]
+        }
+        Si no se especifica precio unitario, pon 0. Si no se especifica cantidad, pon 1. Responde ÚNICAMENTE con el JSON válido, sin texto adicional.`,
+        responseMimeType: 'application/json',
       }
-      Si no se especifica precio unitario, pon 0. Si no se especifica cantidad, pon 1. Responde ÚNICAMENTE con el JSON válido, sin texto adicional.`,
     });
 
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-    });
-
-    const responseText = result.response.text();
+    const responseText = response.text || '{}';
     const cleanText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
-    const resultJson = JSON.parse(cleanText || '{}');
+    const resultJson = JSON.parse(cleanText);
 
     return NextResponse.json({ success: true, data: resultJson });
   } catch (error: any) {
