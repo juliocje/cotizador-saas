@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import InstallButton from './components/InstallButton';
 
 // DICCIONARIO DE TRADUCCIONES
 const translations: Record<string, any> = {
@@ -231,6 +230,9 @@ export default function Home() {
   const [subscriptionEndDate, setSubscriptionEndDate] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
+  // Estado para PWA Install Prompt
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
   const [companyName, setCompanyName] = useState<string>("Mi Empresa S.A. de C.V.");
   const [companyTagline, setCompanyTagline] = useState<string>("Servicios Profesionales");
   const [companyEmail, setCompanyEmail] = useState<string>("contacto@miempresa.com");
@@ -308,12 +310,42 @@ export default function Home() {
     fetchClients();
     fetchCompanies();
 
+    // Capturar evento de instalación de PWA
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    // Comprobar si se abrió la app mediante un enlace compartido de cotización (?quote=ID)
     const params = new URLSearchParams(window.location.search);
     const quoteId = params.get('quote');
     if (quoteId) {
       fetchQuoteById(quoteId);
     }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
   }, []);
+
+  const handleDirectInstall = async () => {
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    const isIOS = /iphone|ipad|ipod/.test(userAgent);
+
+    if (isIOS) {
+      alert('Para instalar en tu iPhone:\n\n1. Toca el botón de Compartir en la barra de Safari.\n2. Selecciona "Añadir a la pantalla de inicio".');
+      return;
+    }
+
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      setDeferredPrompt(null);
+    } else {
+      alert('Para instalar la aplicación:\n\n1. Toca los tres puntos (⠇) en la esquina superior de tu navegador.\n2. Selecciona "Instalar aplicación" o "Agregar a la pantalla principal".');
+    }
+  };
 
   const fetchQuoteById = async (id: string) => {
     try {
@@ -1093,8 +1125,14 @@ export default function Home() {
         </div>
 
         <div className="pt-4 border-t border-slate-800/80 mt-4 pb-6 md:pb-0 space-y-2">
-          {/* BOTÓN FIJO DE INSTALACIÓN PWA */}
-          <InstallButton />
+          {/* BOTÓN DE INSTALACIÓN DIRECTO */}
+          <button 
+            onClick={handleDirectInstall}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold text-cyan-300 bg-cyan-950/40 hover:bg-cyan-900/60 border border-cyan-500/30 transition-all shadow-md"
+          >
+            <span className="text-base">📲</span>
+            <span>Instalar App</span>
+          </button>
 
           <button 
             onClick={handleLogout} 
@@ -1551,6 +1589,7 @@ export default function Home() {
         </footer>
       </main>
 
+      {/* MODALES */}
       {isSettingsOpen && (
         <div className="no-print fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-5 max-h-[85vh] flex flex-col">
@@ -1565,7 +1604,6 @@ export default function Home() {
                   Plantillas / Temas de Diseño para el Documento y PDF:
                 </label>
                 <div className="grid grid-cols-1 gap-3">
-                  
                   <div 
                     onClick={() => setTemplateStyle('classic')} 
                     className={`p-4 rounded-xl border-2 cursor-pointer transition flex items-center justify-between ${
@@ -1595,7 +1633,6 @@ export default function Home() {
                     </div>
                     {templateStyle === 'compact' && <span className="text-indigo-600 font-bold text-lg">✓</span>}
                   </div>
-
                 </div>
               </div>
 
@@ -1610,7 +1647,6 @@ export default function Home() {
                   <span>{t.showBankToggle}</span>
                 </label>
               </div>
-
             </div>
 
             <div className="flex justify-end border-t pt-3">
