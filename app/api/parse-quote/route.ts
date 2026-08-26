@@ -9,7 +9,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Falta configurar la GEMINI_API_KEY en Vercel' }, { status: 500 });
     }
 
-    // Inicializamos con la nueva SDK oficial
     const ai = new GoogleGenAI({ apiKey: apiKey.trim() });
     const { prompt } = await request.json();
 
@@ -17,9 +16,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Falta el texto de la instrucción' }, { status: 400 });
     }
 
-    // Llamada con la nueva SDK y modelo actualizado
+    // Usamos el modelo que Google indicó explícitamente en el error
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.6-flash',
       contents: prompt,
       config: {
         systemInstruction: `Eres un asistente experto para un software de cotizaciones. 
