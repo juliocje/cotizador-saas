@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import InstallButton from './components/InstallButton';
 
 // DICCIONARIO DE TRADUCCIONES
 const translations: Record<string, any> = {
@@ -307,7 +308,6 @@ export default function Home() {
     fetchClients();
     fetchCompanies();
 
-    // Comprobar si se abrió la app mediante un enlace compartido de cotización (?quote=ID)
     const params = new URLSearchParams(window.location.search);
     const quoteId = params.get('quote');
     if (quoteId) {
@@ -1093,6 +1093,9 @@ export default function Home() {
         </div>
 
         <div className="pt-4 border-t border-slate-800/80 mt-4 pb-6 md:pb-0 space-y-2">
+          {/* BOTÓN FIJO DE INSTALACIÓN PWA */}
+          <InstallButton />
+
           <button 
             onClick={handleLogout} 
             className="w-full flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold px-4 py-2.5 rounded-xl text-xs transition-all duration-200 shadow-md text-center border border-slate-700"
