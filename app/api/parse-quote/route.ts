@@ -16,9 +16,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Falta el texto de la instrucción' }, { status: 400 });
     }
 
-    // Cambiamos al modelo con la etiqueta -latest para asegurar compatibilidad total
+    // Usamos el nombre estándar oficial del modelo
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash-latest',
+      model: 'gemini-1.5-flash',
       systemInstruction: `Eres un asistente experto para un software de cotizaciones. 
       Tu tarea es analizar la instrucción en lenguaje natural del usuario y extraer la información en un formato JSON estricto con esta estructura exacta:
       {
