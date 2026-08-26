@@ -75,11 +75,11 @@ export default function AIEnhancedQuoteInput({ onDataParsed }: AIEnhancedQuoteIn
         onDataParsed(result.data);
         setPrompt('');
       } else {
-        alert('Hubo un error al procesar con IA.');
+        alert('Detalle del error: ' + (result.error || 'Error desconocido'));
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert('Error de conexión con el servidor.');
+      alert('Error de conexión: ' + (err.message || 'No se pudo conectar al servidor'));
     } finally {
       setLoading(false);
     }
