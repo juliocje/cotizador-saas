@@ -6,11 +6,10 @@ export async function POST(request: Request) {
     const apiKey = process.env.GEMINI_API_KEY;
     
     if (!apiKey) {
-      console.error("ERROR CRÍTICO: GEMINI_API_KEY no está definida en las variables de entorno de Vercel.");
       return NextResponse.json({ success: false, error: 'Falta configurar la GEMINI_API_KEY en Vercel' }, { status: 500 });
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
+    const genAI = new GoogleGenerativeAI(apiKey.trim()); // .trim() por si se coló un espacio en blanco
     const { prompt } = await request.json();
 
     if (!prompt) {
@@ -48,6 +47,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, data: resultJson });
   } catch (error: any) {
     console.error('Error detallado al procesar con Gemini:', error);
-    return NextResponse.json({ success: false, error: error.message || 'Error desconocido' }, { status: 500 });
+    // Devolvemos el mensaje de error completo al frontend para verlo en pantalla
+    return NextResponse.json({ 
+      success: false, 
+      error: error.message ? `Google Error: ${error.message}` : 'Error desconocido de red' 
+    }, { status: 500 });
   }
 }
