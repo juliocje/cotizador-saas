@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import AIEnhancedQuoteInput from '@/app/components/AIEnhancedQuoteInput';
 
 // DICCIONARIO DE TRADUCCIONES
 const translations: Record<string, any> = {
@@ -1295,6 +1296,27 @@ export default function Home() {
               </div>
             </div>
 
+          </div>
+
+          {/* COMPONENTE CAJA MÁGICA DE IA */}
+          <div className="no-print">
+            <AIEnhancedQuoteInput 
+              onDataParsed={(parsedData: any) => {
+                if (parsedData.clientName) {
+                  setClientName(parsedData.clientName);
+                }
+                if (parsedData.items && parsedData.items.length > 0) {
+                  const newItems = parsedData.items.map((item: any) => ({
+                    description_es: item.description || '',
+                    description_en: item.description || '',
+                    unit: 'pieza',
+                    qty: item.quantity ?? 1,
+                    price: item.unitPrice ?? 0
+                  }));
+                  setItems(newItems);
+                }
+              }} 
+            />
           </div>
 
           {/* DOCUMENTO COTIZACIÓN */}
