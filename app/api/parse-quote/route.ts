@@ -16,9 +16,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Falta el texto de la instrucción' }, { status: 400 });
     }
 
-    // Usamos gemini-1.5-pro para garantizar compatibilidad con tu llave de API
+    // Usamos gemini-pro que es compatible con todas las cuentas y llaves
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-pro',
+      model: 'gemini-pro',
       systemInstruction: `Eres un asistente experto para un software de cotizaciones. 
       Tu tarea es analizar la instrucción en lenguaje natural del usuario y extraer la información en un formato JSON estricto con esta estructura exacta:
       {
@@ -36,9 +36,6 @@ export async function POST(request: Request) {
 
     const result = await model.generateContent({
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: {
-        responseMimeType: 'application/json',
-      },
     });
 
     const responseText = result.response.text();
