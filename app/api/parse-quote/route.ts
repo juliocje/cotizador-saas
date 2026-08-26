@@ -9,15 +9,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Falta configurar la GEMINI_API_KEY en Vercel' }, { status: 500 });
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey.trim()); // .trim() por si se coló un espacio en blanco
+    const genAI = new GoogleGenerativeAI(apiKey.trim());
     const { prompt } = await request.json();
 
     if (!prompt) {
       return NextResponse.json({ error: 'Falta el texto de la instrucción' }, { status: 400 });
     }
 
+    // Cambiamos al modelo con la etiqueta -latest para asegurar compatibilidad total
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-1.5-flash-latest',
       systemInstruction: `Eres un asistente experto para un software de cotizaciones. 
       Tu tarea es analizar la instrucción en lenguaje natural del usuario y extraer la información en un formato JSON estricto con esta estructura exacta:
       {
@@ -47,7 +48,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, data: resultJson });
   } catch (error: any) {
     console.error('Error detallado al procesar con Gemini:', error);
-    // Devolvemos el mensaje de error completo al frontend para verlo en pantalla
     return NextResponse.json({ 
       success: false, 
       error: error.message ? `Google Error: ${error.message}` : 'Error desconocido de red' 
