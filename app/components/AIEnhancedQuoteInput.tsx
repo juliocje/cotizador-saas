@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 
 interface ParsedItem {
   description: string;
@@ -21,9 +21,18 @@ export default function AIEnhancedQuoteInput({ onDataParsed }: AIEnhancedQuoteIn
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  
+  // Referencia para controlar el apagado manual del micrófono
+  const recognitionRef = useRef<any>(null);
 
-  // Función para activar el dictado por voz del navegador
-  const handleVoiceDictation = () => {
+  const toggleVoiceDictation = () => {
+    // Si ya está escuchando, lo detenemos manualmente
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+      return;
+    }
+
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     
     if (!SpeechRecognition) {
@@ -32,23 +41,34 @@ export default function AIEnhancedQuoteInput({ onDataParsed }: AIEnhancedQuoteIn
     }
 
     const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
     recognition.lang = 'es-MX'; // Idioma español
-    recognition.interimResults = false;
+    
+    // LA MAGIA: continuous permite hacer pausas sin que se corte
+    recognition.continuous = true; 
+    // Muestra las palabras en tiempo real mientras habla
+    recognition.interimResults = true; 
     recognition.maxAlternatives = 1;
 
     recognition.onstart = () => {
       setIsListening(true);
+      setPrompt(''); // Limpiamos la caja al empezar un nuevo dictado
     };
 
     recognition.onresult = (event: any) => {
-      const speechText = event.results[0][0].transcript;
-      setPrompt(speechText);
-      setIsListening(false);
+      let fullTranscript = '';
+      // Recorremos todos los fragmentos de voz detectados y los unimos
+      for (let i = 0; i < event.results.length; i++) {
+        fullTranscript += event.results[i][0].transcript;
+      }
+      setPrompt(fullTranscript);
     };
 
     recognition.onerror = (event: any) => {
       console.error("Error de reconocimiento de voz:", event.error);
-      setIsListening(false);
+      if (event.error !== 'no-speech') {
+        setIsListening(false);
+      }
     };
 
     recognition.onend = () => {
@@ -60,6 +80,13 @@ export default function AIEnhancedQuoteInput({ onDataParsed }: AIEnhancedQuoteIn
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
+    
+    // Si el micrófono seguía abierto al darle "Generar", lo apagamos
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
+    
     setLoading(true);
 
     try {
@@ -92,31 +119,31 @@ export default function AIEnhancedQuoteInput({ onDataParsed }: AIEnhancedQuoteIn
       </p>
       
       <div className="flex flex-col gap-3">
-        {/* Input de texto limpio sin elementos flotantes estorbando */}
         <input 
           type="text"
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          placeholder={isListening ? "Escuchando... Habla ahora..." : "Escribe tu orden o usa el micrófono..."}
+          placeholder={isListening ? "Escuchando... Puedes hacer pausas. Vuelve a tocar el botón para terminar." : "Escribe tu orden o usa el micrófono..."}
           className={`w-full bg-slate-950 border rounded-xl px-4 py-3 text-sm text-slate-100 focus:outline-none transition-all ${
-            isListening ? 'border-rose-500 ring-2 ring-rose-500/20 animate-pulse' : 'border-slate-800 focus:border-cyan-500'
+            isListening ? 'border-rose-500 ring-2 ring-rose-500/20' : 'border-slate-800 focus:border-cyan-500'
           }`}
           onKeyDown={(e) => e.key === 'Enter' && handleGenerate()}
         />
 
-        {/* Botones organizados abajo, junto al de generar */}
         <div className="flex flex-col sm:flex-row gap-2 justify-end">
+          {/* Botón dinámico que cambia de color y texto si está escuchando */}
           <button
             type="button"
-            onClick={handleVoiceDictation}
-            disabled={isListening || loading}
+            onClick={toggleVoiceDictation}
+            disabled={loading}
             className={`px-4 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 ${
               isListening 
-                ? 'bg-rose-500 text-white animate-pulse' 
+                ? 'bg-rose-500 hover:bg-rose-600 text-white animate-pulse' 
                 : 'bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700'
             }`}
           >
-            <span>{isListening ? "Escuchando..." : "Dictar con voz"}</span>
+            <span>🎤</span>
+            <span>{isListening ? "⏹️ Detener dictado" : "Dictar con voz"}</span>
           </button>
 
           <button 
