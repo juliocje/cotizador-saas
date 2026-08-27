@@ -115,7 +115,7 @@ export default function AIEnhancedQuoteInput({ onDataParsed }: AIEnhancedQuoteIn
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 mb-8 shadow-xl">
       <p className="text-xs sm:text-sm text-slate-400 mb-4">
-        Haz clic en el micrófono y dicta tu cotización (ej. <span className="text-slate-300 italic">&quot;Cotiza a Juan Pérez 3 escritorios de 3500 pesos&quot;</span>) o escríbela si lo prefieres.
+        Haz clic en el botón y dicta tu cotización (ej. <span className="text-slate-300 italic">&quot;Cotiza a Juan Pérez 3 escritorios de 3500 pesos&quot;</span>) o escríbela si lo prefieres.
       </p>
       
       <div className="flex flex-col gap-3">
@@ -123,7 +123,7 @@ export default function AIEnhancedQuoteInput({ onDataParsed }: AIEnhancedQuoteIn
           type="text"
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          placeholder={isListening ? "Escuchando... Puedes hacer pausas. Vuelve a tocar el botón para terminar." : "Escribe tu orden o usa el micrófono..."}
+          placeholder={isListening ? "Escuchando... Puedes hacer pausas. Vuelve a tocar el botón para terminar." : "Escribe tu orden o dicta con voz..."}
           className={`w-full bg-slate-950 border rounded-xl px-4 py-3 text-sm text-slate-100 focus:outline-none transition-all ${
             isListening ? 'border-rose-500 ring-2 ring-rose-500/20' : 'border-slate-800 focus:border-cyan-500'
           }`}
@@ -131,7 +131,7 @@ export default function AIEnhancedQuoteInput({ onDataParsed }: AIEnhancedQuoteIn
         />
 
         <div className="flex flex-col sm:flex-row gap-2 justify-end">
-          {/* Botón dinámico que cambia de color y texto si está escuchando */}
+          {/* Botón dinámico que cambia de color y texto si está escuchando, sin emojis */}
           <button
             type="button"
             onClick={toggleVoiceDictation}
@@ -142,8 +142,7 @@ export default function AIEnhancedQuoteInput({ onDataParsed }: AIEnhancedQuoteIn
                 : 'bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700'
             }`}
           >
-            <span>🎤</span>
-            <span>{isListening ? "⏹️ Detener dictado" : "Dictar con voz"}</span>
+            <span>{isListening ? "Detener dictado" : "Dictar con voz"}</span>
           </button>
 
           <button 
