@@ -9,7 +9,7 @@ import AIEnhancedQuoteInput from '@/app/components/AIEnhancedQuoteInput';
 // DICCIONARIO DE TRADUCCIONES
 const translations: Record<string, any> = {
   es: {
-    appTitle: "Cotizador Express", // Quitamos el "Pro"
+    appTitle: "Cotizador Express",
     welcomeUser: "Bienvenido,",
     lblLang: "Idioma",
     lblTax: "Impuesto",
@@ -83,7 +83,7 @@ const translations: Record<string, any> = {
     footerLegalNotice: "Cotizador Express es un software de elaboración de documentos comerciales. Las cotizaciones generadas no constituyen una factura o comprobante fiscal."
   },
   en: {
-    appTitle: "Express Quote", // Quitamos el "Pro"
+    appTitle: "Express Quote",
     welcomeUser: "Welcome,",
     lblLang: "Language",
     lblTax: "Tax Rate",
@@ -231,7 +231,6 @@ export default function Home() {
   const [subscriptionEndDate, setSubscriptionEndDate] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
-  // Estado para PWA Install Prompt
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   const [companyName, setCompanyName] = useState<string>("Mi Empresa S.A. de C.V.");
@@ -311,14 +310,12 @@ export default function Home() {
     fetchClients();
     fetchCompanies();
 
-    // Capturar evento de instalación de PWA
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
     };
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-    // Comprobar si se abrió la app mediante un enlace compartido de cotización (?quote=ID)
     const params = new URLSearchParams(window.location.search);
     const quoteId = params.get('quote');
     if (quoteId) {
@@ -993,9 +990,7 @@ export default function Home() {
         }
       `}</style>
 
-      {/* BARRA SUPERIOR FIJA MÓVIL CON BOTÓN DE INSTALAR ESTILIZADO IGUAL AL MENÚ */}
       <div className="no-print md:hidden fixed top-0 left-0 right-0 bg-slate-900 text-white px-4 py-3 flex justify-between items-center shadow-lg z-50 h-14">
-        {/* Aquí agregamos el logotipo a un lado del título en móvil */}
         <div className="flex items-center gap-2">
           <h1 className="font-bold text-base tracking-tight">{t.appTitle}</h1>
           <img src="/cotizador-icon2.png" alt="Logo" className="h-5 object-contain drop-shadow-sm" />
@@ -1017,12 +1012,10 @@ export default function Home() {
         </div>
       </div>
 
-      {/* MENÚ LATERAL */}
       <aside className={`no-print w-full md:w-64 bg-slate-900 text-slate-100 p-4 shrink-0 flex-col justify-between border-r border-slate-800 shadow-xl z-40 
         ${isMobileMenuOpen ? 'fixed inset-x-0 top-14 bottom-0 flex overflow-y-auto' : 'hidden md:flex'}`}>
         <div className="space-y-4">
           <div className="pb-3 border-b border-slate-800/80 block text-center space-y-1">
-            {/* Aquí agregamos el logotipo a un lado del título en escritorio */}
             <div className="flex items-center justify-center gap-2">
               <h1 className="text-xl font-bold text-white tracking-tight">{t.appTitle}</h1>
               <img src="/cotizador-icon2.png" alt="Logo" className="h-5 object-contain drop-shadow-md" />
@@ -1157,14 +1150,11 @@ export default function Home() {
         </div>
       </aside>
 
-      {/* ÁREA PRINCIPAL */}
       <main className="flex-1 p-3 md:p-8 overflow-x-hidden flex flex-col justify-between min-h-screen">
         <div className="max-w-5xl mx-auto print:max-w-none print:w-full space-y-6 w-full">
           
-          {/* BARRA SUPERIOR DE SELECTORES */}
           <div className="no-print bg-white p-4 md:p-5 rounded-xl shadow-md border border-slate-200 space-y-4">
             
-            {/* BOTÓN DE INSTALACIÓN PARA COMPUTADORA EN LA PARTE SUPERIOR */}
             <div className="hidden md:flex justify-between items-center pb-3 border-b border-slate-100">
               <span className="text-xs font-semibold text-slate-500">Panel de Control PWA</span>
               <button 
@@ -1306,7 +1296,6 @@ export default function Home() {
 
           </div>
 
-          {/* COMPONENTE CAJA MÁGICA DE IA */}
           <div className="no-print">
             <AIEnhancedQuoteInput 
               onDataParsed={(parsedData: any) => {
@@ -1327,7 +1316,6 @@ export default function Home() {
             />
           </div>
 
-          {/* DOCUMENTO COTIZACIÓN */}
           <div id="quote-document" className={getContainerStyle()}>
             
             {subscriptionStatus === 'free' && (
@@ -1347,7 +1335,6 @@ export default function Home() {
             <div className="relative z-10">
               <div className={`flex flex-col md:flex-row justify-between items-start border-b border-slate-200 gap-4 ${templateStyle === 'compact' ? 'pb-1' : 'pb-3'}`}>
                 
-                {/* LOGOTIPO MÁS GRANDE */}
                 <div className="w-full md:w-1/2 flex justify-start">
                   <div className={`relative bg-transparent rounded-lg flex items-center justify-center cursor-pointer overflow-hidden ${templateStyle === 'compact' ? 'h-16 w-36' : 'h-28 w-60'}`}>
                     {logo ? (
@@ -1629,7 +1616,6 @@ export default function Home() {
         </footer>
       </main>
 
-      {/* MODALES */}
       {isSettingsOpen && (
         <div className="no-print fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-5 max-h-[85vh] flex flex-col">
