@@ -31,6 +31,7 @@ const translations: Record<string, any> = {
     btnBlank: "Blanco",
     btnPrint: "Guardar / PDF",
     btnSaveCloud: "Guardar en Nube",
+    btnWhatsApp: "Enviar por WhatsApp",
     btnLogout: "Cerrar Sesión",
     btnDeleteAccount: "🗑️ Eliminar mi cuenta",
     logoPrompt: "Haz clic para subir tu Logo o cárgalo desde 'Mis Empresas'",
@@ -105,6 +106,7 @@ const translations: Record<string, any> = {
     btnBlank: "Blank Item",
     btnPrint: "Save / PDF",
     btnSaveCloud: "Save to Cloud",
+    btnWhatsApp: "Enviar por WhatsApp",
     btnLogout: "Log Out",
     btnDeleteAccount: "🗑️ Delete my account",
     logoPrompt: "Click to upload Logo or load it from 'My Companies'",
@@ -498,6 +500,30 @@ export default function Home() {
     if (!canProceed) return;
     await logUsage();
     window.print();
+  };
+
+  const handleWhatsAppShare = async () => {
+    const canProceed = await checkFreePlanUsageLimit();
+    if (!canProceed) return;
+    await logUsage();
+
+    const itemsSummary = items.map(i => `• ${i.qty} ${i.unit} - ${lang === 'es' ? i.description_es : i.description_en}: $${(Number(i.qty || 0) * Number(i.price || 0)).toFixed(2)}`).join('\n');
+    const message = `📋 *${folio}* - *${companyName}*\n👤 *${clientName}*\n\n${itemsSummary}\n\n*Subtotal:* $${subtotal.toFixed(2)} ${currency}\n*Descuento:* $${discountAmount.toFixed(2)} ${currency}\n*Impuesto (${taxRate}%):* $${taxAmount.toFixed(2)} ${currency}\n💎 *Total Neto:* *$${total.toFixed(2)} ${currency}*`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Cotización ${folio}`,
+          text: message,
+        });
+        return;
+      } catch (err) {
+        // User cancelled or share failed, fallback to web
+      }
+    }
+
+    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   const handleCheckoutPro = async () => {
@@ -974,17 +1000,12 @@ export default function Home() {
       
       <style jsx global>{`
         @media print {
-          /* Oculta absolutamente todo el contenido de la página por defecto al imprimir */
           body * {
             visibility: hidden !important;
           }
-          
-          /* Muestra únicamente el contenedor estricto de la cotización y sus hijos */
           #quote-document, #quote-document * {
             visibility: visible !important;
           }
-          
-          /* Posiciona la cotización limpia en la esquina superior izquierda de la hoja */
           #quote-document {
             position: absolute !important;
             left: 0 !important;
@@ -997,7 +1018,6 @@ export default function Home() {
             border: none !important;
             background-color: white !important;
           }
-          
           @page { 
             margin: 0.5cm; 
             size: auto; 
@@ -1146,6 +1166,13 @@ export default function Home() {
               className={menuBtnClass}
             >
               {t.btnPrint}
+            </button>
+
+            <button 
+              onClick={() => { setIsMobileMenuOpen(false); handleWhatsAppShare(); }} 
+              className={menuBtnClass}
+            >
+              {t.btnWhatsApp}
             </button>
 
             <button 
