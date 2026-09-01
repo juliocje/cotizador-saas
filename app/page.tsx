@@ -974,10 +974,34 @@ export default function Home() {
       
       <style jsx global>{`
         @media print {
-          .no-print { display: none !important; }
-          @page { margin: 0; size: auto; }
-          body { background-color: white !important; padding: 0 !important; margin: 0 !important; }
-          .quote-container { box-shadow: none !important; border: none !important; padding: 0.2cm !important; margin: 0 !important; width: 100% !important; max-width: 100% !important; }
+          /* Oculta absolutamente todo el contenido de la página por defecto al imprimir */
+          body * {
+            visibility: hidden !important;
+          }
+          
+          /* Muestra únicamente el contenedor estricto de la cotización y sus hijos */
+          #quote-document, #quote-document * {
+            visibility: visible !important;
+          }
+          
+          /* Posiciona la cotización limpia en la esquina superior izquierda de la hoja */
+          #quote-document {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0.2cm !important;
+            box-shadow: none !important;
+            border: none !important;
+            background-color: white !important;
+          }
+          
+          @page { 
+            margin: 0.5cm; 
+            size: auto; 
+          }
         }
 
         .pdf-theme-compact .client-box-compact {
