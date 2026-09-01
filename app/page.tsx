@@ -507,8 +507,19 @@ export default function Home() {
     if (!canProceed) return;
     await logUsage();
 
-    const itemsSummary = items.map(i => `• ${i.qty} ${i.unit} - ${lang === 'es' ? i.description_es : i.description_en}: $${(Number(i.qty || 0) * Number(i.price || 0)).toFixed(2)}`).join('\n');
-    const message = `📋 *${folio}* - *${companyName}*\n👤 *${clientName}*\n\n${itemsSummary}\n\n*Subtotal:* $${subtotal.toFixed(2)} ${currency}\n*Descuento:* $${discountAmount.toFixed(2)} ${currency}\n*Impuesto (${taxRate}%):* $${taxAmount.toFixed(2)} ${currency}\n💎 *Total Neto:* *$${total.toFixed(2)} ${currency}*`;
+    const itemsSummary = items
+      .map(i => `- ${i.qty} ${i.unit} | ${lang === 'es' ? i.description_es : i.description_en}: $${(Number(i.qty || 0) * Number(i.price || 0)).toFixed(2)} ${currency}`)
+      .join('\n');
+
+    const message = 
+      `${companyName}\n` +
+      `Cotizacion: ${folio}\n` +
+      `Cliente: ${clientName}\n\n` +
+      `Conceptos:\n${itemsSummary}\n\n` +
+      `Subtotal: $${subtotal.toFixed(2)} ${currency}\n` +
+      `Descuento: $${discountAmount.toFixed(2)} ${currency}\n` +
+      `Impuesto (${taxRate}%): $${taxAmount.toFixed(2)} ${currency}\n` +
+      `Total Neto: $${total.toFixed(2)} ${currency}`;
 
     if (navigator.share) {
       try {
@@ -518,7 +529,7 @@ export default function Home() {
         });
         return;
       } catch (err) {
-        // User cancelled or share failed, fallback to web
+        // Fallback to web link if share is cancelled or unavailable
       }
     }
 
