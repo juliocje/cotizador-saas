@@ -18,7 +18,7 @@ export default function ForgotPasswordPage() {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `https://cotizador.jickstech.com/update-password`,
+        redirectTo: `${window.location.origin}/update-password`,
       });
 
       if (error) throw error;
