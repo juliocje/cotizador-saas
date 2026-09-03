@@ -17,7 +17,7 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
         redirectTo: `${window.location.origin}/update-password`,
       });
 
@@ -38,7 +38,7 @@ export default function ForgotPasswordPage() {
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-extrabold text-white tracking-tight">Recuperar Contraseña</h1>
           <p className="text-xs text-slate-400 font-medium">
-            Ingresa tu correo electrónico registrado y te enviaremos instrucciones.
+            Ingresa tu correo electrónico registrado y te enviaremos las instrucciones.
           </p>
         </div>
 
