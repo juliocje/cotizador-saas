@@ -17,14 +17,20 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `https://cotizador.jickstech.com/update-password`,
+      console.log('Enviando solicitud de recuperación para:', email);
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: 'https://cotizador.jickstech.com/update-password',
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error de Supabase:', error);
+        throw error;
+      }
 
-      setMessage('¡Correo enviado! Revisa tu bandeja de entrada para restablecer tu contraseña.');
+      setMessage('¡Correo enviado! Revisa tu bandeja de entrada.');
     } catch (err: any) {
+      console.error('Excepción capturada:', err);
       setErrorMessage(err.message || 'Ocurrió un error al enviar el correo de recuperación.');
     } finally {
       setLoading(false);
