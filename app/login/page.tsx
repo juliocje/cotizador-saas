@@ -43,7 +43,7 @@ export default function LoginPage() {
             data: {
               full_name: fullName.trim()
             },
-            emailRedirectTo: `https://cotizador.jickstech.com/auth/callback`
+            emailRedirectTo: `${window.location.origin}/auth/callback`
           }
         });
 
@@ -70,11 +70,10 @@ export default function LoginPage() {
   };
 
   return (
-    // CONTENEDOR CON DEGRADADO OSCURO PROFESIONAL
     <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 min-h-screen flex items-center justify-center p-4 font-sans text-slate-100">
       <div className="bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-8 border border-slate-800 space-y-6">
         
-        {/* ENCABEZADO CON LOGOTIPO OFICIAL MUY GRANDE */}
+        {/* ENCABEZADO CON LOGOTIPO */}
         <div className="text-center space-y-3">
           <div className="bg-slate-950 p-3 rounded-3xl inline-block shadow-inner border border-slate-800">
             <img 
@@ -99,7 +98,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleAuth} className="space-y-4">
           
-          {/* CAMPO DE NOMBRE DE PILA (SOLO SE MUESTRA EN REGISTRO) */}
+          {/* CAMPO DE NOMBRE DE PILA (SOLO EN REGISTRO) */}
           {isSignUp && (
             <div>
               <label className="text-xs font-bold text-slate-300 uppercase tracking-wider block mb-1">Nombre de Pila</label>
@@ -127,14 +126,7 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-xs font-bold text-slate-300 uppercase tracking-wider block">Contraseña</label>
-              {!isSignUp && (
-                <Link href="/forgot-password" className="text-xs text-indigo-400 hover:text-indigo-300 hover:underline font-semibold transition">
-                  ¿Olvidaste tu contraseña?
-                </Link>
-              )}
-            </div>
+            <label className="text-xs font-bold text-slate-300 uppercase tracking-wider block mb-1">Contraseña</label>
             <input 
               type="password" 
               required
@@ -145,7 +137,7 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* CHECKBOX OBLIGATORIO DE TÉRMINOS Y PRIVACIDAD (SOLO EN REGISTRO) */}
+          {/* CHECKBOX OBLIGATORIO DE TÉRMINOS (SOLO EN REGISTRO) */}
           {isSignUp && (
             <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
               <label className="flex items-start gap-2.5 cursor-pointer text-xs text-slate-300 select-none">
