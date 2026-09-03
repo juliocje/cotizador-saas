@@ -43,7 +43,7 @@ export default function LoginPage() {
             data: {
               full_name: fullName.trim()
             },
-            emailRedirectTo: `${window.location.origin}/auth/callback`
+            emailRedirectTo: `https://cotizador.jickstech.com/auth/callback`
           }
         });
 
