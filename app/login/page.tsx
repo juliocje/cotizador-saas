@@ -70,27 +70,22 @@ export default function LoginPage() {
   };
 
   return (
-    // CONTENEDOR CON DEGRADADO E ILUMINACIÓN INSPIRADA EN EL LOGOTIPO
-    <div className="bg-gradient-to-tr from-[#020617] via-[#091c33] to-[#0284c7]/40 min-h-screen flex items-center justify-center p-4 font-sans text-slate-100 relative overflow-hidden selection:bg-cyan-400 selection:text-slate-950">
-      
-      {/* Halos de luz ambiental */}
-      <div className="absolute w-[500px] h-[500px] bg-cyan-500/15 rounded-full blur-[140px] pointer-events-none -top-20 -left-20"></div>
-      <div className="absolute w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[140px] pointer-events-none -bottom-20 -right-20"></div>
-
-      <div className="bg-slate-900/90 rounded-3xl shadow-2xl shadow-cyan-950/50 max-w-md w-full p-8 border border-cyan-500/30 space-y-6 relative z-10 backdrop-blur-xl">
+    // CONTENEDOR CON DEGRADADO OSCURO PROFESIONAL
+    <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 min-h-screen flex items-center justify-center p-4 font-sans text-slate-100">
+      <div className="bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-8 border border-slate-800 space-y-6">
         
-        {/* ENCABEZADO CON LOGOTIPO OFICIAL */}
+        {/* ENCABEZADO CON LOGOTIPO OFICIAL MUY GRANDE */}
         <div className="text-center space-y-3">
-          <div className="bg-slate-950 p-3 rounded-3xl inline-block shadow-inner border border-cyan-500/30">
+          <div className="bg-slate-950 p-3 rounded-3xl inline-block shadow-inner border border-slate-800">
             <img 
               src="/cotizador-icon.png" 
               alt="Cotizador Express Logo" 
-              className="w-20 h-20 rounded-2xl object-cover mx-auto shadow-md"
+              className="w-24 h-24 rounded-2xl object-cover mx-auto shadow-md"
             />
           </div>
           <div className="space-y-1">
             <h1 className="text-2xl font-extrabold text-white tracking-tight">Cotizador Express</h1>
-            <p className="text-xs text-slate-300 font-medium">
+            <p className="text-xs text-slate-400 font-medium">
               {isSignUp ? 'Crea una cuenta nueva' : 'Inicia sesión en tu cuenta'}
             </p>
           </div>
@@ -114,7 +109,7 @@ export default function LoginPage() {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="Ej. Juan"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-450 transition shadow-inner"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-indigo-500 transition"
               />
             </div>
           )}
@@ -127,16 +122,15 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="tu@correo.com"
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition shadow-inner"
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-indigo-500 transition"
             />
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Contraseña</label>
-              {/* ENLACE DE RECUPERACIÓN DE CONTRASEÑA (SOLO EN LOGIN) */}
+              <label className="text-xs font-bold text-slate-300 uppercase tracking-wider block">Contraseña</label>
               {!isSignUp && (
-                <Link href="/forgot-password" className="text-xs text-cyan-400 hover:underline">
+                <Link href="/forgot-password" className="text-xs text-indigo-400 hover:text-indigo-300 hover:underline font-semibold transition">
                   ¿Olvidaste tu contraseña?
                 </Link>
               )}
@@ -147,7 +141,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition shadow-inner"
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-indigo-500 transition"
             />
           </div>
 
@@ -159,15 +153,15 @@ export default function LoginPage() {
                   type="checkbox" 
                   checked={legalAccepted}
                   onChange={(e) => setLegalAccepted(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 rounded border-slate-700 bg-slate-900 text-cyan-400 focus:ring-cyan-400 cursor-pointer shrink-0" 
+                  className="mt-0.5 h-4 w-4 rounded border-slate-700 bg-slate-900 text-indigo-500 focus:ring-indigo-400 cursor-pointer shrink-0" 
                 />
                 <span className="leading-tight">
                   Acepto los{' '}
-                  <Link href="/terminos" target="_blank" className="text-cyan-400 font-bold underline hover:text-cyan-300">
+                  <Link href="/terminos" target="_blank" className="text-indigo-400 font-bold underline hover:text-indigo-300">
                     Términos y Condiciones
                   </Link>{' '}
                   y el{' '}
-                  <Link href="/privacidad" target="_blank" className="text-cyan-400 font-bold underline hover:text-cyan-300">
+                  <Link href="/privacidad" target="_blank" className="text-indigo-400 font-bold underline hover:text-indigo-300">
                     Aviso de Privacidad
                   </Link>.
                 </span>
@@ -178,10 +172,10 @@ export default function LoginPage() {
           <button 
             type="submit" 
             disabled={loading || (isSignUp && !legalAccepted)}
-            className={`w-full font-bold py-3.5 rounded-xl text-sm transition shadow-lg text-slate-950 ${
+            className={`w-full font-bold py-3 rounded-xl text-sm transition shadow-md text-white ${
               loading || (isSignUp && !legalAccepted)
-                ? 'bg-slate-800 text-slate-400 cursor-not-allowed opacity-60'
-                : 'bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 active:scale-[0.98] shadow-cyan-500/25'
+                ? 'bg-slate-800 cursor-not-allowed opacity-60'
+                : 'bg-slate-800 hover:bg-slate-700 active:scale-[0.98] border border-slate-700 shadow-lg'
             }`}
           >
             {loading ? 'Procesando...' : (isSignUp ? 'Registrarme' : 'Iniciar Sesión')}
@@ -197,7 +191,7 @@ export default function LoginPage() {
               setFullName('');
               setErrorMessage('');
             }}
-            className="text-xs text-cyan-400 hover:text-cyan-300 hover:underline font-semibold transition"
+            className="text-xs text-indigo-400 hover:text-indigo-300 hover:underline font-semibold transition"
           >
             {isSignUp ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate aquí'}
           </button>
