@@ -17,6 +17,9 @@ export const metadata: Metadata = {
   title: "JiCKS Tech - Cotizador SaaS",
   description: "Plataforma de cotizaciones y gestión multiplataforma",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/cotizador-icon.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
