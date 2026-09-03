@@ -45,11 +45,13 @@ export async function middleware(request: NextRequest) {
   const isLoginPage = pathname.startsWith('/login')
   const isAuthRoute = pathname.startsWith('/auth')
 
-  // Definir páginas públicas que no requieren sesión (Términos, Privacidad y Registro)
+  // Definir páginas públicas que no requieren sesión (Términos, Privacidad, Registro y Recuperación de contraseña)
   const isPublicPage = 
     pathname === '/terminos' || 
     pathname === '/privacidad' || 
-    pathname.startsWith('/signup')
+    pathname.startsWith('/signup') ||
+    pathname.startsWith('/forgot-password') ||
+    pathname.startsWith('/update-password')
 
   // Si no hay usuario y NO está en una página permitida (login, auth o públicas), lo mandamos a /login
   if (!user && !isLoginPage && !isAuthRoute && !isPublicPage) {
